@@ -7,11 +7,11 @@ EXPOSE 9090
 ENV http_proxy 'http://172.16.10.20:8080/'
 ENV https_proxy 'http://172.16.10.20:8080/'
 
-ADD target/api-gateway-0.0.1-SNAPSHOT.jar /opt/api-gateway
+ADD target/${project.build.finalName}.jar /opt/${project.artifactId}
 
-WORKDIR /opt/api-gateway
+WORKDIR /opt/${project.artifactId}
 
-CMD ["java", "-jar", "api-gateway-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "${project.build.finalName}.jar"]
 
 
 
