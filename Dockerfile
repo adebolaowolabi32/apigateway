@@ -1,6 +1,6 @@
 FROM openjdk:11-jre-slim
 
-LABEL maintainer "laura.okpara@interswitchgroup.com"
+LABEL maintainer="laura.okpara@interswitchgroup.com"
 
 EXPOSE 9090
 
