@@ -4,14 +4,11 @@ LABEL maintainer="laura.okpara@interswitchgroup.com"
 
 EXPOSE 9090
 
-ENV http_proxy 'http://172.16.10.20:8080/'
-ENV https_proxy 'http://172.16.10.20:8080/'
-
-ADD target/${project.build.finalName}.jar /opt/${project.artifactId}
+ADD target/api-gateway.jar /opt/api-gateway.jar
 
 WORKDIR /opt/${project.artifactId}
 
-CMD ["java", "-jar", "${project.build.finalName}.jar"]
+CMD ["java", "-jar", "api-gateway.jar"]
 
 
 
