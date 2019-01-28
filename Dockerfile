@@ -4,11 +4,11 @@ LABEL maintainer="laura.okpara@interswitchgroup.com"
 
 EXPOSE 9090
 
-ADD target/api-gateway-0.0.1-SNAPSHOT.jar /app/app.jar
+ADD target/api-gateway.jar /opt/api-gateway.jar
 
-CMD ["java", "-jar", "/app/app.jar"]
+WORKDIR /opt/api-gateway
 
-
+CMD ["java", "-jar", "api-gateway.jar"]
 
 
 
