@@ -12,25 +12,20 @@ import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.validation.ValidationException;
-import java.net.URI;
-import java.util.List;
-
 @Component
 public class RouteRepositoryService implements RouteDefinitionRepository {
 
-    @Autowired
     private RouteDefinitionRepositoryMongo routeDefinitionRepositoryMongo;
 
-    @Autowired
-    private GatewayControllerEndpoint gatewayControllerEndpoint;
+    public  RouteRepositoryService(RouteDefinitionRepositoryMongo routeDefinitionRepositoryMongo ){
+        this.routeDefinitionRepositoryMongo = routeDefinitionRepositoryMongo;
+    }
 
     @Override
     @Validated
     public Mono<Void> save(Mono<RouteDefinition> route ) {
         return route.flatMap(r -> {
             routeDefinitionRepositoryMongo.save(r).subscribe();
-            gatewayControllerEndpoint.refresh();
             return Mono.empty();
 
         });
@@ -40,7 +35,6 @@ public class RouteRepositoryService implements RouteDefinitionRepository {
     public Mono<Void> delete(Mono<String> routeId) {
         return routeId.flatMap(id -> {
             routeDefinitionRepositoryMongo.deleteById(id).subscribe();
-            gatewayControllerEndpoint.refresh();
             return Mono.empty();
         });
     }

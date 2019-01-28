@@ -127,17 +127,6 @@
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
         </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>dev</id>
-            <properties>
-                <env>dev</env>
-            </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-    </profiles>
 
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -146,35 +135,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>fabric8-maven-plugin</artifactId>
-                <version>${fabric8-maven-plugin.version}</version>
-                <configuration>
-                    <images>
-                        <image>
-                            <name>${image.user}/${project.artifactId}:${project.version}</name>
-                            <build>
-                                <from>openjdk:11-jre-slim</from>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
-            </plugin>
         </plugins>
-        <testOutputDirectory>${basedir}/target/classes</testOutputDirectory>
-        <filters>
-            <filter>src/main/resources/application-${env}.properties</filter>
-        </filters>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>*.properties</include>
-                </includes>
-            </resource>
-        </resources>
+
     </build>
 
     <repositories>
