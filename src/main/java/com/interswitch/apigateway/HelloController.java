@@ -17,6 +17,7 @@ public class HelloController {
     private static final String template = "Hello, %s!";
     private final AtomicLong counter = new AtomicLong();
 
+
     @GetMapping("/greeting")
     public Mono<Greeting> greeting(@RequestParam(value = "name", defaultValue = "World") String name) {
         var greeting = new Greeting(counter.incrementAndGet(), String.format(template, name));
