@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 @RestController
-@ConfigurationProperties
 public class HelloController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private static final String template = "Hello, %s!";

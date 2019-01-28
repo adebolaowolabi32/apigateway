@@ -41,6 +41,7 @@ public class RouteRepositoryService implements RouteDefinitionRepository {
             routeDefinitionRepositoryMongo.save(r).subscribe();
             gatewayRoutesRefresher.refreshRoutes();
             return Mono.empty();
+
         });
     }
 
