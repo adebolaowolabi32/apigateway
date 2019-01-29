@@ -20,7 +20,7 @@ public class HelloController {
     @GetMapping("/greeting")
     public Mono<Greeting> greeting(@RequestParam(value = "name", defaultValue = "World") String name) {
         var greeting = new Greeting(counter.incrementAndGet(), String.format(template, name));
-        log.info("Message", value("greeting", greeting));
+        log.info("Message received", value("greeting", greeting));
         return Mono.just(greeting);
     }
 }
