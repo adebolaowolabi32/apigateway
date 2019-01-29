@@ -5,5 +5,6 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RouteDefinitionRepositoryMongo extends ReactiveMongoRepository<RouteDefinition, String> {
+public interface ReactiveMongoRouteDefinitionRepository extends ReactiveMongoRepository<RouteDefinition, String> {
+
 }
