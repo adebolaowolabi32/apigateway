@@ -3,12 +3,10 @@ package com.interswitch.apigateway.route;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
-import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Service
 public class MongoRouteDefinitionRepository implements RouteDefinitionRepository {
 
     private ReactiveMongoRouteDefinitionRepository mongo;
