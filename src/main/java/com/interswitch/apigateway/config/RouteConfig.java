@@ -20,12 +20,18 @@ public class RouteConfig {
     public RouteLocator passportRouteLocator(RouteLocatorBuilder builder, @Value("${passport.baseurl}") String baseUrl) {
         RouteLocatorBuilder.Builder routeLocator = builder.routes();
         routeLocator
-                .route(r -> r
+                .route("passport-authorize", r -> r
+                        .host("*")
+                        .and()
                         .path("/oauth/authorize")
-                        .uri(String.format("%s%s", baseUrl, "/oauth/authorize")))
-                .route(r -> r
+                        .filters(f -> f.prefixPath("/passport"))
+                        .uri(baseUrl))
+                .route("passport-token", r -> r
+                        .host("*")
+                        .and()
                         .path("/oauth/token")
-                        .uri(String.format("%s%s", baseUrl, "/oauth/token")));
+                        .filters(f -> f.prefixPath("/passport").preserveHostHeader())
+                        .uri(baseUrl));
         return routeLocator.build();
     }
 }
