@@ -10,14 +10,12 @@ import java.security.Principal;
 
 @Configuration
 public class FilterConfig {
-    private static String API_KEY = "API-Key";
-
     @Bean
     KeyResolver apiKeyResolver(){
         return exchange -> {
             HttpHeaders headers = exchange.getRequest().getHeaders();
-            if (headers.containsKey(API_KEY)){
-                return Mono.just(exchange.getRequest().getHeaders().getFirst(API_KEY));
+            if (headers.containsKey("API-Key")){
+                return Mono.just(exchange.getRequest().getHeaders().getFirst("API-Key"));
             }
             else{
                 return exchange.getPrincipal().map(Principal::getName).switchIfEmpty(Mono.empty());
