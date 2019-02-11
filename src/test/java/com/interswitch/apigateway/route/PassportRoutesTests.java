@@ -8,10 +8,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.Base64;
+import java.nio.charset.Charset;
 import java.util.Map;
 
-import static java.lang.String.format;
 import static org.springframework.web.reactive.function.BodyInserters.fromFormData;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -27,7 +26,7 @@ public class PassportRoutesTests {
     public void testTokenEndpoint() {
         formData.setAll(Map.of("grant_type", "client_credentials", "scope", "profile"));
         this.webClient.post().uri("/oauth/token")
-                .header("Authorization", format("Basic %s", new String(Base64.getEncoder().encode(credentials.getBytes()))))
+                .headers(h -> h.setBasicAuth(clientId, clientSecret, Charset.forName("UTF-8")))
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(fromFormData(formData))
