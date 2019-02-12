@@ -22,6 +22,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     @Override
     public Mono<Void> save(@Validated Mono<RouteDefinition> route) {
+
         return route.flatMap(r -> mongo.save(r).then());
     }
 
