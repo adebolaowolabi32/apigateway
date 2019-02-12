@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-
 public class EnableCorsFilter implements WebFilter, Ordered {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
