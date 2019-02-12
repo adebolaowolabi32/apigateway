@@ -3,9 +3,8 @@ package com.interswitch.apigateway.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -13,8 +12,6 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.Base64;
 
 @Configuration
@@ -22,16 +19,15 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
     private String key;
 
-
     @Bean
-    public ReactiveJwtDecoder jwtDecoder() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        RSAPublicKey publicKey = (RSAPublicKey) publicKey();
-        NimbusReactiveJwtDecoder jwtDecoder = new NimbusReactiveJwtDecoder(publicKey);
-        OAuth2TokenValidator<Jwt> withClockSkew = new DelegatingOAuth2TokenValidator<>(
-                Arrays.asList(new JwtTimestampValidator(Duration.ofSeconds(60)),
-                        JwtValidators.createDefault()));
-        jwtDecoder.setJwtValidator(withClockSkew);
-        return jwtDecoder;
+    public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
+        http.authorizeExchange()
+                .pathMatchers("/oauth/**").permitAll() //Todo: Pending NoSecurityFilter
+                .anyExchange().authenticated()
+                .and().csrf().disable()
+                .oauth2ResourceServer()
+                .jwt().publicKey((RSAPublicKey) publicKey());
+        return http.build();
     }
 
     private PublicKey publicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
