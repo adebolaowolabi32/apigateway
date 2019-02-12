@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
 
+
 @Configuration
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
