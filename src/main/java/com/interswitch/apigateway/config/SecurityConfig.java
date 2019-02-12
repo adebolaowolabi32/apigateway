@@ -23,7 +23,7 @@ public class SecurityConfig {
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange()
                 .pathMatchers("/oauth/**").permitAll()
-                .pathMatchers("/actuator/status").permitAll()
+                .pathMatchers("/actuator/health").permitAll()
                 .anyExchange().authenticated()
                 .and().csrf().disable()
                 .oauth2ResourceServer()
