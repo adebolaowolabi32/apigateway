@@ -10,7 +10,7 @@ import java.security.Principal;
 @Configuration
 public class KeyResolverConfig {
     @Bean
-    KeyResolver apiKeyResolver(){
+    public KeyResolver apiKeyResolver(){
         return exchange -> {
                 return exchange.getPrincipal().map(Principal::getName).switchIfEmpty(Mono.empty());
             };
