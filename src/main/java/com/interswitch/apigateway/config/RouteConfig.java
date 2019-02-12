@@ -12,4 +12,5 @@ public class RouteConfig {
     public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo) {
         return new MongoRouteDefinitionRepository(mongo);
     }
+
 }
