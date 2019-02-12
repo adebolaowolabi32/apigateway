@@ -3,23 +3,17 @@ package com.interswitch.apigateway.config;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
 @Configuration
-public class FilterConfig {
+public class KeyResolverConfig {
     @Bean
     KeyResolver apiKeyResolver(){
         return exchange -> {
-            HttpHeaders headers = exchange.getRequest().getHeaders();
-            if (headers.containsKey("API-Key")){
-                return Mono.just(exchange.getRequest().getHeaders().getFirst("API-Key"));
-            }
-            else{
                 return exchange.getPrincipal().map(Principal::getName).switchIfEmpty(Mono.empty());
-            }
-        };
+            };
+
     }
 }
