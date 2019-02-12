@@ -23,7 +23,6 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange()
-                .pathMatchers("/oauth/**","/actuator/health").permitAll() //Todo: Pending NoSecurityFilter
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .anyExchange().authenticated()
                 .and().csrf().disable()
