@@ -45,19 +45,7 @@ public class EnableCorsFilterTests {
                 .get("http://localhost")
                 .build();
 
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-        when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-
-        filter.filter(exchange, filterChain);
-
-        ServerWebExchange webExchange = captor.getValue();
-
-        assertThat(webExchange.getResponse().getHeaders().containsKey(ALLOWED_ORIGIN));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods().containsAll(ALLOWED_METHODS));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlMaxAge()).isEqualTo(MAX_AGE);
+        assertThatResponseContainsHeaders(request);
 
     }
 
@@ -67,19 +55,7 @@ public class EnableCorsFilterTests {
                 .post("http://localhost")
                 .build();
 
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-        when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-
-        filter.filter(exchange, filterChain);
-
-        ServerWebExchange webExchange = captor.getValue();
-
-        assertThat(webExchange.getResponse().getHeaders().containsKey(ALLOWED_ORIGIN));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods().containsAll(ALLOWED_METHODS));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlMaxAge()).isEqualTo(MAX_AGE);
+        assertThatResponseContainsHeaders(request);
 
     }
 
@@ -89,19 +65,7 @@ public class EnableCorsFilterTests {
                 .options("http://localhost")
                 .build();
 
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-        when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-
-        filter.filter(exchange, filterChain);
-
-        ServerWebExchange webExchange = captor.getValue();
-
-        assertThat(webExchange.getResponse().getHeaders().containsKey(ALLOWED_ORIGIN));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods().containsAll(ALLOWED_METHODS));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlMaxAge()).isEqualTo(MAX_AGE);
+        ServerWebExchange webExchange = assertThatResponseContainsHeaders(request);
         assertThat(webExchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.OK);
 
     }
@@ -112,19 +76,7 @@ public class EnableCorsFilterTests {
                 .options("http://localhost")
                 .build();
 
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-        when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-
-        filter.filter(exchange, filterChain);
-
-        ServerWebExchange webExchange = captor.getValue();
-
-        assertThat(webExchange.getResponse().getHeaders().containsKey(ALLOWED_ORIGIN));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods().containsAll(ALLOWED_METHODS));
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
-        assertThat(webExchange.getResponse().getHeaders().getAccessControlMaxAge()).isEqualTo(MAX_AGE);
+        assertThatResponseContainsHeaders(request);
 
     }
 
@@ -134,6 +86,11 @@ public class EnableCorsFilterTests {
                 .options("http://localhost")
                 .build();
 
+        assertThatResponseContainsHeaders(request);
+
+    }
+
+    public ServerWebExchange assertThatResponseContainsHeaders(MockServerHttpRequest request){
         ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
@@ -148,5 +105,6 @@ public class EnableCorsFilterTests {
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlMaxAge()).isEqualTo(MAX_AGE);
 
+        return webExchange;
     }
 }
