@@ -8,10 +8,12 @@ import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoCo
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 @Import(TestMongoConfig.class)
 @DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
 @Slf4j
+@ActiveProfiles("dev")
 public abstract class AbstractMongoRepositoryTests {
     @Autowired
     protected MongoTemplate template;

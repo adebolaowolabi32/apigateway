@@ -1,6 +1,7 @@
 package com.interswitch.apigateway;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -10,7 +11,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+@ActiveProfiles("dev")
 public class RSAPublicKeyTest {
 
     @Test
