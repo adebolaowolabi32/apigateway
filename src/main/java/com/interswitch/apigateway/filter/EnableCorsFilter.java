@@ -7,7 +7,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.web.cors.reactive.CorsUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -36,6 +35,7 @@ public class EnableCorsFilter implements WebFilter, Ordered {
         headers.setAccessControlAllowMethods(ALLOWED_METHODS);
         headers.setAccessControlAllowCredentials(ALLOW_CREDENTIALS);
         headers.setAccessControlMaxAge(MAX_AGE);
+
         if (request.getMethod() == HttpMethod.OPTIONS) {
             response.setStatusCode(HttpStatus.OK);
         }
@@ -45,7 +45,7 @@ public class EnableCorsFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -1;
+        return 1;
     }
 
 }
