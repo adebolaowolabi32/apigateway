@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromFormData;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
 @Import(RouteConfig.class)
 public class PassportRoutesTests {
