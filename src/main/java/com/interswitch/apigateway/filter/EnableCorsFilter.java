@@ -30,16 +30,14 @@ public class EnableCorsFilter implements WebFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
-        if (CorsUtils.isCorsRequest(request)){
-            HttpHeaders headers = response.getHeaders();
-            headers.setAccessControlAllowOrigin(ALLOWED_ORIGIN);
-            headers.setAccessControlAllowHeaders(ALLOWED_HEADERS);
-            headers.setAccessControlAllowMethods(ALLOWED_METHODS);
-            headers.setAccessControlAllowCredentials(ALLOW_CREDENTIALS);
-            headers.setAccessControlMaxAge(MAX_AGE);
-            if (request.getMethod() == HttpMethod.OPTIONS) {
-                response.setStatusCode(HttpStatus.OK);
-            }
+        HttpHeaders headers = response.getHeaders();
+        headers.setAccessControlAllowOrigin(ALLOWED_ORIGIN);
+        headers.setAccessControlAllowHeaders(ALLOWED_HEADERS);
+        headers.setAccessControlAllowMethods(ALLOWED_METHODS);
+        headers.setAccessControlAllowCredentials(ALLOW_CREDENTIALS);
+        headers.setAccessControlMaxAge(MAX_AGE);
+        if (request.getMethod() == HttpMethod.OPTIONS) {
+            response.setStatusCode(HttpStatus.OK);
         }
         return chain.filter(exchange);
 
@@ -47,7 +45,7 @@ public class EnableCorsFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return 1;
+        return -1;
     }
 
 }
