@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.reactive.config.EnableWebFlux;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -16,6 +18,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 @Configuration
+@EnableWebFluxSecurity
+@EnableWebFlux
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
     private String key;
