@@ -4,13 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -27,16 +27,15 @@ public class EnableCorsFilterTests {
     private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
     private static final long MAX_AGE = 3600;
     private static final Boolean ALLOW_CREDENTIALS = true;
-    private static final String ALLOWED_ORIGIN = "Access-Control-Allow-Origin";
 
     private EnableCorsFilter filter;
-    private WebFilterChain filterChain;
+    private GatewayFilterChain filterChain;
     private ArgumentCaptor<ServerWebExchange> captor;
 
     @BeforeEach
     public void setup() {
         filter = new EnableCorsFilter();
-        filterChain = mock(WebFilterChain.class);
+        filterChain = mock(GatewayFilterChain.class);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
 
     }
@@ -97,11 +96,10 @@ public class EnableCorsFilterTests {
 
         when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
 
-        filter.filter(exchange, filterChain);
+        filter.filter(exchange, filterChain).block();
 
         ServerWebExchange webExchange = captor.getValue();
 
-        //assertThat(webExchange.getResponse().getHeaders()).containsKey(ALLOWED_ORIGIN);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods()).containsAll(ALLOWED_METHODS);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
