@@ -30,24 +30,19 @@ public class RouteConfig {
     public CommandLineRunner commandLineRunner(MongoRouteDefinitionRepository repository){
 
         return commandLineRunner -> {
-            buildPassportRoute(repository, "token", "passport-token");
-            buildPassportRoute(repository, "authorize", "passport-authorize");
+            buildPassportRoute(repository, "/passport");
         };
     }
 
-    private void buildPassportRoute(MongoRouteDefinitionRepository repository, String path, String id) {
+    private void buildPassportRoute(MongoRouteDefinitionRepository repository, String id) {
         RouteDefinition routeDefinition = new RouteDefinition();
         List<PredicateDefinition> predicates = new ArrayList<>();
-        PredicateDefinition predicateDefinition =new PredicateDefinition("Path=/oauth/"+path);
-        List<FilterDefinition> filters = new ArrayList<>();
-        FilterDefinition filterDefinition = new FilterDefinition("PrefixPath=/passport");
+        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=/passport/**");
         predicates.add(predicateDefinition);
-        filters.add(filterDefinition);
         routeDefinition.setId(id);
         routeDefinition.setUri(URI.create(baseUrl));
         routeDefinition.setOrder(0);
         routeDefinition.setPredicates(predicates);
-        routeDefinition.setFilters(filters);
         repository.save(Mono.just(routeDefinition)).subscribe();
     }
 

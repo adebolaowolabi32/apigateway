@@ -33,7 +33,7 @@ public class PassportRoutesTests {
     @Test
     public void testTokenEndpoint() {
         formData.setAll(Map.of("grant_type", "client_credentials", "scope", "profile"));
-        this.webClient.post().uri("/oauth/token")
+        this.webClient.post().uri("/passport/oauth/token")
                 .headers(h -> h.setBasicAuth(clientId, clientSecret, Charset.forName("UTF-8")))
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
