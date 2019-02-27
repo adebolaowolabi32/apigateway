@@ -10,11 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-public class EnableCorsFilter implements GlobalFilter, Ordered {
+public class EnableCorsFilter implements WebFilter, Ordered {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
     private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
@@ -26,8 +28,7 @@ public class EnableCorsFilter implements GlobalFilter, Ordered {
     private static final Boolean ALLOW_CREDENTIALS = true;
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
             HttpHeaders headers = response.getHeaders();
@@ -40,8 +41,7 @@ public class EnableCorsFilter implements GlobalFilter, Ordered {
             if (request.getMethod() == HttpMethod.OPTIONS) {
                 response.setStatusCode(HttpStatus.OK);
             }
-        }));
-
+            return chain.filter(exchange);
     }
 
     @Override

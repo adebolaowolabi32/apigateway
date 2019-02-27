@@ -11,6 +11,7 @@ import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
@@ -29,13 +30,13 @@ public class EnableCorsFilterTests {
     private static final Boolean ALLOW_CREDENTIALS = true;
 
     private EnableCorsFilter filter;
-    private GatewayFilterChain filterChain;
+    private WebFilterChain filterChain;
     private ArgumentCaptor<ServerWebExchange> captor;
 
     @BeforeEach
     public void setup() {
         filter = new EnableCorsFilter();
-        filterChain = mock(GatewayFilterChain.class);
+        filterChain = mock(WebFilterChain.class);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
 
     }
