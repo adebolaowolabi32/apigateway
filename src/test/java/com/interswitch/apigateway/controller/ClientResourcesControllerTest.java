@@ -86,12 +86,13 @@ public class ClientResourcesControllerTest {
 
     @Test
     public void testUpdateClientResources(){
-        when(this.mongo.findById(resource.getId())).thenReturn(Mono.just(resource));
-        when(this. mongo.save(resource)).thenReturn(Mono.empty());
+        when(this.mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
+        when(this. mongo.save(resource)).thenReturn(Mono.just(resource));
         this.webClient.put()
-                .uri("/resources/update/{id}", Collections.singletonMap("id",resource.getId()))
+                .uri("/resources/update")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(resource))
-                .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)

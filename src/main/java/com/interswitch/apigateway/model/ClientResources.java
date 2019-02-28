@@ -1,16 +1,20 @@
 package com.interswitch.apigateway.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.UUID;
 
 @Document
 public class ClientResources {
     @Id
-    private String Id;
-    private String clientId;
+    private String Id =UUID.randomUUID().toString();
     private List resourceIds;
+
+    @Indexed(unique = true)
+    private String clientId;
 
     public ClientResources() {
     }

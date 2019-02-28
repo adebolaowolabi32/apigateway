@@ -37,17 +37,14 @@ public class ClientResourcesController {
 
     }
 
-    @PutMapping(value="/update/{id}", produces = "application/json")
-    private Mono<ResponseEntity<ClientResources>> updateClientResources(@PathVariable(value = "id") String Id, @Validated @RequestBody ClientResources clientResource) {
-        return clientResourceDB.findById(Id.toLowerCase())
-                .map(existingData -> {
-                    existingData.setId(Id);
-                    existingData.setClientId(clientResource.getClientId());
-                    existingData.setResourceIds(clientResource.getResourceIds());
-                    clientResourceDB.save(existingData).subscribe();
-                    return ResponseEntity.status(HttpStatus.OK).body(existingData);
-                })
-                .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
+    @PutMapping(value="/update",produces = "application/json")
+    private Mono<ClientResources> updateClientResources(@Validated @RequestBody ClientResources clientResource) {
+        return clientResourceDB.findByClientId(clientResource.getClientId())
+                .flatMap(existing -> {
+                    ClientResources exist = existing;
+                    existing.setResourceIds(clientResource.getResourceIds());
+                    return clientResourceDB.save(existing);
+                });
     }
 
 
