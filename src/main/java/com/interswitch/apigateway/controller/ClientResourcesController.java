@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.ClientResources;
-import com.interswitch.apigateway.repository.ReactiveMongoClientResources;
+import com.interswitch.apigateway.repository.MongoClientResources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -13,9 +13,9 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/resources")
 public class ClientResourcesController {
 
-    private ReactiveMongoClientResources clientResourceDB;
+    private MongoClientResources clientResourceDB;
 
-    public ClientResourcesController(ReactiveMongoClientResources clientResourceDB) {
+    public ClientResourcesController(MongoClientResources clientResourceDB) {
         this.clientResourceDB = clientResourceDB;
     }
 
@@ -30,31 +30,39 @@ public class ClientResourcesController {
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
-    private Mono<ClientResources> findByClientId(@Validated @PathVariable String clientId){
-        return clientResourceDB.findByClientId(clientId);
+    private Mono<ResponseEntity<ClientResources>> findByClientId(@Validated @PathVariable String clientId){
+        return clientResourceDB.findByClientId(clientId)
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
 
     }
 
-    @PostMapping(value="/update/{id}", produces = "application/json")
+    @PutMapping(value="/update/{id}", produces = "application/json")
     private Mono<ResponseEntity<ClientResources>> updateClientResources(@PathVariable(value = "id") String Id, @Validated @RequestBody ClientResources clientResource) {
         return clientResourceDB.findById(Id.toLowerCase())
                 .map(existingData -> {
                     existingData.setId(Id);
                     existingData.setClientId(clientResource.getClientId());
                     existingData.setResourceIds(clientResource.getResourceIds());
-                    Mono<ClientResources> updated = clientResourceDB.save(existingData);
-                    return ResponseEntity.status(HttpStatus.OK).body(updated.block());
+                    clientResourceDB.save(existingData).subscribe();
+                    return ResponseEntity.status(HttpStatus.OK).body(existingData);
                 })
                 .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
     }
 
 
-    @RequestMapping(value = "/delete/{id}", produces = "application/json", method = RequestMethod.DELETE)
-    private Mono<Void> deleteClientResources(@Validated @PathVariable String id){
-
-        return clientResourceDB.deleteById(id);
-
+    @DeleteMapping("/delete/{id}")
+    private Mono<ResponseEntity<Void>> deleteClientResources(@PathVariable String id){
+        try {
+            return clientResourceDB.deleteById(id)
+                    .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
+        }
+        catch (Exception e){
+            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        }
 
     }
+
+
 
 }

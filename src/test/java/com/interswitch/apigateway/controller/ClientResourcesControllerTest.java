@@ -1,8 +1,9 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.ClientResources;
-import com.interswitch.apigateway.repository.ReactiveMongoClientResources;
+import com.interswitch.apigateway.repository.MongoClientResources;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.ReactiveManagementWebSecurityAutoConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,21 +29,27 @@ import static org.mockito.BDDMockito.when;
 @ActiveProfiles("dev")
 @WebFluxTest(value = {ClientResourcesController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
         ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {ReactiveMongoClientResources.class, ClientResourcesController.class})
+@ContextConfiguration(classes = {MongoClientResources.class, ClientResourcesController.class})
 public class ClientResourcesControllerTest {
 
     @Autowired
     private WebTestClient webClient;
 
     @MockBean
-    private ReactiveMongoClientResources mongo;
+    private MongoClientResources mongo;
 
-    @Test
-    public void testGetClientResources(){
-        List testresourceIds = new ArrayList();
+
+    private List testresourceIds = new ArrayList();
+    private ClientResources resource = new ClientResources();
+
+    @BeforeEach
+    public void setup() throws URISyntaxException {
         testresourceIds.add("passport/oauth/token");
         testresourceIds.add("passport/oauth/authorize");
-        ClientResources resource = new ClientResources("id","testclientid",testresourceIds);
+        resource = new ClientResources("id","testclientid",testresourceIds);
+    }
+    @Test
+    public void testGetClientResources(){
         when(mongo.findAll()).thenReturn(Flux.just(resource));
         this.webClient.get()
                 .uri("/resources")
@@ -54,12 +62,7 @@ public class ClientResourcesControllerTest {
 
     @Test
     public void testSaveClientResources(){
-        List testresourceIds = new ArrayList();
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        ClientResources resource = new ClientResources("id","testclientid",testresourceIds);
         when(mongo.save(resource)).thenReturn(Mono.just(resource));
-
         this.webClient.post()
                 .uri("/resources/save")
                 .body(BodyInserters.fromObject(resource))
@@ -72,10 +75,6 @@ public class ClientResourcesControllerTest {
 
     @Test
     public void findByClientId(){
-        List testresourceIds = new ArrayList();
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        ClientResources resource = new ClientResources("id","testclientid",testresourceIds);
         when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
         this.webClient.get()
                 .uri("/resources/{clientId}", Collections.singletonMap("clientId",resource.getClientId()))
@@ -87,14 +86,10 @@ public class ClientResourcesControllerTest {
 
     @Test
     public void testUpdateClientResources(){
-        List testresourceIds = new ArrayList();
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        ClientResources resource = new ClientResources("id","testclientid",testresourceIds);
         when(this.mongo.findById(resource.getId())).thenReturn(Mono.just(resource));
         when(this. mongo.save(resource)).thenReturn(Mono.empty());
-        this.webClient.post()
-                .uri("/resources/update", resource.getId())
+        this.webClient.put()
+                .uri("/resources/update/{id}", Collections.singletonMap("id",resource.getId()))
                 .body(BodyInserters.fromObject(resource))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -104,14 +99,11 @@ public class ClientResourcesControllerTest {
     }
     @Test
     public void testDeletelientResources(){
-        List testresourceIds = new ArrayList();
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        ClientResources resource = new ClientResources("id","testclientid",testresourceIds);
-        when(mongo.delete(resource))
-                .thenReturn(Mono.empty());
+        when(mongo.deleteById(resource.getId())).thenReturn(Mono.empty());
+        when(mongo.findById(resource.getId())).thenReturn(Mono.just(resource));
         this.webClient.delete()
-                .uri("/resources/delete/{id}",  Collections.singletonMap("id","5c769fe30b6ea90d607dc44c"))
+                .uri("/resources/delete/{id}",  Collections.singletonMap("id",resource.getId()))
+                .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
     }
