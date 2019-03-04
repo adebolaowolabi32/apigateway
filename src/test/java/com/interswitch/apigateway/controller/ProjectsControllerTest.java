@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.ClientResources;
-import com.interswitch.apigateway.repository.MongoClientResources;
+import com.interswitch.apigateway.model.Projects;
+import com.interswitch.apigateway.repository.MongoProjectsRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,26 +27,26 @@ import java.util.List;
 import static org.mockito.BDDMockito.when;
 
 @ActiveProfiles("dev")
-@WebFluxTest(value = {ClientResourcesController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
+@WebFluxTest(value = {ProjectsController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
         ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {MongoClientResources.class, ClientResourcesController.class})
-public class ClientResourcesControllerTest {
+@ContextConfiguration(classes = {MongoProjectsRepository.class, ProjectsController.class})
+public class ProjectsControllerTest {
 
     @Autowired
     private WebTestClient webClient;
 
     @MockBean
-    private MongoClientResources mongo;
+    private MongoProjectsRepository mongo;
 
 
     private List testresourceIds = new ArrayList();
-    private ClientResources resource = new ClientResources();
+    private Projects resource = new Projects();
 
     @BeforeEach
     public void setup() throws URISyntaxException {
         testresourceIds.add("passport/oauth/token");
         testresourceIds.add("passport/oauth/authorize");
-        resource = new ClientResources("id","testclientid",testresourceIds);
+        resource = new Projects("id","testclientid",testresourceIds);
     }
     @Test
     public void testGetClientResources(){
@@ -57,7 +57,7 @@ public class ClientResourcesControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(ClientResources.class);
+                .expectBodyList(Projects.class);
     }
 
     @Test
@@ -70,7 +70,7 @@ public class ClientResourcesControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(ClientResources.class);
+                .expectBodyList(Projects.class);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class ClientResourcesControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(ClientResources.class);
+                .expectBodyList(Projects.class);
     }
     @Test
     public void testDeletelientResources(){
