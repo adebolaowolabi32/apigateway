@@ -7,6 +7,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface MongoClientResourcesRepository extends ReactiveMongoRepository<ClientResources, String> {
-
     Mono<ClientResources> findByClientId(String clientId);
+    
 }
