@@ -62,16 +62,15 @@ public class ProjectsControllerTest {
                 .body(BodyInserters.fromObject(project))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
+                .expectStatus().isCreated()
                 .expectBodyList(Projects.class);
     }
 
     @Test
-    public void findByAppId(){
-        when(mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
+    public void findByProjectId(){
+        when(mongo.findByProjectId(project.getProjectId())).thenReturn(Mono.just(project));
         this.webClient.get()
-                .uri("/projects/{appId}", Collections.singletonMap("appId",project.getAppId()))
+                .uri("/projects/{projectId}", Collections.singletonMap("projectId",project.getProjectId()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -80,7 +79,7 @@ public class ProjectsControllerTest {
 
     @Test
     public void testUpdateProjects(){
-        when(this.mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
+        when(this.mongo.findByProjectId(project.getProjectId())).thenReturn(Mono.just(project));
         when(this. mongo.save(project)).thenReturn(Mono.just(project));
         this.webClient.put()
                 .uri("/projects/update")

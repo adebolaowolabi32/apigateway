@@ -7,6 +7,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface MongoProjectsRepository extends ReactiveMongoRepository<Projects, String> {
-    Mono<Projects> findByAppId(String appId);
+    Mono<Projects> findByProjectId(String projectId);
     
 }

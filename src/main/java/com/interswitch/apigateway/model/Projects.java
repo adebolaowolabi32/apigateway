@@ -13,21 +13,21 @@ public class Projects {
     private String projectName;
     private String passportId;
     private String email;
-    private String appSecret;
+    private String projectSecret;
 
     @Indexed(unique = true)
-    private String appId;
+    private String projectId;
 
     public Projects() {
     }
 
-    public Projects(String id, String projectName, String passportId, String email, String appSecret, String appId) {
+    public Projects(String id, String projectName, String passportId, String email, String projectSecret, String projectId) {
         this.id = id;
         this.projectName = projectName;
         this.passportId = passportId;
         this.email = email;
-        this.appSecret = appSecret;
-        this.appId = appId;
+        this.projectSecret = projectSecret;
+        this.projectId = projectId;
     }
 
 
@@ -63,20 +63,20 @@ public class Projects {
         this.email = email;
     }
 
-    public String getAppSecret() {
-        return appSecret;
+    public String getProjectSecret() {
+        return projectSecret;
     }
 
-    public void setAppSecret(String appSecret) {
-        this.appSecret = appSecret;
+    public void setProjectSecret(String projectSecret) {
+        this.projectSecret = projectSecret;
     }
 
-    public String getAppId() {
-        return appId;
+    public String getProjectId() {
+        return projectId;
     }
 
-    public void setAppId(String appId) {
-        this.appId = appId;
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 }
 

@@ -30,17 +30,17 @@ public class ProjectsController {
         return projectsRepository.save(project);
     }
 
-    @GetMapping(value= "/{appId}", produces = "application/json")
-    private Mono<ResponseEntity<Projects>> findByAppId(@Validated @PathVariable String appId){
-        return projectsRepository.findByAppId(appId)
+    @GetMapping(value= "/{projectId}", produces = "application/json")
+    private Mono<ResponseEntity<Projects>> findByProjectId(@Validated @PathVariable String projectId){
+        return projectsRepository.findByProjectId(projectId)
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
 
     }
 
     @PutMapping(value="/update",produces = "application/json")
-    private Mono<Projects> updateClientResources(@Validated @RequestBody Projects project) {
-        return projectsRepository.findByAppId(project.getAppId())
+    private Mono<Projects> updateProject(@Validated @RequestBody Projects project) {
+        return projectsRepository.findByProjectId(project.getProjectId())
                 .flatMap(existing -> {
                     existing.setProjectName(project.getProjectName());
                     existing.setEmail(project.getEmail());
@@ -50,7 +50,7 @@ public class ProjectsController {
 
 
     @DeleteMapping("/delete/{id}")
-    private Mono<ResponseEntity<Void>> deleteClientResources(@PathVariable String id){
+    private Mono<ResponseEntity<Void>> deleteProject(@PathVariable String id){
         try {
             return projectsRepository.deleteById(id)
                     .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
