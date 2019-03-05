@@ -2,8 +2,14 @@ package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.ClientResources;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.Map;
+
+@Repository
 public class ClientResourcesRepository{
     ReactiveRedisOperations<String, ClientResources> template;
 
@@ -15,6 +21,10 @@ public class ClientResourcesRepository{
 
     public Mono<ClientResources> findByClientId(String id) {
         return template.<String, ClientResources>opsForHash().get(CLIENT_RESOURCE_KEY, id);
+    }
+
+    public Flux<Map.Entry<String, ClientResources>> findAll() {
+        return template.<String, ClientResources>opsForHash().entries(CLIENT_RESOURCE_KEY);
     }
 
     public Mono<ClientResources> save(ClientResources clientResources) {

@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.ClientResources;
+import com.interswitch.apigateway.repository.ClientResourcesRepository;
 import com.interswitch.apigateway.repository.MongoClientResourcesRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,11 +19,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.BDDMockito.when;
 
@@ -38,19 +38,28 @@ public class ClientResourcesControllerTest {
     @MockBean
     private MongoClientResourcesRepository mongo;
 
+    @MockBean
+    private ClientResourcesRepository cache;
 
-    private List testresourceIds = new ArrayList();
-    private ClientResources resource = new ClientResources();
+
+    private List testresourceIds;
+    private ClientResources resource;
+    private String  clientId = "testclienslksklslktid";
 
     @BeforeEach
     public void setup() throws URISyntaxException {
+        testresourceIds = new ArrayList();
         testresourceIds.add("passport/oauth/token");
         testresourceIds.add("passport/oauth/authorize");
-        resource = new ClientResources("id","testclientid",testresourceIds);
+        resource = new ClientResources("ijskjlsnksnsand",clientId,testresourceIds);
     }
     @Test
-    public void testGetClientResources(){
-        when(mongo.findAll()).thenReturn(Flux.just(resource));
+    public void testGetAllClientResources(){
+        ArrayList<Map.Entry<String, ClientResources>> arr = new ArrayList<>();
+        arr.add(new AbstractMap.SimpleEntry(resource.getClientId(), resource));
+
+        when(cache.findAll()).thenReturn(Flux.fromIterable(arr));
+
         this.webClient.get()
                 .uri("/resources")
                 .accept(MediaType.APPLICATION_JSON)
@@ -58,11 +67,13 @@ public class ClientResourcesControllerTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBodyList(ClientResources.class);
+
     }
 
     @Test
     public void testSaveClientResources(){
         when(mongo.save(resource)).thenReturn(Mono.just(resource));
+        when(cache.save(resource)).thenReturn(Mono.just(resource));
         this.webClient.post()
                 .uri("/resources/save")
                 .body(BodyInserters.fromObject(resource))
@@ -70,24 +81,25 @@ public class ClientResourcesControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(ClientResources.class);
+                .expectBody(ClientResources.class);
+
     }
 
     @Test
     public void findByClientId(){
-        when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
+        when(cache.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
         this.webClient.get()
                 .uri("/resources/{clientId}", Collections.singletonMap("clientId",resource.getClientId()))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .consumeWith(response -> Assertions.assertThat(response.getResponseBody()).isNotNull());
+                .expectBody(ClientResources.class);
     }
 
     @Test
     public void testUpdateClientResources(){
-        when(this.mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
-        when(this. mongo.save(resource)).thenReturn(Mono.just(resource));
+        when(cache.update(resource)).thenReturn(Mono.just(resource));
+        when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
+        when(mongo.save(resource)).thenReturn(Mono.just(resource));
         this.webClient.put()
                 .uri("/resources/update")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -96,14 +108,18 @@ public class ClientResourcesControllerTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(ClientResources.class);
+                .expectBody(ClientResources.class);
+//                .jsonPath("$.id").isNotEmpty()
+//                .jsonPath("$.clientId").isEqualTo(clientId)
+//                .jsonPath("$.resourceIds").isEqualTo(testresourceIds);
     }
+
     @Test
-    public void testDeletelientResources(){
-        when(mongo.deleteById(resource.getId())).thenReturn(Mono.empty());
-        when(mongo.findById(resource.getId())).thenReturn(Mono.just(resource));
+    public void testDeleteClientResources(){
+        when(mongo.deleteByClientId(resource.getClientId())).thenReturn(Mono.empty());
+        when(cache.deleteByClientId(resource.getClientId())).thenReturn(Mono.empty());
         this.webClient.delete()
-                .uri("/resources/delete/{id}",  Collections.singletonMap("id",resource.getId()))
+                .uri("/resources/delete/{clientId}",  resource.getClientId())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();

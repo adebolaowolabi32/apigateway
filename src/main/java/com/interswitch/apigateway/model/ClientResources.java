@@ -4,33 +4,35 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
 @Document
-public class ClientResources {
+public class ClientResources implements Serializable {
     @Id
-    private String Id =UUID.randomUUID().toString();
-    private List resourceIds;
+    private String id = UUID.randomUUID().toString();
 
     @Indexed(unique = true)
     private String clientId;
+
+    private List resourceIds;
 
     public ClientResources() {
     }
 
     public ClientResources(String id, String clientId, List resourceIds) {
-        Id = id;
+        this.id = id;
         this.clientId = clientId;
         this.resourceIds = resourceIds;
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        Id = id;
+        this.id = id;
     }
 
     public String getClientId() {
