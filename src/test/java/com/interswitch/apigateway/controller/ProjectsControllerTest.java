@@ -20,9 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static org.mockito.BDDMockito.when;
 
@@ -45,7 +43,7 @@ public class ProjectsControllerTest {
         project = new Projects("id","projectName","passportId","tester@gmail.com","testappSecret","testappId");
     }
     @Test
-    public void testGetClientResources(){
+    public void testGetProjects(){
         when(mongo.findAll()).thenReturn(Flux.just(project));
         this.webClient.get()
                 .uri("/projects")
@@ -57,7 +55,7 @@ public class ProjectsControllerTest {
     }
 
     @Test
-    public void testSaveClientResources(){
+    public void testSaveProjects(){
         when(mongo.save(project)).thenReturn(Mono.just(project));
         this.webClient.post()
                 .uri("/projects/save")
@@ -70,7 +68,7 @@ public class ProjectsControllerTest {
     }
 
     @Test
-    public void findByClientId(){
+    public void findByAppId(){
         when(mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
         this.webClient.get()
                 .uri("/projects/{appId}", Collections.singletonMap("appId",project.getAppId()))
@@ -81,7 +79,7 @@ public class ProjectsControllerTest {
     }
 
     @Test
-    public void testUpdateClientResources(){
+    public void testUpdateProjects(){
         when(this.mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
         when(this. mongo.save(project)).thenReturn(Mono.just(project));
         this.webClient.put()
@@ -95,7 +93,7 @@ public class ProjectsControllerTest {
                 .expectBodyList(Projects.class);
     }
     @Test
-    public void testDeletelientResources(){
+    public void testDeleteProjects(){
         when(mongo.deleteById(project.getId())).thenReturn(Mono.empty());
         when(mongo.findById(project.getId())).thenReturn(Mono.just(project));
         this.webClient.delete()

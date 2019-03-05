@@ -25,6 +25,7 @@ public class ProjectsController {
     }
 
     @PostMapping (value = "/save", produces = "application/json")
+    @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Projects> saveProjects(@Validated @RequestBody Projects project){
         return projectsRepository.save(project);
     }
@@ -41,7 +42,6 @@ public class ProjectsController {
     private Mono<Projects> updateClientResources(@Validated @RequestBody Projects project) {
         return projectsRepository.findByAppId(project.getAppId())
                 .flatMap(existing -> {
-                    Projects exist = existing;
                     existing.setProjectName(project.getProjectName());
                     existing.setEmail(project.getEmail());
                     return projectsRepository.save(existing);

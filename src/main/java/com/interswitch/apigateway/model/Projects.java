@@ -9,7 +9,7 @@ import java.util.UUID;
 @Document
 public class Projects {
     @Id
-    private String Id =UUID.randomUUID().toString();
+    private String id =UUID.randomUUID().toString();
     private String projectName;
     private String passportId;
     private String email;
@@ -22,7 +22,7 @@ public class Projects {
     }
 
     public Projects(String id, String projectName, String passportId, String email, String appSecret, String appId) {
-        Id = id;
+        this.id = id;
         this.projectName = projectName;
         this.passportId = passportId;
         this.email = email;
@@ -32,11 +32,11 @@ public class Projects {
 
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        Id = id;
+        this.id = id;
     }
 
     public String getProjectName() {
