@@ -25,8 +25,8 @@ public class ProjectsController {
     }
 
     @PostMapping (value = "/save", produces = "application/json")
-    private Mono<Projects> saveProjects(@Validated @RequestBody Projects clientResource){
-        return projectsRepository.save(clientResource);
+    private Mono<Projects> saveProjects(@Validated @RequestBody Projects project){
+        return projectsRepository.save(project);
     }
 
     @GetMapping(value= "/{appId}", produces = "application/json")
@@ -38,11 +38,12 @@ public class ProjectsController {
     }
 
     @PutMapping(value="/update",produces = "application/json")
-    private Mono<Projects> updateClientResources(@Validated @RequestBody Projects clientResource) {
-        return projectsRepository.findByClientId(clientResource.getClientId())
+    private Mono<Projects> updateClientResources(@Validated @RequestBody Projects project) {
+        return projectsRepository.findByAppId(project.getAppId())
                 .flatMap(existing -> {
                     Projects exist = existing;
-                    existing.setResourceIds(clientResource.getResourceIds());
+                    existing.setProjectName(project.getProjectName());
+                    existing.setEmail(project.getEmail());
                     return projectsRepository.save(existing);
                 });
     }

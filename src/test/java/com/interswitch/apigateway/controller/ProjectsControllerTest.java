@@ -38,21 +38,17 @@ public class ProjectsControllerTest {
     @MockBean
     private MongoProjectsRepository mongo;
 
-
-    private List testresourceIds = new ArrayList();
-    private Projects resource = new Projects();
+    private Projects project = new Projects();
 
     @BeforeEach
     public void setup() throws URISyntaxException {
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        resource = new Projects("id","testclientid",testresourceIds);
+        project = new Projects("id","projectName","passportId","tester@gmail.com","testappSecret","testappId");
     }
     @Test
     public void testGetClientResources(){
-        when(mongo.findAll()).thenReturn(Flux.just(resource));
+        when(mongo.findAll()).thenReturn(Flux.just(project));
         this.webClient.get()
-                .uri("/resources")
+                .uri("/projects")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -62,10 +58,10 @@ public class ProjectsControllerTest {
 
     @Test
     public void testSaveClientResources(){
-        when(mongo.save(resource)).thenReturn(Mono.just(resource));
+        when(mongo.save(project)).thenReturn(Mono.just(project));
         this.webClient.post()
-                .uri("/resources/save")
-                .body(BodyInserters.fromObject(resource))
+                .uri("/projects/save")
+                .body(BodyInserters.fromObject(project))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -75,9 +71,9 @@ public class ProjectsControllerTest {
 
     @Test
     public void findByClientId(){
-        when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
+        when(mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
         this.webClient.get()
-                .uri("/resources/{clientId}", Collections.singletonMap("clientId",resource.getClientId()))
+                .uri("/projects/{appId}", Collections.singletonMap("appId",project.getAppId()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -86,13 +82,13 @@ public class ProjectsControllerTest {
 
     @Test
     public void testUpdateClientResources(){
-        when(this.mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
-        when(this. mongo.save(resource)).thenReturn(Mono.just(resource));
+        when(this.mongo.findByAppId(project.getAppId())).thenReturn(Mono.just(project));
+        when(this. mongo.save(project)).thenReturn(Mono.just(project));
         this.webClient.put()
-                .uri("/resources/update")
+                .uri("/projects/update")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
-                .body(BodyInserters.fromObject(resource))
+                .body(BodyInserters.fromObject(project))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -100,10 +96,10 @@ public class ProjectsControllerTest {
     }
     @Test
     public void testDeletelientResources(){
-        when(mongo.deleteById(resource.getId())).thenReturn(Mono.empty());
-        when(mongo.findById(resource.getId())).thenReturn(Mono.just(resource));
+        when(mongo.deleteById(project.getId())).thenReturn(Mono.empty());
+        when(mongo.findById(project.getId())).thenReturn(Mono.just(project));
         this.webClient.delete()
-                .uri("/resources/delete/{id}",  Collections.singletonMap("id",resource.getId()))
+                .uri("/projects/delete/{id}",  Collections.singletonMap("id",project.getId()))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
