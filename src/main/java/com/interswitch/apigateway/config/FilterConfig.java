@@ -1,4 +1,5 @@
 package com.interswitch.apigateway.config;
+import com.interswitch.apigateway.filter.AccessControlFilter;
 import com.interswitch.apigateway.filter.EnableCorsFilter;
 import com.interswitch.apigateway.filter.RemoveDuplicateHeadersFilter;
 import org.springframework.context.annotation.Bean;
@@ -14,4 +15,6 @@ public class FilterConfig {
     public RemoveDuplicateHeadersFilter removeDuplicateHeadersFilter(){
         return new RemoveDuplicateHeadersFilter();
     }
+    @Bean
+    public AccessControlFilter accessControlFilter(){return new AccessControlFilter();}
 }
