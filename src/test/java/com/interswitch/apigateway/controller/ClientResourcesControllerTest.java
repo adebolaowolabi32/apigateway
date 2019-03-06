@@ -3,7 +3,6 @@ package com.interswitch.apigateway.controller;
 import com.interswitch.apigateway.model.ClientResources;
 import com.interswitch.apigateway.repository.ClientResourcesRepository;
 import com.interswitch.apigateway.repository.MongoClientResourcesRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
 
 import java.net.URISyntaxException;
 import java.util.*;
@@ -44,14 +42,14 @@ public class ClientResourcesControllerTest {
 
     private List testresourceIds;
     private ClientResources resource;
-    private String  clientId = "testclienslksklslktid";
+    private String  clientId = "testclientid";
 
     @BeforeEach
     public void setup() throws URISyntaxException {
         testresourceIds = new ArrayList();
         testresourceIds.add("passport/oauth/token");
         testresourceIds.add("passport/oauth/authorize");
-        resource = new ClientResources("ijskjlsnksnsand",clientId,testresourceIds);
+        resource = new ClientResources("id",clientId,testresourceIds);
     }
     @Test
     public void testGetAllClientResources(){
@@ -109,9 +107,6 @@ public class ClientResourcesControllerTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBody(ClientResources.class);
-//                .jsonPath("$.id").isNotEmpty()
-//                .jsonPath("$.clientId").isEqualTo(clientId)
-//                .jsonPath("$.resourceIds").isEqualTo(testresourceIds);
     }
 
     @Test

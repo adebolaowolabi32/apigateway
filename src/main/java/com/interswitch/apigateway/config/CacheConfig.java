@@ -32,6 +32,11 @@ public class CacheConfig {
     }
 
     @Bean
+    public ClientResourcesRepository clientResourcesRepository(ReactiveRedisTemplate<String, ClientResources> template){
+        return new ClientResourcesRepository(template);
+    }
+
+    @Bean
     public CommandLineRunner commandLineRunnerCache(ClientResourcesRepository cache, MongoClientResourcesRepository clientResourcesRepository){
 
         return commandLineRunnerCache -> {
