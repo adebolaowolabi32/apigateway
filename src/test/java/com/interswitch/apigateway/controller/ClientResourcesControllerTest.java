@@ -27,7 +27,7 @@ import static org.mockito.BDDMockito.when;
 @ActiveProfiles("dev")
 @WebFluxTest(value = {ClientResourcesController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
         ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {MongoClientResourcesRepository.class, ClientResourcesController.class})
+@ContextConfiguration(classes = {MongoClientResourcesRepository.class, ClientResourcesRepository.class, ClientResourcesController.class})
 public class ClientResourcesControllerTest {
 
     @Autowired
@@ -53,10 +53,10 @@ public class ClientResourcesControllerTest {
     }
     @Test
     public void testGetAllClientResources(){
-        ArrayList<Map.Entry<String, ClientResources>> arr = new ArrayList<>();
-        arr.add(new AbstractMap.SimpleEntry(resource.getClientId(), resource));
+        ArrayList<Map.Entry<String, ClientResources>> listOfClientResources = new ArrayList<>();
+        listOfClientResources.add(new AbstractMap.SimpleEntry(resource.getClientId(), resource));
 
-        when(cache.findAll()).thenReturn(Flux.fromIterable(arr));
+        when(cache.findAll()).thenReturn(Flux.fromIterable(listOfClientResources));
 
         this.webClient.get()
                 .uri("/resources")
@@ -70,6 +70,7 @@ public class ClientResourcesControllerTest {
 
     @Test
     public void testSaveClientResources(){
+        when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
         when(mongo.save(resource)).thenReturn(Mono.just(resource));
         when(cache.save(resource)).thenReturn(Mono.just(resource));
         this.webClient.post()
@@ -77,8 +78,6 @@ public class ClientResourcesControllerTest {
                 .body(BodyInserters.fromObject(resource))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBody(ClientResources.class);
 
     }
@@ -104,15 +103,14 @@ public class ClientResourcesControllerTest {
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(resource))
                 .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBody(ClientResources.class);
     }
 
     @Test
     public void testDeleteClientResources(){
-        when(mongo.deleteByClientId(resource.getClientId())).thenReturn(Mono.empty());
+        when(mongo.deleteById(resource.getId())).thenReturn(Mono.empty());
         when(cache.deleteByClientId(resource.getClientId())).thenReturn(Mono.empty());
+        when(mongo.findByClientId(resource.getClientId())).thenReturn(Mono.just(resource));
         this.webClient.delete()
                 .uri("/resources/delete/{clientId}",  resource.getClientId())
                 .accept(MediaType.APPLICATION_JSON)

@@ -2,28 +2,32 @@ package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.config.CacheConfig;
 import com.interswitch.apigateway.model.ClientResources;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 @ActiveProfiles("dev")
-@Import(CacheConfig.class)
+@DataRedisTest
+@EnableAutoConfiguration
+@ContextConfiguration(classes = {CacheConfig.class, MongoClientResourcesRepository.class, ClientResourcesRepository.class})
 public class ClientResourceRepositoryTests {
 
     @Autowired
-    ClientResourcesRepository clientResourcesRepository;
+    public ClientResourcesRepository clientResourcesRepository;
+
+    @MockBean
+    MongoClientResourcesRepository mongoClientResourcesRepository;
 
     private List testresourceIds;
     private ClientResources clientResources;
@@ -33,23 +37,26 @@ public class ClientResourceRepositoryTests {
 
     @BeforeEach
     public void setUp() {
-        clientResourcesRepository = mock(ClientResourcesRepository.class);
         testresourceIds = new ArrayList();
         testresourceIds.add("passport/oauth/token");
         testresourceIds.add("passport/oauth/authorize");
         clientResources = new ClientResources("id",clientId,testresourceIds);
+        clientResourcesRepository.save(clientResources).block();
 
+    }
+
+    @AfterEach
+    @Test
+    public void delete(){
+        StepVerifier.create(clientResourcesRepository.deleteByClientId(clientResources.getClientId())).expectComplete().verify();
     }
 
     @Test
     public void testGetClientResources() {
-        StepVerifier.create(clientResourcesRepository.findAll().doOnNext(System.out::println)).expectNextCount(2).verifyComplete();
+        StepVerifier.create(clientResourcesRepository.findAll()).expectNextCount(1);
     }
     @Test
     public void testFindClientResources() {
-        clientResourcesRepository.save(clientResources).block();
-        clientResourcesRepository.save(clientResources).block();
-
         Mono<ClientResources> clientResourceMono = clientResourcesRepository.findByClientId(clientResources.getClientId());
 
         StepVerifier.create(clientResourceMono).assertNext(r -> {
@@ -61,25 +68,12 @@ public class ClientResourceRepositoryTests {
 
     @Test
     public void testUpdateClientResources() {
-        clientResources.setClientId("newClientID");
+        testresourceIds.remove("passport/oauth/token");
+        clientResources.setResourceIds(testresourceIds);
         clientResourcesRepository.update(clientResources).block();
-
         Mono<ClientResources> clientResourceMono = clientResourcesRepository.findByClientId(clientResources.getClientId());
-
         StepVerifier.create(clientResourceMono).assertNext(r -> {
-            assertThat(r.getClientId()).isEqualTo("newClientID");
+            assertThat(r.getResourceIds()).hasSize(1);
         }).expectComplete().verify();
     }
-    
-    @Test
-    public void testDeleteClientResources() {
-        clientResourcesRepository.deleteByClientId(clientResources.getId()).block();
-
-        Mono<ClientResources> clientResourceMono = clientResourcesRepository.findByClientId(clientResources.getClientId());
-
-        StepVerifier.create(clientResourceMono).assertNext(r -> {
-            assertThat(r).isNull();
-        }).expectComplete().verify();
-    }
-    
 }

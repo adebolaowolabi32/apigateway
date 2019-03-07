@@ -13,7 +13,6 @@ public class ClientResources implements Serializable {
     @Id
     private String id = UUID.randomUUID().toString();
 
-    @Indexed(unique = true)
     private String clientId;
 
     private List resourceIds;
