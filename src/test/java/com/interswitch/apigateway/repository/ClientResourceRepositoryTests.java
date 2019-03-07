@@ -24,15 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ClientResourceRepositoryTests {
 
     @Autowired
-    public ClientResourcesRepository clientResourcesRepository;
+    ClientResourcesRepository clientResourcesRepository;
 
     @MockBean
     MongoClientResourcesRepository mongoClientResourcesRepository;
 
     private List testresourceIds;
     private ClientResources clientResources;
-
-    private String  clientId = "testclient";
+    private String  clientId = "testclientresource";
 
 
     @BeforeEach
@@ -42,13 +41,11 @@ public class ClientResourceRepositoryTests {
         testresourceIds.add("passport/oauth/authorize");
         clientResources = new ClientResources("id",clientId,testresourceIds);
         clientResourcesRepository.save(clientResources).block();
-
     }
 
     @AfterEach
-    @Test
     public void delete(){
-        StepVerifier.create(clientResourcesRepository.deleteByClientId(clientResources.getClientId())).expectComplete().verify();
+        clientResourcesRepository.deleteByClientId(clientResources.getClientId()).block();
     }
 
     @Test
@@ -72,6 +69,7 @@ public class ClientResourceRepositoryTests {
         clientResources.setResourceIds(testresourceIds);
         clientResourcesRepository.update(clientResources).block();
         Mono<ClientResources> clientResourceMono = clientResourcesRepository.findByClientId(clientResources.getClientId());
+
         StepVerifier.create(clientResourceMono).assertNext(r -> {
             assertThat(r.getResourceIds()).hasSize(1);
         }).expectComplete().verify();
