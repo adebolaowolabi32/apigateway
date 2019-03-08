@@ -4,7 +4,6 @@ import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionReposit
 import com.interswitch.apigateway.route.MongoRouteDefinitionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Bean;
