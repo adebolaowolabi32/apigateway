@@ -1,5 +1,6 @@
 package com.interswitch.apigateway;
 
+import com.interswitch.apigateway.repository.MongoClientResourcesRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
@@ -7,15 +8,21 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDeta
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ActiveProfiles("dev")
 @WebFluxTest( excludeAutoConfiguration = {SecurityAutoConfiguration.class, ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ContextConfiguration(classes = {MongoClientResourcesRepository.class, HelloController.class})
 public class HelloControllerTest {
     @Autowired
     private WebTestClient webClient;
+
+    @MockBean
+    private MongoClientResourcesRepository mongoClientResourcesRepository;
 
     @Test
     public void testGreetingDefault() {
