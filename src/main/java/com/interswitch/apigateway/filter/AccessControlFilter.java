@@ -1,12 +1,8 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.repository.ClientResourcesRepository;
-import org.jose4j.jwa.AlgorithmConstraints;
-import org.jose4j.jws.AlgorithmIdentifiers;
-import org.jose4j.jwt.MalformedClaimException;
-import org.jose4j.jwt.consumer.InvalidJwtException;
-import org.jose4j.jwt.consumer.JwtConsumer;
-import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -15,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.text.ParseException;
 import java.util.List;
 
 
@@ -27,6 +24,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     }
     String client_id = "";
+    JWT jwtToken = null;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -34,28 +32,15 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         accessToken = accessToken.replace(accessToken.substring(accessToken.indexOf("B") - 1, accessToken.indexOf(" ") + 1), "");
         String resourceId = (exchange.getRequest().getMethod().toString()) + (exchange.getRequest().getPath().toString());
 
-        JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-                .setRequireExpirationTime()
-                .setAllowedClockSkewInSeconds(30)
-                .setExpectedAudience("isw-core")
-                .setDisableRequireSignature()
-                .setSkipSignatureVerification()
-                .setJwsAlgorithmConstraints(
-                        new AlgorithmConstraints(AlgorithmConstraints.ConstraintType.WHITELIST,
-                                AlgorithmIdentifiers.RSA_USING_SHA256))
-                .build();
-
         try {
-            client_id = jwtConsumer.processToClaims(accessToken).getStringClaimValue("client_id");
-        } catch (MalformedClaimException e) {
+            jwtToken = JWTParser.parse(accessToken);
+        } catch (ParseException e) {
             e.printStackTrace();
-        } catch (InvalidJwtException e) {
+        }
+        try {
+            client_id =jwtToken.getJWTClaimsSet().getClaim("client_id").toString();
+        } catch (ParseException e) {
             e.printStackTrace();
-            try {
-                client_id = e.getJwtContext().getJwtClaims().getStringClaimValue("client_id");
-            } catch (MalformedClaimException e1) {
-                e1.printStackTrace();
-            }
         }
             return check(resourceId)
                     .flatMap(condition -> {
