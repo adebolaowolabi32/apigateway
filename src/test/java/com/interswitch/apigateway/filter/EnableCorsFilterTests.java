@@ -1,13 +1,12 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.repository.MongoClientResourcesRepository;
+import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -26,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {MongoClientResourcesRepository.class, EnableCorsFilter.class})
+@ContextConfiguration(classes = {ClientMongoRepository.class, EnableCorsFilter.class})
 public class EnableCorsFilterTests {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
@@ -40,7 +39,7 @@ public class EnableCorsFilterTests {
     private ArgumentCaptor<ServerWebExchange> captor;
 
     @MockBean
-    private MongoClientResourcesRepository mongoClientResourcesRepository;
+    private ClientMongoRepository clientMongoRepository;
 
     @BeforeEach
     public void setup() {

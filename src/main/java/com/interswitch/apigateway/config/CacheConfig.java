@@ -1,6 +1,6 @@
 package com.interswitch.apigateway.config;
 
-import com.interswitch.apigateway.model.ClientResources;
+import com.interswitch.apigateway.model.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -14,10 +14,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class CacheConfig {
 
     @Bean
-    public ReactiveRedisOperations<String, ClientResources> reactiveRedisTemplate(ReactiveRedisConnectionFactory connectionFactory) {
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(ClientResources.class);
-        RedisSerializationContext<String, ClientResources> serializationContext = RedisSerializationContext
-                .<String, ClientResources>newSerializationContext(new StringRedisSerializer())
+    public ReactiveRedisOperations<String, Client> reactiveRedisTemplate(ReactiveRedisConnectionFactory connectionFactory) {
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Client.class);
+        RedisSerializationContext<String, Client> serializationContext = RedisSerializationContext
+                .<String, Client>newSerializationContext(new StringRedisSerializer())
                 .hashKey(new StringRedisSerializer())
                 .hashValue(jackson2JsonRedisSerializer)
                 .build();

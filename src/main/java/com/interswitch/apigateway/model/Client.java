@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.model;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
@@ -10,20 +9,23 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Document
-public class ClientResources implements Serializable {
+public class Client implements Serializable {
     @Id
     private String id = UUID.randomUUID().toString();
 
     private String clientId;
 
+    private List origins;
+
     private List resourceIds;
 
-    public ClientResources() {
+    public Client() {
     }
 
-    public ClientResources(String id, String clientId, List resourceIds) {
+    public Client(String id, String clientId, List origins, List resourceIds) {
         this.id = id;
         this.clientId = clientId;
+        this.origins = origins;
         this.resourceIds = resourceIds;
     }
 
@@ -43,6 +45,10 @@ public class ClientResources implements Serializable {
         this.clientId = clientId;
     }
 
+    public List getOrigins() { return origins; }
+
+    public void setOrigins(List origins) { this.origins = origins; }
+
     public List getResourceIds() {
         return resourceIds;
     }
@@ -52,27 +58,29 @@ public class ClientResources implements Serializable {
     }
 
     @Override
-    public String toString() {
-        return "ClientResources{" +
-                "id='" + id + '\'' +
-                ", clientId='" + clientId + '\'' +
-                ", resourceIds=" + resourceIds +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ClientResources)) return false;
-        ClientResources that = (ClientResources) o;
-        return Objects.equals(getId(), that.getId()) &&
-                Objects.equals(getClientId(), that.getClientId()) &&
-                Objects.equals(getResourceIds(), that.getResourceIds());
+        if (!(o instanceof Client)) return false;
+        Client client = (Client) o;
+        return Objects.equals(getId(), client.getId()) &&
+                Objects.equals(getClientId(), client.getClientId()) &&
+                Objects.equals(getOrigins(), client.getOrigins()) &&
+                Objects.equals(getResourceIds(), client.getResourceIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getClientId(), getResourceIds());
+        return Objects.hash(getId(), getClientId(), getOrigins(), getResourceIds());
+    }
+
+    @Override
+    public String toString() {
+        return "Client{" +
+                "id='" + id + '\'' +
+                ", clientId='" + clientId + '\'' +
+                ", origins=" + origins +
+                ", resourceIds=" + resourceIds +
+                '}';
     }
 }
 
