@@ -2,7 +2,7 @@ package com.interswitch.apigateway.config;
 import com.interswitch.apigateway.filter.AccessControlFilter;
 import com.interswitch.apigateway.filter.EnableCorsFilter;
 import com.interswitch.apigateway.filter.RemoveDuplicateHeadersFilter;
-import com.interswitch.apigateway.repository.ClientResourcesRepository;
+import com.interswitch.apigateway.repository.ClientCacheRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,5 +17,5 @@ public class FilterConfig {
         return new RemoveDuplicateHeadersFilter();
     }
     @Bean
-    public AccessControlFilter accessControlFilter(ClientResourcesRepository repository){return new AccessControlFilter(repository);}
+    public AccessControlFilter accessControlFilter(ClientCacheRepository repository){return new AccessControlFilter(repository);}
 }

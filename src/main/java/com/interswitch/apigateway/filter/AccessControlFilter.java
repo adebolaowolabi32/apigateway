@@ -1,6 +1,6 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.repository.ClientResourcesRepository;
+import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -17,9 +17,9 @@ import java.util.List;
 
 public class AccessControlFilter implements GlobalFilter, Ordered  {
 
-    private ClientResourcesRepository repository;
+    private ClientCacheRepository repository;
 
-    public  AccessControlFilter(ClientResourcesRepository repository) {
+    public  AccessControlFilter(ClientCacheRepository repository) {
         this.repository=repository;
 
     }
