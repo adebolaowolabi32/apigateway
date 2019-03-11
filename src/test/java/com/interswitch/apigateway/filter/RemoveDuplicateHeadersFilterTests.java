@@ -16,7 +16,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
@@ -26,8 +25,10 @@ public class RemoveDuplicateHeadersFilterTests {
 
     @Autowired
     private RemoveDuplicateHeadersFilter filter;
-    private GatewayFilterChain filterChain;
     private ArgumentCaptor<ServerWebExchange> captor;
+
+    @MockBean
+    private GatewayFilterChain filterChain;
 
     @MockBean
     private ClientMongoRepository clientMongoRepository;
@@ -35,13 +36,12 @@ public class RemoveDuplicateHeadersFilterTests {
 
     @BeforeEach
     public void setup() {
-        filterChain = mock(GatewayFilterChain.class);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
 
     }
 
     @Test
-    public void getRequestFromAllowedOriginShouldReturnAccessControlHeadersInResponse() {
+    public void test() {
         MockServerHttpRequest request = MockServerHttpRequest
                 .get("/")
                 .build();
