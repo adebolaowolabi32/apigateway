@@ -73,6 +73,7 @@ public class EnableCorsFilter implements WebFilter, Ordered {
                    else ALLOWED_ORIGIN = "Origin is not Allowed";
                }
 
+                responseHeaders.setVary(Arrays.asList("Origin"));
                 responseHeaders.setAccessControlAllowOrigin(ALLOWED_ORIGIN);
                 responseHeaders.setAccessControlAllowHeaders(ALLOWED_HEADERS);
                 responseHeaders.setAccessControlAllowMethods(ALLOWED_METHODS);

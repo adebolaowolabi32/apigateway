@@ -123,6 +123,7 @@ public class EnableCorsFilterTests {
         ServerWebExchange webExchange = captor.getValue();
 
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowOrigin()).isNotNull().isNotEmpty();
+        assertThat(webExchange.getResponse().getHeaders().getVary()).contains("Origin");
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowHeaders()).containsAll(ALLOWED_HEADERS);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowMethods()).containsAll(ALLOWED_METHODS);
         assertThat(webExchange.getResponse().getHeaders().getAccessControlAllowCredentials()).isEqualTo(ALLOW_CREDENTIALS);
