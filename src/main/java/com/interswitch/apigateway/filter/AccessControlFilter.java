@@ -7,7 +7,6 @@ import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -20,8 +19,6 @@ import java.util.List;
 
 
 public class AccessControlFilter implements GlobalFilter, Ordered  {
-    @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
-    private String key;
 
     private ClientResourcesRepository repository;
 
@@ -29,22 +26,22 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         this.repository=repository;
 
     }
+    String client_id = "";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String client_id = "";
         String accessToken = exchange.getRequest().getHeaders().get("Authorization").toString();
         accessToken = accessToken.replace(accessToken.substring(accessToken.indexOf("B") - 1, accessToken.indexOf(" ") + 1), "");
         String resourceId = (exchange.getRequest().getMethod().toString()) + (exchange.getRequest().getPath().toString());
 
         JwtConsumer jwtConsumer = new JwtConsumerBuilder()
-                .setRequireExpirationTime() // the JWT must have an expiration time
-                .setAllowedClockSkewInSeconds(30)// allow some leeway in validating time based claims to account for clock skew
+                .setRequireExpirationTime()
+                .setAllowedClockSkewInSeconds(30)
                 .setExpectedAudience("isw-core")
                 .setDisableRequireSignature()
                 .setSkipSignatureVerification()
-                .setJwsAlgorithmConstraints( // only allow the expected signature algorithm(s) in the given context
-                        new AlgorithmConstraints(AlgorithmConstraints.ConstraintType.WHITELIST, // which is only RS256 here
+                .setJwsAlgorithmConstraints(
+                        new AlgorithmConstraints(AlgorithmConstraints.ConstraintType.WHITELIST,
                                 AlgorithmIdentifiers.RSA_USING_SHA256))
                 .build();
 
@@ -60,17 +57,30 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                 e1.printStackTrace();
             }
         }
-        return repository.findByClientId(client_id)
-                .flatMap(item -> {
-                    List resourceIds = item.getResourceIds();
+            return check(resourceId)
+                    .flatMap(condition -> {
+                                if (condition.equals(true)) {
+                                    return chain.filter(exchange);
+                                } else {
+                                    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
+
+                                }
+                            }
+                    );
+
+    }
+    private Mono<Boolean> check(String resourceId) {
+            return repository.findByClientId(client_id)
+                .switchIfEmpty(Mono.error(new Exception()))
+                .flatMap(clientResources -> {
+                    List resourceIds = clientResources.getResourceIds();
                     if (resourceIds.contains(resourceId)) {
-                        return chain.filter(exchange.mutate().build());
+                        return Mono.just(true);
                     } else {
-                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN,"You are not allowed to use this resource"));
+                        return Mono.just(false);
                     }
-                })
-//                .doOnSuccess(c -> chain.filter(exchange))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "You do not have access to this resource")));
+                });
+
     }
 
     @Override
