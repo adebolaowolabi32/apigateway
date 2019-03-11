@@ -1,15 +1,18 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -22,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
+@ContextConfiguration(classes = {ClientMongoRepository.class, EnableCorsFilter.class})
 public class EnableCorsFilterTests {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
@@ -29,13 +33,16 @@ public class EnableCorsFilterTests {
     private static final long MAX_AGE = 3600;
     private static final Boolean ALLOW_CREDENTIALS = true;
 
+    @Autowired
     private EnableCorsFilter filter;
     private WebFilterChain filterChain;
     private ArgumentCaptor<ServerWebExchange> captor;
 
+    @MockBean
+    private ClientMongoRepository clientMongoRepository;
+
     @BeforeEach
     public void setup() {
-        filter = new EnableCorsFilter();
         filterChain = mock(WebFilterChain.class);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
 
