@@ -73,7 +73,6 @@ public class AccessControlFliterTests {
 
     @Test
     public void testAccessControl (){
-        String routeUri = "http://localhost:8080/users/find/TestP.jaMonJan14";
         MockServerHttpRequest request = MockServerHttpRequest
                 .get("http://localhost:8080/users/find/TestP.jaMonJan14")
                 .header("Authorization",accessToken)
