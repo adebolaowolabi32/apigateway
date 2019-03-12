@@ -28,20 +28,21 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        String accessToken = exchange.getRequest().getHeaders().get("Authorization").toString();
-        accessToken = accessToken.replace(accessToken.substring(accessToken.indexOf("B") - 1, accessToken.indexOf(" ") + 1), "");
-        String resourceId = (exchange.getRequest().getMethod().toString()) + (exchange.getRequest().getPath().toString());
 
-        try {
-            jwtToken = JWTParser.parse(accessToken);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        try {
-            client_id =jwtToken.getJWTClaimsSet().getClaim("client_id").toString();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+            String accessToken = exchange.getRequest().getHeaders().get("Authorization").toString();
+            accessToken = accessToken.replace(accessToken.substring(accessToken.indexOf("B") - 1, accessToken.indexOf(" ") + 1), "");
+            String resourceId = (exchange.getRequest().getMethod().toString()) + (exchange.getRequest().getPath().toString());
+
+            try {
+                jwtToken = JWTParser.parse(accessToken);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            try {
+                client_id = jwtToken.getJWTClaimsSet().getClaim("client_id").toString();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             return check(resourceId)
                     .flatMap(condition -> {
                                 if (condition.equals(true)) {
