@@ -1,17 +1,13 @@
 package com.interswitch.apigateway.config;
-import com.interswitch.apigateway.filter.EnableCorsFilter;
-import com.interswitch.apigateway.filter.RemoveDuplicateHeadersFilter;
+
+import com.interswitch.apigateway.filter.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class FilterConfig {
     @Bean
-    public EnableCorsFilter enableCorsFilter(){
-        return new EnableCorsFilter();
-    }
-    @Bean
-    public RemoveDuplicateHeadersFilter removeDuplicateHeadersFilter(){
-        return new RemoveDuplicateHeadersFilter();
+    public CorsFilter enableCorsFilter(){
+        return new CorsFilter();
     }
 }

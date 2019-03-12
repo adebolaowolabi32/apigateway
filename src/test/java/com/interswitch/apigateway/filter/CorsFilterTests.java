@@ -26,8 +26,8 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, EnableCorsFilter.class})
-public class EnableCorsFilterTests {
+@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, CorsFilter.class})
+public class CorsFilterTests {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
     private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
@@ -36,7 +36,7 @@ public class EnableCorsFilterTests {
     private static final String ALLOWED_ORIGIN = "http://localhost:3000";
 
     @Autowired
-    private EnableCorsFilter filter;
+    private CorsFilter filter;
     private ArgumentCaptor<ServerWebExchange> captor;
     private HttpHeaders headers;
 
