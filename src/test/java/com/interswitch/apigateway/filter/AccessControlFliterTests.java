@@ -24,7 +24,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -86,7 +89,6 @@ public class AccessControlFliterTests {
                 .predicate(swe -> true).build();
         ServerWebExchange exchange = MockServerWebExchange.from(request);
         exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, value);
-        Map<String, Object> attributes = exchange.getAttributes();
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         filter.filter(exchange, filterChain).block();
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete();
