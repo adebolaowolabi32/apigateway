@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.config.CacheConfig;
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
 import com.nimbusds.jose.*;
@@ -15,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.route.Route;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,13 +24,13 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 @DataRedisTest
 @ActiveProfiles("dev")
@@ -45,11 +45,6 @@ public class AccessControlFliterTests {
 
     private GlobalFilter filter;
     private GatewayFilterChain filterChain  ;
-
-    private List testresourceIds = new ArrayList();
-    private List origins = new ArrayList();
-    private Client client= new Client();
-    private String  clientId = "testclientid";
     private String accessToken = "";
 
     @BeforeEach
@@ -69,24 +64,26 @@ public class AccessControlFliterTests {
 
         filter = new AccessControlFilter(repository);
         filterChain = mock(GatewayFilterChain.class);
-        testresourceIds.add("passport/oauth/token");
-        testresourceIds.add("passport/oauth/authorize");
-        origins.add("http://localhost:8080");
-        client = new Client("id",clientId,origins,testresourceIds);
+
     }
 
     @Test
     public void testAccessControl (){
+        String routeUri = "http://localhost:8080/users/find/TestP.jaMonJan14";
         MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/foo")
+                .get("http://localhost:8080/users/find/TestP.jaMonJan14")
                 .header("Authorization",accessToken)
                 .build();
         assertAuthorizationHeader(request);
     }
 
-
-    public void assertAuthorizationHeader(MockServerHttpRequest request) {
+    @Test
+    private void assertAuthorizationHeader(MockServerHttpRequest request) {
+        Route value = Route.async().id("testid").uri(request.getURI()).order(0)
+                .predicate(swe -> true).build();
         ServerWebExchange exchange = MockServerWebExchange.from(request);
+        exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, value);
+        Map<String, Object> attributes = exchange.getAttributes();
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         filter.filter(exchange, filterChain).block();
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete();

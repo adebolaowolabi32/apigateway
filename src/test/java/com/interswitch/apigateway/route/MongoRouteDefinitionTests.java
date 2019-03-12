@@ -66,6 +66,6 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
 
     @Test
     public void testGetRouteDefinitions() {
-        StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2).verifyComplete();
+        StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).verifyComplete();
     }
 }
