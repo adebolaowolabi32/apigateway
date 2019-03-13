@@ -33,7 +33,7 @@ public class ClientCacheRepositoryTests {
     private List resourceIds;
     private List origins;
     private Client client;
-    private String  clientId = "testclientresource";
+    private String  clientId = "testclient";
 
 
     @BeforeEach

@@ -11,22 +11,22 @@ import java.util.Map;
 public class ClientCacheRepository {
     ReactiveRedisOperations<String, Client> template;
 
-    private String CLIENT_RESOURCE_KEY = "Client";
+    private String CLIENT_KEY = "Client";
 
     public ClientCacheRepository(ReactiveRedisOperations<String, Client> template) {
         this.template = template;
     }
 
     public Mono<Client> findByClientId(String clientId) {
-        return template.<String, Client>opsForHash().get(CLIENT_RESOURCE_KEY, clientId);
+        return template.<String, Client>opsForHash().get(CLIENT_KEY, clientId);
     }
 
     public Flux<Map.Entry<String, Client>> findAll() {
-        return template.<String, Client>opsForHash().entries(CLIENT_RESOURCE_KEY);
+        return template.<String, Client>opsForHash().entries(CLIENT_KEY);
     }
 
     public Mono<Client> save(Client client) {
-        return template.opsForHash().put(CLIENT_RESOURCE_KEY, client.getClientId(), client)
+        return template.opsForHash().put(CLIENT_KEY, client.getClientId(), client)
                 .map(s -> client).log();
     }
 
@@ -37,7 +37,7 @@ public class ClientCacheRepository {
     }
 
     public Mono<Void> deleteByClientId(String clientId) {
-        return template.opsForHash().remove(CLIENT_RESOURCE_KEY, clientId)
+        return template.opsForHash().remove(CLIENT_KEY, clientId)
                 .flatMap(p -> Mono.<Void>empty()).log();
     }
 
