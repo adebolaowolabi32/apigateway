@@ -11,7 +11,7 @@ public class StartupConfig {
     @Bean
     public CommandLineRunner commandLineRunnerCache(ClientMongoRepository mongo, ClientCacheRepository cache){
         return commandLineRunnerCache -> {
-            mongo.findAll().flatMap(clientResources -> cache.save(clientResources)).subscribe();
+            mongo.findAll().flatMap(clients -> cache.save(clients)).subscribe();
         };
     }
 }

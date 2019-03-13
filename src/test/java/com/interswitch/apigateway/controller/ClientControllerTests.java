@@ -6,7 +6,6 @@ import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.security.reactive.ReactiveManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -18,15 +17,12 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.net.URISyntaxException;
 import java.util.*;
 
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
-@WebFluxTest(value = {ClientController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
-        ReactiveUserDetailsServiceAutoConfiguration.class})
+@WebFluxTest(value = {ClientController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, ClientController.class})
 public class ClientControllerTests {
     @Autowired

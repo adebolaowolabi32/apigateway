@@ -29,14 +29,14 @@ public class RouteConfig {
     public CommandLineRunner commandLineRunner(MongoRouteDefinitionRepository repository){
 
         return commandLineRunner -> {
-            buildPassportRoute(repository, "/passport");
+            buildPassportRoute(repository, "passport-oauth");
         };
     }
 
     private void buildPassportRoute(MongoRouteDefinitionRepository repository, String id) {
         RouteDefinition routeDefinition = new RouteDefinition();
         List<PredicateDefinition> predicates = new ArrayList<>();
-        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=/passport/**");
+        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=/passport/oauth/**");
         predicates.add(predicateDefinition);
         routeDefinition.setId(id);
         routeDefinition.setUri(URI.create(baseUrl));
