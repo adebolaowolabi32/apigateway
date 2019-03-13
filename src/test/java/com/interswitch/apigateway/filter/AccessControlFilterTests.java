@@ -37,7 +37,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
 @ContextConfiguration(classes = {CacheConfig.class,ClientCacheRepository.class, ClientMongoRepository.class, AccessControlFilter.class})
-public class AccessControlFliterTests {
+public class AccessControlFilterTests {
 
     @MockBean
     private ClientCacheRepository repository;

@@ -10,8 +10,6 @@ import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -25,18 +23,10 @@ import java.util.List;
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
-    ReactiveMongoOperations operations;
-    @Autowired
     private MongoRouteDefinitionRepository repository;
 
     @BeforeEach
     public void setUp() throws URISyntaxException {
-        operations.collectionExists(RouteDefinition.class)
-                .flatMap(exists -> exists ? operations.dropCollection(RouteDefinition.class) : Mono.just(exists))
-                .flatMap(o -> operations.createCollection(RouteDefinition.class, CollectionOptions.empty().maxDocuments(100).size(1024 * 1024)))
-                .then()
-                .block();
-
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
         definition.setUri(new URI("http://httpbin.org:80"));

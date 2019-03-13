@@ -12,34 +12,31 @@ import java.util.UUID;
 
 public class RouteIdFilter implements WebFilter, Ordered {
 
-    String GATEWAY_SAVE_URL = "/actuator/gateway/routes/";
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        ServerHttpRequest req = exchange.getRequest();
-        String fullPath = req.getURI().getPath();
+        ServerHttpRequest request = exchange.getRequest();
+        String fullPath = request.getURI().getPath();
         int indexOfLastSlash = fullPath.lastIndexOf('/') + 1;
         String path = fullPath.substring(0, indexOfLastSlash);
+        String GATEWAY_SAVE_URL = "/actuator/gateway/routes/";
 
-        if(req.getMethod() == HttpMethod.POST && path.equalsIgnoreCase(GATEWAY_SAVE_URL)){
 
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append(path);
-
+        if(request.getMethod() == HttpMethod.POST && path.equalsIgnoreCase(GATEWAY_SAVE_URL)){
             String id = fullPath.substring(indexOfLastSlash);
 
-            if(!id.isEmpty()){
+            if(!id.isEmpty() && !id.contains(":")){
                 String unique = UUID.randomUUID().toString().replaceAll("-", "");
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(path);
                 stringBuilder.append(id);
                 stringBuilder.append(":");
                 stringBuilder.append(unique);
-            }
-            fullPath = stringBuilder.toString();
-        }
 
-        ServerHttpRequest request = req.mutate()
-                .path(fullPath)
-                .build();
+                request = request.mutate()
+                        .path(stringBuilder.toString())
+                        .build();
+            }
+        }
 
         return chain.filter(exchange.mutate().request(request).build());
 
