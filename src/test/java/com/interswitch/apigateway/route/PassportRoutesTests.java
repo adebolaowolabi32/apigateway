@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.config.RouteConfig;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromFormData;
 
-@Disabled
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
 @Import(RouteConfig.class)
