@@ -70,8 +70,8 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private Mono<Boolean> check(String resourceId) {
             return repository.findByClientId(client_id)
                 .switchIfEmpty(Mono.error(new Exception()))
-                .flatMap(clientResources -> {
-                    List resourceIds = clientResources.getResourceIds();
+                .flatMap(clients -> {
+                    List resourceIds = clients.getResourceIds();
                     if (resourceIds.contains(resourceId)) {
                         return Mono.just(true);
                     } else {

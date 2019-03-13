@@ -67,7 +67,7 @@ public class ClientCacheRepositoryTests {
     }
 
     @Test
-    public void testUpdateClientResources() {
+    public void testUpdateClient() {
         resourceIds = Arrays.asList("passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://api-gateway-ui.com", "http://localhost:3000");
         client.setOrigins(origins);

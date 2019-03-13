@@ -15,14 +15,14 @@ public class Client implements Serializable {
 
     private String clientId;
 
-    private List origins;
+    private List<String> origins;
 
-    private List resourceIds;
+    private List<String> resourceIds;
 
     public Client() {
     }
 
-    public Client(String id, String clientId, List origins, List resourceIds) {
+    public Client(String id, String clientId, List<String> origins, List<String> resourceIds) {
         this.id = id;
         this.clientId = clientId;
         this.origins = origins;
@@ -45,15 +45,15 @@ public class Client implements Serializable {
         this.clientId = clientId;
     }
 
-    public List getOrigins() { return origins; }
+    public List<String> getOrigins() { return origins; }
 
-    public void setOrigins(List origins) { this.origins = origins; }
+    public void setOrigins(List<String> origins) { this.origins = origins; }
 
-    public List getResourceIds() {
+    public List<String> getResourceIds() {
         return resourceIds;
     }
 
-    public void setResourceIds(List resourceIds) {
+    public void setResourceIds(List<String> resourceIds) {
         this.resourceIds = resourceIds;
     }
 
