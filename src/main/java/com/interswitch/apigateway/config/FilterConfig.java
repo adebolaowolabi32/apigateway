@@ -10,15 +10,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FilterConfig {
     @Bean
-    public CorsFilter enableCorsFilter(){
+    public CorsFilter corsFilter(){
         return new CorsFilter();
     }
-    @Bean
-    public AccessControlFilter accessControlFilter(ClientCacheRepository cacheRepository){
-        return new AccessControlFilter(cacheRepository);
-    }
+
     @Bean
     public RouteIdFilter routeIdFilter(){
         return new RouteIdFilter();
+    }
+
+    @Bean
+    public AccessControlFilter accessControlFilter(ClientCacheRepository cacheRepository){
+        return new AccessControlFilter(cacheRepository);
     }
 }
