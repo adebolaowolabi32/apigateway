@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.interswitch</groupId>
-    <artifactId>api-gateway</artifactId>
+    <artifactId>api-management-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>api-gateway</name>
-    <description>Demo project for Spring Boot</description>
+    <name>api-management-gateway</name>
+    <description>API Management Gateway</description>
 
     <properties>
         <java.version>11</java.version>
