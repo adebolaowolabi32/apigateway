@@ -4,7 +4,7 @@
     <property name="LOG_FILE" value="logs/${service_name}.log"/>​
     <property name="CONSOLE_LOG_PATTERN"
               value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${service_name:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
-
+    <property resource="application-dev.properties" />
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <!--<filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
             <!--&lt;!&ndash; Minimum logging level to be presented in the console logs&ndash;&gt;-->
@@ -44,7 +44,7 @@
         <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
         <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
         <!-- bootstrap.servers is the only mandatory producerConfig -->
-        <producerConfig>bootstrap.servers=172.26.40.211:9092, 172.26.40.212:9092, 172.26.40.213:9092</producerConfig>
+        <producerConfig>bootstrap.servers=${spring.kafka.bootstrap-servers}</producerConfig>
 
         <!-- this is the fallback appender if kafka is not available. -->
         <appender-ref ref="TIME_BASED_FILE" />
