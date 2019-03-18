@@ -72,11 +72,10 @@ public class CorsFilter implements WebFilter, Ordered {
                     ALLOWED_ORIGIN = requestOrigin;
                     response.setStatusCode(HttpStatus.OK);
                 }
-
                 if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
-                    if (requestOrigin == null) ALLOWED_ORIGIN = "No Origin Header Present";
-                    else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin Header is Empty";
-                    else ALLOWED_ORIGIN = "Origin is not Allowed";
+                    if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
+                    else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
+                    else ALLOWED_ORIGIN = "Origin-is-not-Allowed";
                 }
 
                 ServerWebExchangeDecorator decorator = new ServerWebExchangeDecoratorImpl(exchange);
@@ -86,7 +85,7 @@ public class CorsFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return 1;
+        return 0;
     }
 
     class ServerWebExchangeDecoratorImpl extends ServerWebExchangeDecorator {

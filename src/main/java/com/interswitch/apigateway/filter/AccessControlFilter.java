@@ -42,7 +42,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
             List<String> accesstokens = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION);
             if(accesstokens != null && !accesstokens.isEmpty()){
                 String accesstoken= accesstokens.get(0);
-                if(accesstoken.contains("Bearer")){
+                if(accesstoken.contains("Bearer ")){
                     accesstoken = accesstoken.replaceFirst("Bearer ", "");
                     if(!accesstoken.isEmpty()){
                         try{
@@ -72,7 +72,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private Mono<Boolean> check(String resourceId, String clientId) {
         if(ALLOW_ALL_ACCESS.contains(resourceId)) return Mono.just(true);
         return repository.findByClientId(clientId)
-            .switchIfEmpty(Mono.error(new Exception("Client not found")))
+            .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
             .flatMap(clients -> {
                 List resourceIds = clients.getResourceIds();
                 if (resourceIds.contains(resourceId)) {
@@ -85,6 +85,6 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     }
     @Override
     public int getOrder() {
-        return 0;
+        return 1;
     }
 }
