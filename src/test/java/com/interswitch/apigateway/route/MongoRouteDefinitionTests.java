@@ -5,7 +5,8 @@ import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinition;
@@ -18,9 +19,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
-@Import(RouteConfig.class)
+@Import({RouteConfig.class})
 @ActiveProfiles("dev")
-@DataMongoTest
+@EnableAutoConfiguration
+@SpringBootTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
     private MongoRouteDefinitionRepository repository;
