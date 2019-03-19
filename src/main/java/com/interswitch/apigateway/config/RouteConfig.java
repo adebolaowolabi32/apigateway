@@ -4,7 +4,9 @@ import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionReposit
 import com.interswitch.apigateway.route.MongoRouteDefinitionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
+import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +23,8 @@ public class RouteConfig {
     String baseUrl;
 
     @Bean
-    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo) {
-        return new MongoRouteDefinitionRepository(mongo);
+    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
+        return new MongoRouteDefinitionRepository(mongo,gatewayFilterFactories,predicates);
     }
 
     @Bean
