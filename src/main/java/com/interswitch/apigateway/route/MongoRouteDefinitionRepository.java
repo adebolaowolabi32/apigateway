@@ -27,12 +27,13 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private final Map<String, RoutePredicateFactory> predicates = new LinkedHashMap<>();
     protected final Log logger = LogFactory.getLog(getClass());
 
-    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories,List<RoutePredicateFactory> predicates) {
+    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
+                                          List<GatewayFilterFactory> gatewayFilterFactories,
+                                          List<RoutePredicateFactory> predicates) {
         gatewayFilterFactories.forEach(
                 factory -> this.gatewayFilterFactories.put(factory.name(), factory));
         this.mongo = mongo;
         initFactories(predicates);
-
     }
 
     @Override
@@ -64,6 +65,8 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         return mongo.deleteById(routeId);
     }
 
+
+    //methods to check the body of the request before saving to database.
     private Boolean checkGatewayFilters(List<FilterDefinition> filterDefinitions) {
         return filterDefinitions.stream().allMatch(filterDefinition -> {
             GatewayFilterFactory factory = this.gatewayFilterFactories.get(filterDefinition.getName());
