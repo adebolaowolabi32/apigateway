@@ -90,6 +90,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         });
     }
 
+    //method to initialize predicate factory to a form that can be matched to the request.
     private void initFactories(List<RoutePredicateFactory> predicates) {
         predicates.forEach(factory -> {
             String key = factory.name();
