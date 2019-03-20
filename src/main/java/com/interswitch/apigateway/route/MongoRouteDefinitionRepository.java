@@ -70,7 +70,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private Boolean checkGatewayFilters(List<FilterDefinition> filterDefinitions) {
         return filterDefinitions.stream().allMatch(filterDefinition -> {
             GatewayFilterFactory factory = this.gatewayFilterFactories.get(filterDefinition.getName());
-            if(factory==null){
+            if(factory == null){
                 return false;
             }
             else{return true;}

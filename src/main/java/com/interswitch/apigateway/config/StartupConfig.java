@@ -12,6 +12,7 @@ public class StartupConfig {
     public CommandLineRunner commandLineRunnerCache(ClientMongoRepository mongo, ClientCacheRepository cache){
         return commandLineRunnerCache -> {
             mongo.findAll().flatMap(clients -> cache.save(clients)).subscribe();
+
         };
     }
 }
