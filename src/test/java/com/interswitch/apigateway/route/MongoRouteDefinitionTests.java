@@ -2,13 +2,18 @@ package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.config.RouteConfig;
 import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
+import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
+import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory;
+import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
+import org.springframework.cloud.gateway.handler.predicate.HostRoutePredicateFactory;
+import org.springframework.cloud.gateway.handler.predicate.PathRoutePredicateFactory;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
+import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,18 +22,31 @@ import reactor.test.StepVerifier;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
+
+import static reactor.core.publisher.Mono.when;
 
 @Import({RouteConfig.class})
 @ActiveProfiles("dev")
-@EnableAutoConfiguration
-@SpringBootTest
+@DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
-    private MongoRouteDefinitionRepository repository;
+    MongoRouteDefinitionRepository repository;
+
+    @Autowired
+    ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
     @BeforeEach
     public void setUp() throws URISyntaxException {
+        //Load predicates
+        List<RoutePredicateFactory> load_predicates = Arrays
+                .asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
+        //Load filters
+        List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(
+                new AddRequestHeaderGatewayFilterFactory());
+        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo,gatewayFilterFactories,load_predicates);
+
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
         definition.setUri(new URI("http://httpbin.org:80"));
@@ -58,6 +76,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
 
     @Test
     public void testGetRouteDefinitions() {
+        when ();
         StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2);
     }
 }

@@ -4,12 +4,14 @@ import com.interswitch.apigateway.config.TestMongoConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 @Import(TestMongoConfig.class)
-//@DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
+@DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
 @Slf4j
 @ActiveProfiles("dev")
 public abstract class AbstractMongoRepositoryTests {

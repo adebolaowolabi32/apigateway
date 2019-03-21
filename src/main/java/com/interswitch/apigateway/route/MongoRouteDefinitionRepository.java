@@ -51,11 +51,11 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
             }
             if(checkGatewayPredicates(predicates)==false){
                 return  Mono.error(
-                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate Does Not Exist"))  ;
+                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) Does Not Exist"))  ;
             }
             else{
                 return  Mono.error(
-                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter Does Not Exist"))  ;
+                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Does Not Exist"))  ;
         }
         });
     }
