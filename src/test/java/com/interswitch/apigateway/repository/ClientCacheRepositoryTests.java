@@ -13,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ClientCacheRepositoryTests {
 
     @Autowired
-    ClientCacheRepository clientCacheRepository;
+    private ClientCacheRepository clientCacheRepository;
 
     @MockBean
-    ClientMongoRepository clientMongoRepository;
+    private ClientMongoRepository clientMongoRepository;
 
     private List resourceIds;
     private List origins;

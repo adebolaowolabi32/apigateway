@@ -25,17 +25,15 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-import static reactor.core.publisher.Mono.when;
-
 @Import(RouteConfig.class)
 @ActiveProfiles("dev")
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
-    MongoRouteDefinitionRepository repository;
+    private MongoRouteDefinitionRepository repository;
 
     @Autowired
-    ReactiveMongoRouteDefinitionRepository reactiveMongo;
+    private ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
     @BeforeEach
     public void setUp() throws URISyntaxException {
@@ -70,7 +68,6 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
 
     @Test
     public void testGetRouteDefinitions() {
-        when ();
         StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2);
     }
 }
