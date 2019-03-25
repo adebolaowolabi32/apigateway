@@ -1,8 +1,6 @@
 package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
@@ -24,16 +22,11 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     private ReactiveMongoRouteDefinitionRepository mongo;
     private final Map<String, GatewayFilterFactory> gatewayFilterFactories = new HashMap<>();
-    private final Map<String, RoutePredicateFactory> predicates = new LinkedHashMap<>();
-    protected final Log logger = LogFactory.getLog(getClass());
+    private final Map<String, RoutePredicateFactory> routePredicateFactories = new LinkedHashMap<>();
 
-    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
-                                          List<GatewayFilterFactory> gatewayFilterFactories,
-                                          List<RoutePredicateFactory> predicates) {
-        gatewayFilterFactories.forEach(
-                factory -> this.gatewayFilterFactories.put(factory.name(), factory));
+    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> routePredicateFactories) {
+        initFactories(gatewayFilterFactories, routePredicateFactories);
         this.mongo = mongo;
-        initFactories(predicates);
     }
 
     @Override
@@ -43,20 +36,21 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     @Override
     public Mono<Void> save(@Validated Mono<RouteDefinition> route) {
-        return route.flatMap(rou -> {
-            List<PredicateDefinition> predicates = rou.getPredicates();
-            List<FilterDefinition> filters = rou.getFilters();
-            if (checkGatewayFilters(filters)==true && checkGatewayPredicates(predicates)==true|| filters.size()==0 ){
-                    return mongo.save(rou).then();
+        return route.flatMap(r -> {
+            List<PredicateDefinition> predicates = r.getPredicates();
+            List<FilterDefinition> filters = r.getFilters();
+            if(!checkGatewayPredicatesExist(predicates)){
+                return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) Does Not Exist"));
             }
-            if(checkGatewayPredicates(predicates)==false){
-                return  Mono.error(
-                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) Does Not Exist"))  ;
+            if(!filters.isEmpty())
+            {
+                if(!checkGatewayFiltersExists(filters))
+                    {
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Does Not Exist"));
+                    }
             }
-            else{
-                return  Mono.error(
-                        new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Does Not Exist"))  ;
-        }
+            return mongo.save(r).then();
+
         });
     }
 
@@ -65,45 +59,26 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         return mongo.deleteById(routeId);
     }
 
-
-    //methods to check the body of the request before saving to database.
-    private Boolean checkGatewayFilters(List<FilterDefinition> filterDefinitions) {
+    private boolean checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {
         return filterDefinitions.stream().allMatch(filterDefinition -> {
             GatewayFilterFactory factory = this.gatewayFilterFactories.get(filterDefinition.getName());
-            if(factory == null){
-                return false;
-            }
-            else{return true;}
-        })    ;
+            return factory != null;
+        });
 
     }
 
-    private Boolean checkGatewayPredicates (List<PredicateDefinition> predicateDefinitions){
+    private boolean checkGatewayPredicatesExist (List<PredicateDefinition> predicateDefinitions){
         return predicateDefinitions.stream().allMatch(predicateDefinition -> {
-            RoutePredicateFactory<Object> factory = this.predicates.get(predicateDefinition.getName());
-            if (factory == null) {
-                return false;
-            }
-            else{
-                return true;
-            }
+            RoutePredicateFactory factory = this.routePredicateFactories.get(predicateDefinition.getName());
+            return factory != null;
         });
     }
 
-    //method to initialize predicate factory to a form that can be matched to the request.
-    private void initFactories(List<RoutePredicateFactory> predicates) {
-        predicates.forEach(factory -> {
-            String key = factory.name();
-            if (this.predicates.containsKey(key)) {
-                this.logger.warn("A RoutePredicateFactory named " + key
-                        + " already exists, class: " + this.predicates.get(key)
-                        + ". It will be overwritten.");
-            }
-            this.predicates.put(key, factory);
-            if (logger.isInfoEnabled()) {
-                logger.info("Loaded RoutePredicateFactory [" + key + "]");
-            }
-        });
+    private void initFactories(List<GatewayFilterFactory> filters, List<RoutePredicateFactory> predicates) {
+        filters.forEach(
+                factory -> this.gatewayFilterFactories.put(factory.name(), factory));
+        predicates.forEach(
+                factory -> this.routePredicateFactories.put(factory.name(), factory));
     }
 
 }

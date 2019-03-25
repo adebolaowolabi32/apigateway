@@ -27,7 +27,7 @@ import java.util.List;
 
 import static reactor.core.publisher.Mono.when;
 
-@Import({RouteConfig.class})
+@Import(RouteConfig.class)
 @ActiveProfiles("dev")
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
@@ -39,12 +39,8 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
 
     @BeforeEach
     public void setUp() throws URISyntaxException {
-        //Load predicates
-        List<RoutePredicateFactory> load_predicates = Arrays
-                .asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
-        //Load filters
-        List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(
-                new AddRequestHeaderGatewayFilterFactory());
+        List<RoutePredicateFactory> load_predicates = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
+        List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
         MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo,gatewayFilterFactories,load_predicates);
 
         RouteDefinition definition = new RouteDefinition();
@@ -53,8 +49,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
         List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
         List<PredicateDefinition> predicates = List.of(
                 new PredicateDefinition("Host=**.apiaddrequestheader.org"),
-                new PredicateDefinition("Path=/headers")
-        );
+                new PredicateDefinition("Path=/headers"));
         definition.setFilters(filters);
         definition.setPredicates(predicates);
 
@@ -64,8 +59,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
         List<FilterDefinition> filters2 = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
         List<PredicateDefinition> predicates2 = List.of(
                 new PredicateDefinition("Host=**.apiaddrequestheader.org"),
-                new PredicateDefinition("Path=/headers")
-        );
+                new PredicateDefinition("Path=/headers"));
         definition2.setFilters(filters2);
         definition2.setPredicates(predicates2);
 

@@ -18,7 +18,6 @@ import static org.springframework.web.reactive.function.BodyInserters.fromFormDa
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
-@Import(RouteConfig.class)
 public class PassportRoutesTests {
     MultiValueMap formData = new LinkedMultiValueMap();
 
