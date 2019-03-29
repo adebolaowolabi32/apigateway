@@ -1,9 +1,6 @@
 package com.interswitch.apigateway.config;
 
-import com.interswitch.apigateway.filter.AccessCheck;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,40 +8,32 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.reactive.config.EnableWebFlux;
-
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 
 @Configuration
-//@EnableWebFluxSecurity
-//@EnableWebFlux
+@EnableWebFluxSecurity
+@EnableWebFlux
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
     private String key;
 
-    @Autowired
-    AccessCheck accessCheck;
-
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
-            http.authorizeExchange()
-                    .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                    .anyExchange().access(accessCheck)
-                    .and().csrf().disable()
-                    .oauth2ResourceServer()
-                    .jwt().publicKey((RSAPublicKey) publicKey());
-            return http.build();
-
+        http.authorizeExchange()
+                .pathMatchers("/passport/oauth/**","/actuator/health").permitAll()
+                .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                .anyExchange().authenticated()
+                .and().csrf().disable()
+                .oauth2ResourceServer()
+                .jwt().publicKey((RSAPublicKey) publicKey());
+        return http.build();
     }
-
 
     private PublicKey publicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keybytes = Base64.getDecoder().decode(key);
