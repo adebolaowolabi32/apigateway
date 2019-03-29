@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Product;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -16,7 +15,7 @@ public class AccessCheckTests {
     private WebTestClient webClient;
 
     @Test
-    public void testGetProducts(){
+    public void testAccess(){
         this.webClient.get()
                 .uri("/actuator/health")
                 .accept(MediaType.APPLICATION_JSON)
