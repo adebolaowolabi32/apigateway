@@ -47,7 +47,10 @@ public class ClientController {
     @PutMapping(value="/update",produces = "application/json")
     private Mono<ResponseEntity<Client>> updateClient(@Validated @RequestBody Client client) {
         return clientMongoRepository.findByClientId(client.getClientId())
-                .flatMap(existing -> clientMongoRepository.save(client).then(clientCacheRepository.update(client)).map(ResponseEntity::ok))
+                .flatMap(existing -> {
+                    client.setId(existing.getId());
+                    return clientMongoRepository.save(client).then(clientCacheRepository.update(client)).map(ResponseEntity::ok);
+                })
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
