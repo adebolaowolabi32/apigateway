@@ -50,6 +50,7 @@ public class ClientController {
     private Mono<ResponseEntity<Client>> updateClient(@Validated @RequestBody Client client) {
         return clientMongoRepository.findByClientId(client.getClientId())
                 .flatMap(existing -> {
+                    existing.setOrigins(client.getOrigins());
                     existing.setResourceIds(client.getResourceIds());
                     return clientMongoRepository.save(existing)
                             .then(clientCacheRepository.update(client))
