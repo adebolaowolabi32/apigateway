@@ -19,9 +19,7 @@
         <spring-cloud.version>Greenwich.BUILD-SNAPSHOT</spring-cloud.version>
         <spring.cloud.k8s.version>1.0.1.BUILD-SNAPSHOT</spring.cloud.k8s.version>
         <commons-pool2.version>2.6.0</commons-pool2.version>
-<!--
         <logback-kafka-appender.version>0.2.0-RC2</logback-kafka-appender.version>
--->
         <logstash-logback-encoder.version>5.2</logstash-logback-encoder.version>
         <junit-jupiter.version>5.3.2</junit-jupiter.version>
     </properties>
@@ -100,17 +98,17 @@
             <artifactId>spring-cloud-sleuth-core</artifactId>
             <version>2.1.1.RELEASE</version>
         </dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
             <version>2.2.4.RELEASE</version>
-        </dependency>-->
-        <!--<dependency>
+        </dependency>
+        <dependency>
             <groupId>com.github.danielwegener</groupId>
             <artifactId>logback-kafka-appender</artifactId>
             <version>${logback-kafka-appender.version}</version>
             <scope>runtime</scope>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
@@ -121,10 +119,10 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bus-kafka</artifactId>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -154,11 +152,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
