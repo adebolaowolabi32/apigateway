@@ -25,15 +25,13 @@ public class ClientController {
 
     @GetMapping(produces = "application/json")
     private Flux<Client> getAllClients() {
-
-        return clientCacheRepository.findAll()
-                .map(clients -> clients.getValue());
+        return clientCacheRepository.findAll().map(clients -> clients.getValue());
     }
 
     @PostMapping (value = "/save", produces = "application/json")
     private Mono<ResponseEntity<Client>> saveClient(@Validated @RequestBody Client client){
         return clientMongoRepository.findByClientId(client.getClientId())
-                .flatMap(existing -> Mono.error(new RuntimeException("Client Resource already exists")))
+                .flatMap(existing -> Mono.error(new RuntimeException("Client Permissions already exists")))
                 .switchIfEmpty(clientMongoRepository.save(client).then(clientCacheRepository.save(client)))
                 .then(Mono.defer(() -> Mono.just(ResponseEntity.created(URI.create("/routes/"+client.getClientId())).build())));
     }
@@ -50,10 +48,8 @@ public class ClientController {
     private Mono<ResponseEntity<Client>> updateClient(@Validated @RequestBody Client client) {
         return clientMongoRepository.findByClientId(client.getClientId())
                 .flatMap(existing -> {
-                    existing.setResourceIds(client.getResourceIds());
-                    return clientMongoRepository.save(existing)
-                            .then(clientCacheRepository.update(client))
-                            .map(ResponseEntity::ok);
+                    client.setId(existing.getId());
+                    return clientMongoRepository.save(client).then(clientCacheRepository.update(client)).map(ResponseEntity::ok);
                 })
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
@@ -70,5 +66,4 @@ public class ClientController {
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
         }
     }
-
 }
