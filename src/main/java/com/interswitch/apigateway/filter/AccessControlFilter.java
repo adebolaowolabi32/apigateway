@@ -75,7 +75,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
             .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
             .flatMap(clients -> {
                 List resourceIds = clients.getResourceIds();
-                if (resourceIds.contains(resourceId)) {
+                if (resourceIds.contains(resourceId) & clients.getStatus().equals("Approved")) {
                     return Mono.just(true);
                 } else {
                     return Mono.just(false);

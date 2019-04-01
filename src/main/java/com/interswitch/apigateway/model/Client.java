@@ -15,6 +15,8 @@ public class Client implements Serializable {
 
     private String clientId;
 
+    private String status;
+
     private List<String> origins;
 
     private List<String> resourceIds;
@@ -22,9 +24,10 @@ public class Client implements Serializable {
     public Client() {
     }
 
-    public Client(String id, String clientId, List<String> origins, List<String> resourceIds) {
+    public Client(String id, String clientId, String status, List<String> origins, List<String> resourceIds) {
         this.id = id;
         this.clientId = clientId;
+        this.status = status;
         this.origins = origins;
         this.resourceIds = resourceIds;
     }
@@ -44,6 +47,10 @@ public class Client implements Serializable {
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
+
+    public String getStatus() { return status; }
+
+    public void setStatus(String status) { this.status = status; }
 
     public List<String> getOrigins() { return origins; }
 

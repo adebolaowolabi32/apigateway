@@ -43,7 +43,7 @@ public class ClientControllerTests {
     public void setup() {
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId, origins, resourceIds);
+        client = new Client("id", clientId,"Approved", origins, resourceIds);
     }
     
     @Test
