@@ -71,13 +71,14 @@ public class Client implements Serializable {
         Client client = (Client) o;
         return Objects.equals(getId(), client.getId()) &&
                 Objects.equals(getClientId(), client.getClientId()) &&
+                Objects.equals(getStatus(), client.getStatus()) &&
                 Objects.equals(getOrigins(), client.getOrigins()) &&
                 Objects.equals(getResourceIds(), client.getResourceIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getClientId(), getOrigins(), getResourceIds());
+        return Objects.hash(getId(), getClientId(), getStatus(), getOrigins(), getResourceIds());
     }
 
     @Override
@@ -85,6 +86,7 @@ public class Client implements Serializable {
         return "Client{" +
                 "id='" + id + '\'' +
                 ", clientId='" + clientId + '\'' +
+                ", status='" + status + '\'' +
                 ", origins=" + origins +
                 ", resourceIds=" + resourceIds +
                 '}';
