@@ -41,10 +41,8 @@ public class ProductController {
     private Mono<Product> updateProduct(@Validated @RequestBody Product product) {
         return mongoProductRepository.findByProductId(product.getProductId())
                 .flatMap(existing -> {
-                    existing.setProductName(product.getProductName());
-                    existing.setResourceIds(product.getResourceIds());
-                    existing.setProductDescription(product.getProductDescription());
-                    return mongoProductRepository.save(existing);
+                    product.setId(existing.getId());
+                    return mongoProductRepository.save(product);
                 });
     }
 
