@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.repository;
 
-import com.interswitch.apigateway.config.CacheConfig;
 import com.interswitch.apigateway.model.Client;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("dev")
 @DataRedisTest
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {CacheConfig.class, ClientMongoRepository.class, ClientCacheRepository.class})
+@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class})
 public class ClientCacheRepositoryTests {
 
     @Autowired
@@ -29,8 +28,8 @@ public class ClientCacheRepositoryTests {
     @MockBean
     private ClientMongoRepository clientMongoRepository;
 
-    private List resourceIds;
-    private List origins;
+    private List<String> resourceIds;
+    private List<String> origins;
     private Client client;
     private String  clientId = "testclient";
 
@@ -40,12 +39,12 @@ public class ClientCacheRepositoryTests {
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
         client = new Client("id", clientId, origins, resourceIds);
-        clientCacheRepository.save(client).block();
+        clientCacheRepository.save(Mono.just(client)).block();
     }
 
     @AfterEach
     public void delete(){
-        clientCacheRepository.deleteByClientId(client.getClientId()).block();
+        clientCacheRepository.deleteByClientId(Mono.just(client.getClientId())).block();
     }
 
     @Test
@@ -55,7 +54,7 @@ public class ClientCacheRepositoryTests {
 
     @Test
     public void testFindClient() {
-        Mono<Client> clientMono = clientCacheRepository.findByClientId(client.getClientId());
+        Mono<Client> clientMono = clientCacheRepository.findByClientId(Mono.just(client.getClientId()));
 
         StepVerifier.create(clientMono).assertNext(r -> {
             assertThat(r.getId()).isEqualTo("id");
@@ -71,10 +70,9 @@ public class ClientCacheRepositoryTests {
         origins = Arrays.asList("https://qa.interswitchng.com", "http://api-gateway-ui.com", "http://localhost:3000");
         client.setOrigins(origins);
         client.setResourceIds(resourceIds);
-        clientCacheRepository.update(client).block();
-        Mono<Client> clientMono = clientCacheRepository.findByClientId(client.getClientId());
+        clientCacheRepository.save(Mono.just(client)).block();
 
-        StepVerifier.create(clientMono).assertNext(r -> {
+        StepVerifier.create(clientCacheRepository.findByClientId(Mono.just(client.getClientId()))).assertNext(r -> {
             assertThat(r.getOrigins()).hasSize(3);
             assertThat(r.getResourceIds()).hasSize(1);
         }).expectComplete().verify();

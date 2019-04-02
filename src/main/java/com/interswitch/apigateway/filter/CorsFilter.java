@@ -17,18 +17,16 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class CorsFilter implements WebFilter, Ordered {
 
-    static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
-    static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
-    static final long MAX_AGE = 3600;
-    static final Boolean ALLOW_CREDENTIALS = true;
-    static String ALLOWED_ORIGIN = "";
-    static List<String> URLS_TO_ALLOW_ALL_ORIGINS = Arrays.asList("/passport/oauth/token", "/passport/oauth/authorize");
+    private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
+    private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
+    private static final long MAX_AGE = 3600;
+    private static final Boolean ALLOW_CREDENTIALS = true;
+    private static String ALLOWED_ORIGIN = "";
+    private static List<String> URLS_TO_ALLOW_ALL_ORIGINS = Arrays.asList("/passport/oauth/token", "/passport/oauth/authorize");
 
 
     @Autowired
@@ -41,6 +39,7 @@ public class CorsFilter implements WebFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
         HttpHeaders requestHeaders = request.getHeaders();
+        HttpMethod requestMethod = request.getMethod();
         String requestOrigin = requestHeaders.getOrigin();
         String path = request.getURI().getPath();
 
@@ -61,17 +60,17 @@ public class CorsFilter implements WebFilter, Ordered {
                 }
             }
         }
-        return clientCacheRepository.findByClientId(clientId).flatMap(client -> {
+        return clientCacheRepository.findByClientId(Mono.just(clientId)).flatMap(client -> {
             List<String> origins = client.getOrigins();
             if (origins.contains(requestOrigin))
                 ALLOWED_ORIGIN = requestOrigin;
             return Mono.empty();
         }).then(Mono.defer(() -> {
-                if (URLS_TO_ALLOW_ALL_ORIGINS.contains(path)) ALLOWED_ORIGIN = "*";
-                if (request.getMethod().equals(HttpMethod.OPTIONS)) {
+                if (requestMethod != null && requestMethod.equals(HttpMethod.OPTIONS)) {
                     ALLOWED_ORIGIN = requestOrigin;
                     response.setStatusCode(HttpStatus.OK);
                 }
+                if (URLS_TO_ALLOW_ALL_ORIGINS.contains(path)) ALLOWED_ORIGIN = "*";
                 if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
                     if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
                     else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
@@ -83,16 +82,11 @@ public class CorsFilter implements WebFilter, Ordered {
             }));
     }
 
-    @Override
-    public int getOrder() {
-        return 0;
-    }
-
-    class ServerWebExchangeDecoratorImpl extends ServerWebExchangeDecorator {
+    private class ServerWebExchangeDecoratorImpl extends ServerWebExchangeDecorator {
 
         private ServerHttpResponseDecorator responseDecorator;
 
-        public ServerWebExchangeDecoratorImpl(ServerWebExchange delegate) {
+        private ServerWebExchangeDecoratorImpl(ServerWebExchange delegate) {
             super(delegate);
             this.responseDecorator = new ServerHttpResponseDecoratorImpl(delegate.getResponse());
         }
@@ -104,12 +98,12 @@ public class CorsFilter implements WebFilter, Ordered {
 
     }
 
-    class ServerHttpResponseDecoratorImpl extends ServerHttpResponseDecorator {
+    private class ServerHttpResponseDecoratorImpl extends ServerHttpResponseDecorator {
 
         private HttpHeaders headers;
         private ServerHttpResponse response;
 
-        public ServerHttpResponseDecoratorImpl(ServerHttpResponse response) {
+        private ServerHttpResponseDecoratorImpl(ServerHttpResponse response) {
             super(response);
             this.response = response;
         }
@@ -117,7 +111,7 @@ public class CorsFilter implements WebFilter, Ordered {
         @Override
         public HttpHeaders getHeaders() {
             headers = reduceHeaders(response.getHeaders());
-            headers.setVary(Arrays.asList("Origin"));
+            headers.setVary(Collections.singletonList("Origin"));
             headers.setAccessControlAllowOrigin(ALLOWED_ORIGIN);
             headers.setAccessControlAllowHeaders(ALLOWED_HEADERS);
             headers.setAccessControlAllowMethods(ALLOWED_METHODS);
@@ -129,17 +123,15 @@ public class CorsFilter implements WebFilter, Ordered {
         private HttpHeaders reduceHeaders(HttpHeaders headers){
             for (String key : headers.keySet()) {
                 List<String> headerValue = (headers.get(key) != null) ? headers.get(key) : new ArrayList();
-                String newValue = "";
-
-                for (String value : headerValue) {
-                    newValue = value;
-                    break;
-                }
-                headers.replace(key, Arrays.asList(newValue));
+                String newValue = headerValue != null ? headerValue.get(0) != null ? headerValue.get(0) : "" : "";
+                headers.replace(key, Collections.singletonList(newValue));
             }
             return headers;
         }
     }
-
+    @Override
+    public int getOrder() {
+        return 0;
+    }
 }
 

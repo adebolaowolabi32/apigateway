@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.config.CacheConfig;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
@@ -29,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -36,7 +36,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {CacheConfig.class,ClientCacheRepository.class, ClientMongoRepository.class, AccessControlFilter.class})
+@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, AccessControlFilter.class})
 public class AccessControlFilterTests {
 
     @MockBean
@@ -47,9 +47,9 @@ public class AccessControlFilterTests {
     private GlobalFilter filter;
     private GatewayFilterChain filterChain  ;
     private String accessToken = "";
-    private String client_id = "IKIA344B890097001647EEDB60226A5850AE75C7CD19";
-    List testresourceIds = new ArrayList();
-    List origin=null;
+    private String client_id = "client-test-id";
+    private List<String> testresourceIds = new ArrayList<>();
+    private List <String> origin = null;
 
     @BeforeEach
     public void setup() throws JOSEException, ParseException {
@@ -74,16 +74,15 @@ public class AccessControlFilterTests {
     @Test
     public void testAccessControl (){
         MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/users/find/TestP.jaMonJan14")
+                .get("http://localhost:8080/users/find/TestUser")
                 .header("Authorization",accessToken)
                 .build();
         assertAuthorizationHeader(request);
     }
 
-    @Test
     private void assertAuthorizationHeader(MockServerHttpRequest request) {
         Client client = new Client("testclient",client_id,origin,testresourceIds);
-        when(repository.findByClientId(client_id)).thenReturn(Mono.just(client));
+        when(repository.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
         Route value = Route.async().id("testid").uri(request.getURI()).order(0)
                 .predicate(swe -> true).build();
         ServerWebExchange exchange = MockServerWebExchange.from(request);
@@ -91,6 +90,5 @@ public class AccessControlFilterTests {
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         filter.filter(exchange, filterChain).block();
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete();
-
     }
 }

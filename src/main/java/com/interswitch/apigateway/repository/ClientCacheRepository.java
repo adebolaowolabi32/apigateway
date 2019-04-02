@@ -1,44 +1,46 @@
 package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.Client;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Repository
 public class ClientCacheRepository {
-    ReactiveRedisOperations<String, Client> template;
+    private final Map<String, Client> clients = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    private String CLIENT_KEY = "Client";
-
-    public ClientCacheRepository(ReactiveRedisOperations<String, Client> template) {
-        this.template = template;
+    public ClientCacheRepository() {
     }
 
-    public Mono<Client> findByClientId(String clientId) {
-        return template.<String, Client>opsForHash().get(CLIENT_KEY, clientId);
+    public Mono<Client> findByClientId(Mono<String> clientId) {
+        return clientId.map(this.clients::get);
     }
 
-    public Flux<Map.Entry<String, Client>> findAll() {
-        return template.<String, Client>opsForHash().entries(CLIENT_KEY);
+    public Flux<Client> findAll() {
+        return Flux.fromIterable(this.clients.values());
     }
 
-    public Mono<Client> save(Client client) {
-        return template.opsForHash().put(CLIENT_KEY, client.getClientId(), client)
-                .map(s -> client).log();
+    public Mono<Client> save(Mono<Client> client) {
+        return client.flatMap((c) -> {
+            this.clients.put(c.getClientId(), c);
+            return Mono.empty();
+        });
     }
 
-    public Mono<Client> update(Client client) {
-        return findByClientId(client.getClientId())
-                .switchIfEmpty(Mono.error(new RuntimeException("Client ID not found")))
-                .flatMap(existingSession -> save(client).log());
-    }
-
-    public Mono<Void> deleteByClientId(String clientId) {
-        return template.opsForHash().remove(CLIENT_KEY, clientId)
-                .flatMap(p -> Mono.<Void>empty()).log();
+    public Mono<Void> deleteByClientId(Mono<String> clientId) {
+        return clientId.flatMap((cId) -> {
+            if (this.clients.containsKey(cId)) {
+                this.clients.remove(cId);
+                return Mono.empty();
+            } else {
+                return Mono.defer(() -> Mono.error(new NotFoundException("Client Permissions not found for ClientID: " + cId)));
+            }
+        });
     }
 
 }
