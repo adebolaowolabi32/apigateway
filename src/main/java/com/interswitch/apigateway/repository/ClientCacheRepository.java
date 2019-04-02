@@ -10,15 +10,18 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.util.Collections.synchronizedMap;
+
 @Repository
 public class ClientCacheRepository {
-    private final Map<String, Client> clients = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, Client> clients = new LinkedHashMap<>();
 
     public ClientCacheRepository() {
     }
 
     public Mono<Client> findByClientId(Mono<String> clientId) {
-        return clientId.map(this.clients::get);
+        return clientId.flatMap(key ->
+                Mono.just(this.clients.get(key)));
     }
 
     public Flux<Client> findAll() {

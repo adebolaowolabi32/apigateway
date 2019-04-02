@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
@@ -79,7 +80,7 @@ public class ClientControllerTests {
 
     @Test
     public void findClientByClientId(){
-        when(cache.findByClientId(Mono.just(client.getClientId()))).thenReturn(Mono.just(client));
+        when(cache.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
         this.webClient.get()
                 .uri("/clients/{clientId}", client.getClientId())
                 .exchange()
@@ -104,7 +105,7 @@ public class ClientControllerTests {
     @Test
     public void testDeleteClient(){
         when(mongo.deleteById(client.getId())).thenReturn(Mono.empty());
-        when(cache.deleteByClientId(Mono.just(client.getClientId()))).thenReturn(Mono.empty());
+        when(cache.deleteByClientId(any(Mono.class))).thenReturn(Mono.empty());
         when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         this.webClient.delete()
                 .uri("/clients/delete/{clientId}",  client.getClientId())

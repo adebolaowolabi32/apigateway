@@ -24,7 +24,7 @@ public class StartupConfig {
     public CommandLineRunner commandLineRunner(ClientMongoRepository mongoClientRepo, ClientCacheRepository cacheClientRepo, MongoRouteDefinitionRepository repository){
         return commandLineRunner -> {
             buildPassportRoute(repository, "passport-oauth");
-            mongoClientRepo.findAll().map(client -> cacheClientRepo.save(Mono.just(client))).subscribe();
+            mongoClientRepo.findAll().flatMap(client -> cacheClientRepo.save(Mono.just(client))).subscribe();
         };
     }
 
