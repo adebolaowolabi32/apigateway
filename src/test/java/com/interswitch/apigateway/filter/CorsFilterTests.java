@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest
@@ -39,6 +41,7 @@ public class CorsFilterTests {
     private CorsFilter filter;
     private ArgumentCaptor<ServerWebExchange> captor;
     private HttpHeaders headers;
+    private Client client;
 
     @MockBean
     private WebFilterChain filterChain;
@@ -51,6 +54,12 @@ public class CorsFilterTests {
 
     @BeforeEach
     public void setup() {
+        List<String> origins;
+        List<String> resourceIds;
+        String clientId = "testclientid";
+        resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
+        origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
+        client = new Client("id", clientId, origins, resourceIds);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
         headers = new HttpHeaders();
         headers.set("Origin", ALLOWED_ORIGIN);
@@ -112,12 +121,11 @@ public class CorsFilterTests {
 
     }
 
-    public ServerWebExchange assertThatResponseContainsHeaders(MockServerHttpRequest request){
+    private ServerWebExchange assertThatResponseContainsHeaders(MockServerHttpRequest request){
         ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-        when(clientCacheRepository.findByClientId("")).thenReturn(Mono.empty());
-
+        when(clientCacheRepository.findByClientId(any(Mono.class))).thenReturn(Mono.empty());
         filter.filter(exchange, filterChain).block();
 
         ServerWebExchange webExchange = captor.getValue();

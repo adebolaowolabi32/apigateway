@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/clients")
 public class ClientController {
@@ -23,20 +25,20 @@ public class ClientController {
 
     @GetMapping(produces = "application/json")
     private Flux<Client> getAllClients() {
-        return clientCacheRepository.findAll().map(clients -> clients.getValue());
+        return clientCacheRepository.findAll();
     }
 
     @PostMapping (value = "/save", produces = "application/json")
     private Mono<ResponseEntity<Client>> saveClient(@Validated @RequestBody Client client){
         return clientMongoRepository.findByClientId(client.getClientId())
                 .flatMap(existing -> Mono.error(new RuntimeException("Client Permissions already exists")))
-                .switchIfEmpty(clientMongoRepository.save(client).then(clientCacheRepository.save(client)))
-                .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(client));
+                .switchIfEmpty(clientMongoRepository.save(client).then(clientCacheRepository.save(Mono.just(client))))
+                .then(Mono.defer(() -> Mono.just(ResponseEntity.created(URI.create("/routes/"+client.getClientId())).build())));
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
     private Mono<ResponseEntity<Client>> findClientByClientId(@Validated @PathVariable String clientId){
-        return clientCacheRepository.findByClientId(clientId)
+        return clientCacheRepository.findByClientId(Mono.just(clientId))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
 
@@ -47,7 +49,7 @@ public class ClientController {
         return clientMongoRepository.findByClientId(client.getClientId())
                 .flatMap(existing -> {
                     client.setId(existing.getId());
-                    return clientMongoRepository.save(client).then(clientCacheRepository.update(client)).map(ResponseEntity::ok);
+                    return clientMongoRepository.save(client).then(clientCacheRepository.save(Mono.just(client))).map(ResponseEntity::ok);
                 })
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
@@ -57,7 +59,7 @@ public class ClientController {
         try {
             return clientMongoRepository.findByClientId(clientId)
                     .flatMap(existing -> clientMongoRepository.deleteById(existing.getId())
-                            .then(clientCacheRepository.deleteByClientId(clientId))
+                            .then(clientCacheRepository.deleteByClientId(Mono.just(clientId)))
                             .map(ResponseEntity::ok));
         }
         catch (Exception e){

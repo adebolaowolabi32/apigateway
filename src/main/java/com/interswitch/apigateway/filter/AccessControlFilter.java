@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
@@ -13,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +26,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private static List<String> ALLOW_ALL_ACCESS = Arrays.asList("passport-oauth");
 
     public  AccessControlFilter(ClientCacheRepository repository) {
-        this.repository=repository;
+        this.repository = repository;
     }
 
 
@@ -59,6 +57,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
             }
         }
+
         return check(resourceId, client_id)
                 .flatMap(condition -> {
                     if (condition) {
@@ -67,23 +66,19 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                         return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
 
                     }
-                }
-                );
-
+                });
     }
     private Mono<Boolean> check(String resourceId, String clientId) {
         if(ALLOW_ALL_ACCESS.contains(resourceId)) return Mono.just(true);
-        return repository.findByClientId(clientId)
+        return repository.findByClientId(Mono.just(clientId))
             .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
             .flatMap(clients -> {
-                List resourceIds = clients.getResourceIds();
-                if (resourceIds.contains(resourceId) & clients.getStatus()== Client.Status.APPROVED) {
+                if (clients.getResourceIds().contains(resourceId)) {
                     return Mono.just(true);
                 } else {
                     return Mono.just(false);
                 }
             });
-
     }
     @Override
     public int getOrder() {

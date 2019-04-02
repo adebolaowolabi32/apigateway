@@ -34,14 +34,14 @@ public class ClientControllerTests {
 
     @MockBean
     private ClientCacheRepository cache;
-    
-    private List origins;
-    private List resourceIds;
+
     private Client client;
-    private String clientId = "testclientid";
 
     @BeforeEach
     public void setup() {
+        List<String> origins;
+        List<String> resourceIds;
+        String clientId = "testclientid";
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
         client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
@@ -49,8 +49,7 @@ public class ClientControllerTests {
     
     @Test
     public void testGetAllClients(){
-        ArrayList<Map.Entry<String, Client>> listOfClients = new ArrayList<>();
-        listOfClients.add(new AbstractMap.SimpleEntry(client.getClientId(), client));
+        List<Client> listOfClients = Collections.singletonList(client);
 
         when(cache.findAll()).thenReturn(Flux.fromIterable(listOfClients));
 
@@ -68,7 +67,7 @@ public class ClientControllerTests {
     public void testSaveClient(){
         when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         when(mongo.save(client)).thenReturn(Mono.just(client));
-        when(cache.save(client)).thenReturn(Mono.just(client));
+        when(cache.save(Mono.just(client))).thenReturn(Mono.just(client));
         this.webClient.post()
                 .uri("/clients/save")
                 .body(BodyInserters.fromObject(client))
@@ -80,7 +79,7 @@ public class ClientControllerTests {
 
     @Test
     public void findClientByClientId(){
-        when(cache.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        when(cache.findByClientId(Mono.just(client.getClientId()))).thenReturn(Mono.just(client));
         this.webClient.get()
                 .uri("/clients/{clientId}", client.getClientId())
                 .exchange()
@@ -90,7 +89,7 @@ public class ClientControllerTests {
 
     @Test
     public void testUpdateClient(){
-        when(cache.update(client)).thenReturn(Mono.just(client));
+        when(cache.save(Mono.just(client))).thenReturn(Mono.just(client));
         when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         when(mongo.save(client)).thenReturn(Mono.just(client));
         this.webClient.put()
@@ -105,7 +104,7 @@ public class ClientControllerTests {
     @Test
     public void testDeleteClient(){
         when(mongo.deleteById(client.getId())).thenReturn(Mono.empty());
-        when(cache.deleteByClientId(client.getClientId())).thenReturn(Mono.empty());
+        when(cache.deleteByClientId(Mono.just(client.getClientId()))).thenReturn(Mono.empty());
         when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         this.webClient.delete()
                 .uri("/clients/delete/{clientId}",  client.getClientId())
