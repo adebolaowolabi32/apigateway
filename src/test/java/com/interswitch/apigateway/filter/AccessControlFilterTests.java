@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
+import com.interswitch.apigateway.util.ClientPermissionUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -43,6 +44,8 @@ public class AccessControlFilterTests {
     private ClientCacheRepository repository;
     @MockBean
     private ClientMongoRepository mongo;
+    @MockBean
+    private ClientPermissionUtils util;
 
     private GlobalFilter filter;
     private GatewayFilterChain filterChain  ;
@@ -65,7 +68,7 @@ public class AccessControlFilterTests {
         JWSObject jws = new JWSObject(jwsHeader,payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = "Bearer " + jws.serialize();
-        filter = new AccessControlFilter(repository);
+        filter = new AccessControlFilter(repository, util);
         filterChain = mock(GatewayFilterChain.class);
         testresourceIds.add("testid");
     }

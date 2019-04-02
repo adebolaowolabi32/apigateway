@@ -1,9 +1,8 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.interswitch.apigateway.util.ClientPermissionUtils;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,7 +15,6 @@ import org.springframework.web.server.ServerWebExchangeDecorator;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import java.text.ParseException;
 import java.util.*;
 
 public class CorsFilter implements WebFilter, Ordered {
@@ -26,60 +24,58 @@ public class CorsFilter implements WebFilter, Ordered {
     private static final long MAX_AGE = 3600;
     private static final Boolean ALLOW_CREDENTIALS = true;
     private static String ALLOWED_ORIGIN = "";
-    private static List<String> URLS_TO_ALLOW_ALL_ORIGINS = Arrays.asList("/passport/oauth/token", "/passport/oauth/authorize");
+    private static List<String> ALLOW_FOR_ALL_ORIGINS = Arrays.asList("/passport/oauth/token", "/passport/oauth/authorize");
 
-
-    @Autowired
     private ClientCacheRepository clientCacheRepository;
+
+    private ClientPermissionUtils util;
+
+    private ServerHttpRequest request;
+    private ServerHttpResponse response;
+
+    public CorsFilter(ClientCacheRepository clientCacheRepository, ClientPermissionUtils util) {
+        this.util = util;
+        this.clientCacheRepository = clientCacheRepository;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        request = exchange.getRequest();
+        response = exchange.getResponse();
         ALLOWED_ORIGIN = "";
-        String clientId = "";
-        ServerHttpRequest request = exchange.getRequest();
-        ServerHttpResponse response = exchange.getResponse();
-        HttpHeaders requestHeaders = request.getHeaders();
-        HttpMethod requestMethod = request.getMethod();
-        String requestOrigin = requestHeaders.getOrigin();
-        String path = request.getURI().getPath();
+        String clientId = util.GetClientIdFromBearerToken(request.getHeaders());
 
-        if (requestHeaders.containsKey(HttpHeaders.AUTHORIZATION)) {
-            List<String> accesstokenl = request.getHeaders().get(HttpHeaders.AUTHORIZATION);
-            if (accesstokenl != null && !accesstokenl.isEmpty()) {
-                String accesstoken = accesstokenl.get(0);
-                if (accesstoken.contains("Bearer ")) {
-                    accesstoken = accesstoken.replaceFirst("Bearer ", "");
-                    if (!accesstoken.isEmpty()) {
-                        try {
-                            JWT jwtToken = JWTParser.parse(accesstoken);
-                            clientId = jwtToken.getJWTClaimsSet().getClaim("client_id").toString();
-                        } catch (ParseException ex) {
-                            return Mono.error(ex);
-                        }
-                    }
-                }
-            }
+        return clientCacheRepository.findByClientId(Mono.just(clientId))
+                .flatMap(this::setAllowedOriginsForClient)
+                .then(Mono.defer(() -> {
+                    ServerWebExchangeDecorator decorator = new ServerWebExchangeDecoratorImpl(exchange);
+                    return chain.filter(decorator);
+                }));
+
         }
-        return clientCacheRepository.findByClientId(Mono.just(clientId)).flatMap(client -> {
-            List<String> origins = client.getOrigins();
-            if (origins.contains(requestOrigin))
-                ALLOWED_ORIGIN = requestOrigin;
-            return Mono.empty();
-        }).then(Mono.defer(() -> {
-                if (requestMethod != null && requestMethod.equals(HttpMethod.OPTIONS)) {
-                    ALLOWED_ORIGIN = requestOrigin;
-                    response.setStatusCode(HttpStatus.OK);
-                }
-                if (URLS_TO_ALLOW_ALL_ORIGINS.contains(path)) ALLOWED_ORIGIN = "*";
-                if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
-                    if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
-                    else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
-                    else ALLOWED_ORIGIN = "Origin-is-not-Allowed";
-                }
 
-                ServerWebExchangeDecorator decorator = new ServerWebExchangeDecoratorImpl(exchange);
-                return chain.filter(decorator);
-            }));
+    private Mono<Void> setAllowedOriginsForClient(Client client){
+
+        List<String> origins = client.getOrigins();
+        String requestOrigin = request.getHeaders().getOrigin();
+        HttpMethod requestMethod = request.getMethod();
+
+        if (origins.contains(requestOrigin)) ALLOWED_ORIGIN = requestOrigin;
+        if (requestMethod != null && requestMethod.equals(HttpMethod.OPTIONS)) {
+            response.setStatusCode(HttpStatus.OK);
+            ALLOWED_ORIGIN = requestOrigin;
+            return Mono.empty();
+        }
+        if (ALLOW_FOR_ALL_ORIGINS.contains(request.getURI().getPath())){
+            ALLOWED_ORIGIN = "*";
+            return Mono.empty();
+        }
+        if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
+            if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
+            else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
+            else ALLOWED_ORIGIN = "Origin-is-not-Allowed";
+        }
+        return Mono.empty();
     }
 
     private class ServerWebExchangeDecoratorImpl extends ServerWebExchangeDecorator {
