@@ -15,7 +15,10 @@ public class Client implements Serializable {
 
     private String clientId;
 
-    private String status;
+    public enum Status{
+        APPROVED, REQUESTED, REJECTED
+    }
+    private Status status ;
 
     private List<String> origins;
 
@@ -24,7 +27,7 @@ public class Client implements Serializable {
     public Client() {
     }
 
-    public Client(String id, String clientId, String status, List<String> origins, List<String> resourceIds) {
+    public Client(String id, String clientId, Status status, List<String> origins, List<String> resourceIds) {
         this.id = id;
         this.clientId = clientId;
         this.status = status;
@@ -48,9 +51,9 @@ public class Client implements Serializable {
         this.clientId = clientId;
     }
 
-    public String getStatus() { return status; }
+    public Status getStatus() { return status; }
 
-    public void setStatus(String status) { this.status = status; }
+    public void setStatus(Status status) { this.status = status; }
 
     public List<String> getOrigins() { return origins; }
 

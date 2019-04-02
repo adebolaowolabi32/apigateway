@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
-
 @RestController
 @RequestMapping("/clients")
 public class ClientController {
@@ -33,7 +31,7 @@ public class ClientController {
         return clientMongoRepository.findByClientId(client.getClientId())
                 .flatMap(existing -> Mono.error(new RuntimeException("Client Permissions already exists")))
                 .switchIfEmpty(clientMongoRepository.save(client).then(clientCacheRepository.save(client)))
-                .then(Mono.defer(() -> Mono.just(ResponseEntity.created(URI.create("/routes/"+client.getClientId())).build())));
+                .map(saved -> ResponseEntity.status(HttpStatus.CREATED).body(client));
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")

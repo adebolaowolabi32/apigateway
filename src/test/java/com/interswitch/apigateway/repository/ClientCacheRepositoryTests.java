@@ -13,8 +13,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
 import java.util.Arrays;
 import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("dev")
@@ -39,7 +41,7 @@ public class ClientCacheRepositoryTests {
     public void setUp() {
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId,"Approved", origins, resourceIds);
+        client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
         clientCacheRepository.save(client).block();
     }
 
