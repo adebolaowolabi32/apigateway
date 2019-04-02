@@ -17,6 +17,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
 import java.util.*;
 
 import static org.mockito.Mockito.when;
@@ -43,7 +44,7 @@ public class ClientControllerTests {
     public void setup() {
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId, origins, resourceIds);
+        client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
     }
     
     @Test

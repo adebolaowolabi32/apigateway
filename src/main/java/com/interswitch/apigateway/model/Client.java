@@ -15,6 +15,11 @@ public class Client implements Serializable {
 
     private String clientId;
 
+    public enum Status{
+        APPROVED, REQUESTED, REJECTED
+    }
+    private Status status ;
+
     private List<String> origins;
 
     private List<String> resourceIds;
@@ -22,9 +27,10 @@ public class Client implements Serializable {
     public Client() {
     }
 
-    public Client(String id, String clientId, List<String> origins, List<String> resourceIds) {
+    public Client(String id, String clientId, Status status, List<String> origins, List<String> resourceIds) {
         this.id = id;
         this.clientId = clientId;
+        this.status = status;
         this.origins = origins;
         this.resourceIds = resourceIds;
     }
@@ -45,6 +51,10 @@ public class Client implements Serializable {
         this.clientId = clientId;
     }
 
+    public Status getStatus() { return status; }
+
+    public void setStatus(Status status) { this.status = status; }
+
     public List<String> getOrigins() { return origins; }
 
     public void setOrigins(List<String> origins) { this.origins = origins; }
@@ -64,13 +74,14 @@ public class Client implements Serializable {
         Client client = (Client) o;
         return Objects.equals(getId(), client.getId()) &&
                 Objects.equals(getClientId(), client.getClientId()) &&
+                Objects.equals(getStatus(), client.getStatus()) &&
                 Objects.equals(getOrigins(), client.getOrigins()) &&
                 Objects.equals(getResourceIds(), client.getResourceIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getClientId(), getOrigins(), getResourceIds());
+        return Objects.hash(getId(), getClientId(), getStatus(), getOrigins(), getResourceIds());
     }
 
     @Override
@@ -78,6 +89,7 @@ public class Client implements Serializable {
         return "Client{" +
                 "id='" + id + '\'' +
                 ", clientId='" + clientId + '\'' +
+                ", status='" + status + '\'' +
                 ", origins=" + origins +
                 ", resourceIds=" + resourceIds +
                 '}';

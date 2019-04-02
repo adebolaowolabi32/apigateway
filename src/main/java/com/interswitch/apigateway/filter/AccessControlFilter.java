@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +77,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
             .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
             .flatMap(clients -> {
                 List resourceIds = clients.getResourceIds();
-                if (resourceIds.contains(resourceId)) {
+                if (resourceIds.contains(resourceId) & clients.getStatus()== Client.Status.APPROVED) {
                     return Mono.just(true);
                 } else {
                     return Mono.just(false);
