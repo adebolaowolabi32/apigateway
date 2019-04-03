@@ -38,7 +38,7 @@ public class ClientCacheRepositoryTests {
     public void setUp() {
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId, origins, resourceIds);
+        client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
         clientCacheRepository.save(Mono.just(client)).block();
     }
 

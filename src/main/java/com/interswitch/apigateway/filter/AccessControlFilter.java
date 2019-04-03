@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.util.ClientPermissionUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -53,7 +54,14 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         if(ALLOW_ALL_ACCESS.contains(resourceId)) return Mono.just(true);
         return repository.findByClientId(Mono.just(clientId))
             .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
-            .flatMap(client -> Mono.just(client.getResourceIds().contains(resourceId)));
+                .flatMap(clients -> {
+                    List resourceIds = clients.getResourceIds();
+                    if (resourceIds.contains(resourceId) & clients.getStatus()== Client.Status.APPROVED) {
+                        return Mono.just(true);
+                    } else {
+                        return Mono.just(false);
+                    }
+                });
     }
     @Override
     public int getOrder() {

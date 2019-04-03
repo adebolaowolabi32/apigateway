@@ -34,7 +34,7 @@ public class ClientCacheRepository {
     public Mono<Client> save(Mono<Client> client) {
         return client.flatMap((c) -> {
             this.clients.put(c.getClientId(), c);
-            return Mono.empty();
+            return client;
         });
     }
 

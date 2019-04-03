@@ -43,40 +43,35 @@ public class CorsFilter implements WebFilter, Ordered {
         request = exchange.getRequest();
         response = exchange.getResponse();
         ALLOWED_ORIGIN = "";
+        String requestOrigin = request.getHeaders().getOrigin();
+        HttpMethod requestMethod = request.getMethod();
+
         String clientId = util.GetClientIdFromBearerToken(request.getHeaders());
 
         return clientCacheRepository.findByClientId(Mono.just(clientId))
-                .flatMap(this::setAllowedOriginsForClient)
+                .flatMap(client -> {
+                    if (client.getOrigins().contains(requestOrigin))
+                        ALLOWED_ORIGIN = requestOrigin;
+                    return Mono.empty();
+                })
                 .then(Mono.defer(() -> {
+                    if (requestMethod != null && requestMethod.equals(HttpMethod.OPTIONS)) {
+                        response.setStatusCode(HttpStatus.OK);
+                        ALLOWED_ORIGIN = requestOrigin;
+                    }
+                    if (ALLOW_FOR_ALL_ORIGINS.contains(request.getURI().getPath())){
+                        ALLOWED_ORIGIN = "*";
+                    }
+                    if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
+                        if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
+                        else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
+                        else ALLOWED_ORIGIN = "Origin-is-not-Allowed";
+                    }
                     ServerWebExchangeDecorator decorator = new ServerWebExchangeDecoratorImpl(exchange);
                     return chain.filter(decorator);
                 }));
 
         }
-
-    private Mono<Void> setAllowedOriginsForClient(Client client){
-
-        List<String> origins = client.getOrigins();
-        String requestOrigin = request.getHeaders().getOrigin();
-        HttpMethod requestMethod = request.getMethod();
-
-        if (origins.contains(requestOrigin)) ALLOWED_ORIGIN = requestOrigin;
-        if (requestMethod != null && requestMethod.equals(HttpMethod.OPTIONS)) {
-            response.setStatusCode(HttpStatus.OK);
-            ALLOWED_ORIGIN = requestOrigin;
-            return Mono.empty();
-        }
-        if (ALLOW_FOR_ALL_ORIGINS.contains(request.getURI().getPath())){
-            ALLOWED_ORIGIN = "*";
-            return Mono.empty();
-        }
-        if (ALLOWED_ORIGIN == null || ALLOWED_ORIGIN.isEmpty()) {
-            if (requestOrigin == null) ALLOWED_ORIGIN = "No-Origin-Header-Present";
-            else if (requestOrigin.trim().isEmpty()) ALLOWED_ORIGIN = "Origin-Header-is-Empty";
-            else ALLOWED_ORIGIN = "Origin-is-not-Allowed";
-        }
-        return Mono.empty();
-    }
 
     private class ServerWebExchangeDecoratorImpl extends ServerWebExchangeDecorator {
 

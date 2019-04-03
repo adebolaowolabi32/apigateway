@@ -84,7 +84,7 @@ public class AccessControlFilterTests {
     }
 
     private void assertAuthorizationHeader(MockServerHttpRequest request) {
-        Client client = new Client("testclient",client_id,origin,testresourceIds);
+        Client client = new Client("testclient",client_id, Client.Status.APPROVED, origin,testresourceIds);
         when(repository.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
         Route value = Route.async().id("testid").uri(request.getURI()).order(0)
                 .predicate(swe -> true).build();
