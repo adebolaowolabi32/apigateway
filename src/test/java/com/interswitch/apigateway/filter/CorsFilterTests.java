@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
+import com.interswitch.apigateway.util.ClientPermissionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, CorsFilter.class})
+@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, ClientPermissionUtils.class, CorsFilter.class})
 public class CorsFilterTests {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
@@ -45,6 +46,9 @@ public class CorsFilterTests {
 
     @MockBean
     private WebFilterChain filterChain;
+
+    @Autowired
+    private ClientPermissionUtils util;
 
     @MockBean
     private ClientMongoRepository clientMongoRepository;
@@ -125,7 +129,7 @@ public class CorsFilterTests {
         ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         when(filterChain.filter(captor.capture())).thenReturn(Mono.empty());
-        when(clientCacheRepository.findByClientId(any(Mono.class))).thenReturn(Mono.empty());
+        when(clientCacheRepository.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
         filter.filter(exchange, filterChain).block();
 
         ServerWebExchange webExchange = captor.getValue();

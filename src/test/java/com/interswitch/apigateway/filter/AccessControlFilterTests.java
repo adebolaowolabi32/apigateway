@@ -9,6 +9,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,25 +31,30 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, AccessControlFilter.class})
+@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, ClientPermissionUtils.class, AccessControlFilter.class})
 public class AccessControlFilterTests {
 
     @MockBean
     private ClientCacheRepository repository;
+
     @MockBean
     private ClientMongoRepository mongo;
-    @MockBean
+
+    @Autowired
     private ClientPermissionUtils util;
 
-    private GlobalFilter filter;
+    @Autowired
+    private AccessControlFilter filter;
+
+    @MockBean
     private GatewayFilterChain filterChain  ;
+
     private String accessToken = "";
     private String client_id = "client-test-id";
     private List<String> testresourceIds = new ArrayList<>();
@@ -68,8 +74,6 @@ public class AccessControlFilterTests {
         JWSObject jws = new JWSObject(jwsHeader,payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = "Bearer " + jws.serialize();
-        filter = new AccessControlFilter(repository, util);
-        filterChain = mock(GatewayFilterChain.class);
         testresourceIds.add("testid");
     }
 
