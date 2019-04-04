@@ -28,26 +28,38 @@
     </appender>
 
     <!--&lt;!&ndash; This is the kafkaAppender &ndash;&gt;-->
-    <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-        <topic>${service_name}-logs</topic>
-        <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
-        <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+    <springProfile name="dev">
+        <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+            <topic>${service_name}-logs</topic>
+            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
+            <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
 
-        <!-- Optional parameter to use a fixed partition -->
-        <!--<partition>0</partition>-->
+            <!-- Optional parameter to use a fixed partition -->
+            <!--<partition>0</partition>-->
 
-        <!-- Optional parameter to include log timestamps into the kafka message -->
-        <!-- <appendTimestamp>true</appendTimestamp> -->
+            <!-- Optional parameter to include log timestamps into the kafka message -->
+            <!-- <appendTimestamp>true</appendTimestamp> -->
 
-        <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
-        <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
-        <!-- bootstrap.servers is the only mandatory producerConfig -->
-        <producerConfig>bootstrap.servers=${spring.kafka.bootstrap-servers}</producerConfig>
+            <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
+            <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
+            <!-- bootstrap.servers is the only mandatory producerConfig -->
+            <producerConfig>bootstrap.servers=172.26.40.211:9092,172.26.40.212:9092,172.26.40.213:9092</producerConfig>
 
-        <!-- this is the fallback appender if kafka is not available. -->
-        <appender-ref ref="TIME_BASED_FILE" />
-    </appender>
+            <!-- this is the fallback appender if kafka is not available. -->
+            <appender-ref ref="TIME_BASED_FILE" />
+        </appender>
+    </springProfile>
+    <springProfile name="prod">
+        <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+            <topic>${service_name}-logs</topic>
+            <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
+            <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
+            <producerConfig>bootstrap.servers=172.25.15.250:9092</producerConfig>
+            <appender-ref ref="TIME_BASED_FILE" />
+        </appender>
+    </springProfile>
 
     <logger name="org.apache.kafka" level="WARN" />
     <logger name="org.springframework.cloud.gateway" level="TRACE"/>
