@@ -6,16 +6,38 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.synchronizedMap;
 
-@Repository
+
 public class ClientCacheRepository {
     private final Map<String, Client> clients = synchronizedMap(new LinkedHashMap<>());
 
+    private Mono<List<Client>> clientList;
     public ClientCacheRepository() {
+    }
+
+    public ClientCacheRepository(ClientMongoRepository clientMongoRepository){
+           clientList = clientMongoRepository.findAll().collectList();
+        clientMongoRepository.findAll().collectList().flatMap(client -> {
+            for (var c :client) {
+                this.clients.put(c.getClientId(), c);
+            }
+            return Mono.empty();
+        });
+    }
+
+    private Mono<Void> loadClients(){
+        return clientMongoRepository.findAll().collectList().flatMap(client -> {
+            for (var c :client) {
+               this.clients.put(c.getClientId(), c);
+            }
+            return Mono.empty();
+        });
     }
 
     public Mono<Client> findByClientId(Mono<String> clientId) {
