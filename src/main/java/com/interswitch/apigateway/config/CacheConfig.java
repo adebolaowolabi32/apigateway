@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class CacheConfig {
 
-    @RefreshScope
     @DependsOn("clientMongoRepository")
     @Bean
     public ClientCacheRepository clientCacheRepository(ClientMongoRepository clientMongoRepository){

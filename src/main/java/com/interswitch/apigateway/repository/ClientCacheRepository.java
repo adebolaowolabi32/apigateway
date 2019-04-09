@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.SubmissionPublisher;
 
 import static java.util.Collections.synchronizedMap;
 
@@ -22,15 +23,15 @@ public class ClientCacheRepository {
     }
 
     public ClientCacheRepository(ClientMongoRepository clientMongoRepository){
-           clientList = clientMongoRepository.findAll().collectList();
-        clientMongoRepository.findAll().collectList().flatMap(client -> {
-            for (var c :client) {
-                this.clients.put(c.getClientId(), c);
-            }
-            return Mono.empty();
-        });
+            clientMongoRepository.findAll()
+                .map(client -> {
+                            this.clients.put(client.getClientId(), client);
+                            return Mono.empty();
+                        }
+                ).subscribe();
+                //subscribe();
     }
-
+/*
     private Mono<Void> loadClients(){
         return clientMongoRepository.findAll().collectList().flatMap(client -> {
             for (var c :client) {
@@ -38,7 +39,7 @@ public class ClientCacheRepository {
             }
             return Mono.empty();
         });
-    }
+    }*/
 
     public Mono<Client> findByClientId(Mono<String> clientId) {
         return clientId.flatMap(key -> {
@@ -50,7 +51,9 @@ public class ClientCacheRepository {
     }
 
     public Flux<Client> findAll() {
-        return Flux.fromIterable(this.clients.values());
+        return Flux.fromIterable(
+                this.clients.values()
+        );
     }
 
     public Mono<Client> save(Mono<Client> client) {
