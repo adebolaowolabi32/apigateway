@@ -25,7 +25,7 @@ public class HelloControllerTest {
 
     @Test
     public void testGreetingDefault() {
-        this.webClient.get().uri("/")
+        this.webClient.get().uri("/greeting")
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .exchange()
                 .expectStatus().isOk()
