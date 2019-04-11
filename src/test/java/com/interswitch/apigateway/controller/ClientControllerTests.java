@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.Client;
+import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
 @WebFluxTest(value = {ClientController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, ClientController.class})
+@ContextConfiguration(classes = {ClientController.class})
 public class ClientControllerTests {
     @Autowired
     private WebTestClient webClient;
@@ -35,6 +36,9 @@ public class ClientControllerTests {
 
     @MockBean
     private ClientCacheRepository cache;
+
+    @MockBean
+    private AutoBusRefresh autoBusRefresh;
 
     private Client client;
 

@@ -1,12 +1,17 @@
 package com.interswitch.apigateway.route;
 
+import com.interswitch.apigateway.config.BusRefreshConfig;
 import com.interswitch.apigateway.config.RouteConfig;
+import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.bus.BusProperties;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
@@ -25,10 +30,17 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-@Import(RouteConfig.class)
+@Import({RouteConfig.class})
 @ActiveProfiles("dev")
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
+
+    @MockBean
+    private BusProperties busProperties;
+
+    @MockBean
+    private AutoBusRefresh autoBusRefresh;
+
     @Autowired
     private MongoRouteDefinitionRepository repository;
 
@@ -39,7 +51,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
-        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo,null, gatewayFilterFactories,routePredicateFactories);
+        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, autoBusRefresh, gatewayFilterFactories,routePredicateFactories);
 
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
