@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.route;
 
+import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
@@ -24,9 +25,12 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private final Map<String, GatewayFilterFactory> gatewayFilterFactories = new HashMap<>();
     private final Map<String, RoutePredicateFactory> routePredicateFactories = new LinkedHashMap<>();
 
-    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> routePredicateFactories) {
-        initFactories(gatewayFilterFactories, routePredicateFactories);
+    private AutoBusRefresh autoBusRefresh;
+
+    public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, AutoBusRefresh autoBusRefresh, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> routePredicateFactories) {
         this.mongo = mongo;
+        this.autoBusRefresh = autoBusRefresh;
+        initFactories(gatewayFilterFactories, routePredicateFactories);
     }
 
     @Override
@@ -49,14 +53,20 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                         return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Does Not Exist"));
                     }
             }
-            return mongo.save(r).then();
+            return mongo.save(r).then(Mono.defer(() -> {
+                autoBusRefresh.publishRefreshEvent();
+             return Mono.empty();
+            }));
 
         });
     }
 
     @Override
     public Mono<Void> delete(Mono<String> routeId) {
-        return mongo.deleteById(routeId);
+        return mongo.deleteById(routeId).then(Mono.defer(() -> {
+            autoBusRefresh.publishRefreshEvent();
+            return Mono.empty();
+        }));
     }
 
     private boolean checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {

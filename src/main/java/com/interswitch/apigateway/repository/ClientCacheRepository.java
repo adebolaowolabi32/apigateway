@@ -2,15 +2,10 @@ package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.Client;
 import org.springframework.cloud.gateway.support.NotFoundException;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.SubmissionPublisher;
 
 import static java.util.Collections.synchronizedMap;
 
@@ -18,28 +13,12 @@ import static java.util.Collections.synchronizedMap;
 public class ClientCacheRepository {
     private final Map<String, Client> clients = synchronizedMap(new LinkedHashMap<>());
 
-    private Mono<List<Client>> clientList;
     public ClientCacheRepository() {
     }
 
-    public ClientCacheRepository(ClientMongoRepository clientMongoRepository){
-            clientMongoRepository.findAll()
-                .map(client -> {
-                            this.clients.put(client.getClientId(), client);
-                            return Mono.empty();
-                        }
-                ).subscribe();
-                //subscribe();
+    public Flux<Client> findAll() {
+        return Flux.fromIterable(this.clients.values());
     }
-/*
-    private Mono<Void> loadClients(){
-        return clientMongoRepository.findAll().collectList().flatMap(client -> {
-            for (var c :client) {
-               this.clients.put(c.getClientId(), c);
-            }
-            return Mono.empty();
-        });
-    }*/
 
     public Mono<Client> findByClientId(Mono<String> clientId) {
         return clientId.flatMap(key -> {
@@ -48,12 +27,6 @@ public class ClientCacheRepository {
             }
             return Mono.empty();
         });
-    }
-
-    public Flux<Client> findAll() {
-        return Flux.fromIterable(
-                this.clients.values()
-        );
     }
 
     public Mono<Client> save(Mono<Client> client) {
@@ -72,6 +45,10 @@ public class ClientCacheRepository {
                 return Mono.defer(() -> Mono.error(new NotFoundException("Client Permissions not found for ClientID: " + cId)));
             }
         });
+    }
+
+    public void clear(){
+        this.clients.clear();
     }
 
 }

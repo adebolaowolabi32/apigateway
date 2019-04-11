@@ -1,12 +1,10 @@
 package com.interswitch.apigateway.config;
 
-import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.interswitch.apigateway.repository.ClientMongoRepository;
+import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import com.interswitch.apigateway.route.MongoRouteDefinitionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
@@ -25,8 +23,8 @@ public class RouteConfig {
     String baseUrl;
 
     @Bean
-    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
-        return new MongoRouteDefinitionRepository(mongo,gatewayFilterFactories,predicates);
+    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, AutoBusRefresh autoBusRefresh, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
+        return new MongoRouteDefinitionRepository(mongo,autoBusRefresh, gatewayFilterFactories,predicates);
     }
     @Bean
     public CommandLineRunner commandLineRunner(MongoRouteDefinitionRepository mongoRouteDefinitionRepository){

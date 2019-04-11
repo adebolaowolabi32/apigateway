@@ -39,7 +39,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
-        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo,gatewayFilterFactories,routePredicateFactories);
+        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo,null, gatewayFilterFactories,routePredicateFactories);
 
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");

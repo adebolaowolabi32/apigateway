@@ -1,30 +1,39 @@
 package com.interswitch.apigateway.config;
 
+import com.interswitch.apigateway.refresh.AutoBusRefresh;
+import com.interswitch.apigateway.refresh.ClientCacheRefresh;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.bus.BusProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.core.task.TaskExecutor;
 import reactor.core.publisher.Mono;
 
 @Configuration
 public class CacheConfig {
 
-    @DependsOn("clientMongoRepository")
     @Bean
-    public ClientCacheRepository clientCacheRepository(ClientMongoRepository clientMongoRepository){
-        return new ClientCacheRepository(clientMongoRepository);
-           // clientMongoRepository.findAll().flatMap(client -> clientCacheRepository.save(Mono.just(client))).subscribe();
+    public AutoBusRefresh autoBusRefresh(ApplicationContext context, BusProperties bus){
+        return new AutoBusRefresh(context,bus);
     }
 
-/*    @Bean
-    public CommandLineRunner loadClientCache(ClientMongoRepository mongoClientRepo, ClientCacheRepository cacheClientRepo){
-        return loadClientCache -> {
-            mongoClientRepo.findAll().flatMap(client -> cacheClientRepo.save(Mono.just(client))).subscribe();
+    @Bean
+    public ClientCacheRefresh clientCacheRefresh(ClientMongoRepository mongo, ClientCacheRepository cache){
+        return new ClientCacheRefresh(mongo, cache);
+    }
+
+    @Bean
+    public ClientCacheRepository clientCacheRepository(){
+        return new ClientCacheRepository();
+    }
+
+    @Bean
+    public CommandLineRunner loadClients(ClientMongoRepository mongo, ClientCacheRepository cache){
+        return loadClients -> {
+            mongo.findAll().flatMap(client -> cache.save(Mono.just(client))).subscribe();
         };
-    }*/
+    }
 
 }
