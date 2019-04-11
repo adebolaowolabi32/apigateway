@@ -1,9 +1,8 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
-import com.interswitch.apigateway.util.ClientPermissionUtils;
+import com.interswitch.apigateway.util.Client;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -14,7 +13,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -37,7 +35,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, ClientPermissionUtils.class, AccessControlFilter.class})
+@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, Client.class, AccessControlFilter.class})
 public class AccessControlFilterTests {
 
     @MockBean
@@ -47,7 +45,7 @@ public class AccessControlFilterTests {
     private ClientMongoRepository mongo;
 
     @Autowired
-    private ClientPermissionUtils util;
+    private Client util;
 
     @Autowired
     private AccessControlFilter filter;
@@ -88,7 +86,7 @@ public class AccessControlFilterTests {
     }
 
     private void assertAuthorizationHeader(MockServerHttpRequest request) {
-        Client client = new Client("testclient",client_id, Client.Status.APPROVED, origin,testresourceIds);
+        com.interswitch.apigateway.model.Client client = new com.interswitch.apigateway.model.Client("testclient",client_id, com.interswitch.apigateway.model.Client.Status.APPROVED, origin,testresourceIds);
         when(repository.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
         Route value = Route.async().id("testid").uri(request.getURI()).order(0)
                 .predicate(swe -> true).build();

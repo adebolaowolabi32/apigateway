@@ -2,20 +2,22 @@ package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.Client;
 import org.springframework.cloud.gateway.support.NotFoundException;
-import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static java.util.Collections.synchronizedMap;
 
-@Repository
+
 public class ClientCacheRepository {
     private final Map<String, Client> clients = synchronizedMap(new LinkedHashMap<>());
 
     public ClientCacheRepository() {
+    }
+
+    public Flux<Client> findAll() {
+        return Flux.fromIterable(this.clients.values());
     }
 
     public Mono<Client> findByClientId(Mono<String> clientId) {
@@ -25,10 +27,6 @@ public class ClientCacheRepository {
             }
             return Mono.empty();
         });
-    }
-
-    public Flux<Client> findAll() {
-        return Flux.fromIterable(this.clients.values());
     }
 
     public Mono<Client> save(Mono<Client> client) {
@@ -47,6 +45,10 @@ public class ClientCacheRepository {
                 return Mono.defer(() -> Mono.error(new NotFoundException("Client Permissions not found for ClientID: " + cId)));
             }
         });
+    }
+
+    public void clear(){
+        this.clients.clear();
     }
 
 }

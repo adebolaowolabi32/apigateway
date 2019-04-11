@@ -1,8 +1,7 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.interswitch.apigateway.util.ClientPermissionUtils;
+import com.interswitch.apigateway.util.Client;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -24,9 +23,9 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     private static List<String> ALLOW_ALL_ACCESS = Arrays.asList("passport-oauth");
 
-    private ClientPermissionUtils util;
+    private Client util;
 
-    public  AccessControlFilter(ClientCacheRepository repository, ClientPermissionUtils util) {
+    public  AccessControlFilter(ClientCacheRepository repository, Client util) {
         this.util = util;
         this.repository = repository;
     }
@@ -56,7 +55,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
             .switchIfEmpty(Mono.error(new Exception("Client Permissions not found")))
                 .flatMap(clients -> {
                     List resourceIds = clients.getResourceIds();
-                    if (resourceIds.contains(resourceId) & clients.getStatus()== Client.Status.APPROVED) {
+                    if (resourceIds.contains(resourceId) & clients.getStatus()== com.interswitch.apigateway.model.Client.Status.APPROVED) {
                         return Mono.just(true);
                     } else {
                         return Mono.just(false);

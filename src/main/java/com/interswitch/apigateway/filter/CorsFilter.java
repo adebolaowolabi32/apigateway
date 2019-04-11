@@ -1,8 +1,7 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.interswitch.apigateway.util.ClientPermissionUtils;
+import com.interswitch.apigateway.util.Client;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,12 +27,12 @@ public class CorsFilter implements WebFilter, Ordered {
 
     private ClientCacheRepository clientCacheRepository;
 
-    private ClientPermissionUtils util;
+    private Client util;
 
     private ServerHttpRequest request;
     private ServerHttpResponse response;
 
-    public CorsFilter(ClientCacheRepository clientCacheRepository, ClientPermissionUtils util) {
+    public CorsFilter(ClientCacheRepository clientCacheRepository, Client util) {
         this.util = util;
         this.clientCacheRepository = clientCacheRepository;
     }

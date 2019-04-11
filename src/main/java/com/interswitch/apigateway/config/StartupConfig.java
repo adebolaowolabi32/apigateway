@@ -17,14 +17,21 @@ import java.util.List;
 
 @Configuration
 public class StartupConfig {
+
     @Value("${passport.baseurl}")
     String baseUrl;
 
     @Bean
-    public CommandLineRunner commandLineRunner(ClientMongoRepository mongoClientRepo, ClientCacheRepository cacheClientRepo, MongoRouteDefinitionRepository repository){
+    public CommandLineRunner loadClients(ClientMongoRepository mongo, ClientCacheRepository cache){
+        return loadClients -> {
+            mongo.findAll().flatMap(client -> cache.save(Mono.just(client))).subscribe();
+        };
+    }
+
+    @Bean
+    public CommandLineRunner commandLineRunner(MongoRouteDefinitionRepository mongoRouteDefinitionRepository){
         return commandLineRunner -> {
-            buildPassportRoute(repository, "passport-oauth");
-            mongoClientRepo.findAll().flatMap(client -> cacheClientRepo.save(Mono.just(client))).subscribe();
+            buildPassportRoute(mongoRouteDefinitionRepository, "passport-oauth");
         };
     }
 

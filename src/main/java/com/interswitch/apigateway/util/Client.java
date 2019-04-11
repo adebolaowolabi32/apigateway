@@ -10,7 +10,8 @@ import java.text.ParseException;
 import java.util.List;
 
 @Component
-public class ClientPermissionUtils {
+public class Client {
+
     public String GetClientIdFromBearerToken(HttpHeaders headers) {
         String client_id = "";
         if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {

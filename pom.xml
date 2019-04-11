@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.interswitch</groupId>
-    <artifactId>api-management-gateway</artifactId>
+    <artifactId>api-gateway</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>api-management-gateway</name>
+    <name>api-gateway</name>
     <description>API Management Gateway</description>
 
     <properties>

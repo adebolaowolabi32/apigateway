@@ -1,9 +1,8 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
-import com.interswitch.apigateway.util.ClientPermissionUtils;
+import com.interswitch.apigateway.util.Client;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, ClientPermissionUtils.class, CorsFilter.class})
+@ContextConfiguration(classes = {ClientMongoRepository.class, ClientCacheRepository.class, Client.class, CorsFilter.class})
 public class CorsFilterTests {
 
     private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
@@ -42,13 +41,13 @@ public class CorsFilterTests {
     private CorsFilter filter;
     private ArgumentCaptor<ServerWebExchange> captor;
     private HttpHeaders headers;
-    private Client client;
+    private com.interswitch.apigateway.model.Client client;
 
     @MockBean
     private WebFilterChain filterChain;
 
     @Autowired
-    private ClientPermissionUtils util;
+    private Client util;
 
     @MockBean
     private ClientMongoRepository clientMongoRepository;
@@ -63,7 +62,7 @@ public class CorsFilterTests {
         String clientId = "testclientid";
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
+        client = new com.interswitch.apigateway.model.Client("id", clientId, com.interswitch.apigateway.model.Client.Status.APPROVED, origins, resourceIds);
         captor = ArgumentCaptor.forClass(ServerWebExchange.class);
         headers = new HttpHeaders();
         headers.set("Origin", ALLOWED_ORIGIN);
