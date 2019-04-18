@@ -56,7 +56,7 @@
             <topic>${service_name}-logs</topic>
             <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
             <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
-            <producerConfig>bootstrap.servers=172.25.15.250:9092</producerConfig>
+            <producerConfig>bootstrap.servers=172.35.14.144:9092,172.35.14.145:9092,172.35.14.177:9092</producerConfig>
             <appender-ref ref="TIME_BASED_FILE" />
         </appender>
     </springProfile>
