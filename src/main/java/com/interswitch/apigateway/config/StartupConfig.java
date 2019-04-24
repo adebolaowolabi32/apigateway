@@ -13,13 +13,21 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class StartupConfig {
 
     @Value("${passport.baseurl}")
     String baseUrl;
+
+    Map<String, String> passportRoutes = new HashMap<>(){{
+            put("passport-oauth", "/passport/oauth/**");
+            put("passport-user", "/passport/api/v1/clients/**");
+            put("passport-client", "/passport/api/v1/accounts/**");
+            }};
 
     @Bean
     public CommandLineRunner loadClients(ClientMongoRepository mongo, ClientCacheRepository cache){
@@ -31,14 +39,16 @@ public class StartupConfig {
     @Bean
     public CommandLineRunner commandLineRunner(MongoRouteDefinitionRepository mongoRouteDefinitionRepository){
         return commandLineRunner -> {
-            buildPassportRoute(mongoRouteDefinitionRepository, "passport-oauth");
+            for (var key : passportRoutes.keySet()) {
+                buildPassportRoute(mongoRouteDefinitionRepository, key, passportRoutes.get(key));
+            }
         };
     }
 
-    private void buildPassportRoute(MongoRouteDefinitionRepository repository, String id) {
+    private void buildPassportRoute(MongoRouteDefinitionRepository repository, String id, String path) {
         RouteDefinition routeDefinition = new RouteDefinition();
         List<PredicateDefinition> predicates = new ArrayList<>();
-        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=/passport/oauth/**");
+        PredicateDefinition predicateDefinition = new PredicateDefinition("Path=" + path);
         predicates.add(predicateDefinition);
         routeDefinition.setId(id);
         routeDefinition.setUri(URI.create(baseUrl));
