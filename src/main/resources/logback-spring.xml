@@ -61,13 +61,6 @@
         </appender>
     </springProfile>
 
-    <!--<logger name="org.apache.kafka" level="WARN" />-->
-    <!--<logger name="org.springframework.cloud.gateway" level="TRACE"/>-->
-    <!--<logger name="org.springframework.http.server.reactive" level="DEBUG"/>-->
-    <!--<logger name="org.springframework.web.reactive" level="DEBUG"/>-->
-    <!--<logger name="reactor.ipc.netty" level="DEBUG"/>-->
-    <!--<logger name="reactor.netty" level="DEBUG"/>-->
-
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="kafkaAppender" />
