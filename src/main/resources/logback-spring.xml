@@ -34,19 +34,7 @@
             <topic>${service_name}-logs</topic>
             <keyingStrategy class="com.github.danielwegener.logback.kafka.keying.NoKeyKeyingStrategy" />
             <deliveryStrategy class="com.github.danielwegener.logback.kafka.delivery.AsynchronousDeliveryStrategy" />
-
-            <!-- Optional parameter to use a fixed partition -->
-            <!--<partition>0</partition>-->
-
-            <!-- Optional parameter to include log timestamps into the kafka message -->
-            <!-- <appendTimestamp>true</appendTimestamp> -->
-
-            <!-- each <producerConfig> translates to regular kafka-client config (format: key=value) -->
-            <!-- producer configs are documented here: https://kafka.apache.org/documentation.html#newproducerconfigs -->
-            <!-- bootstrap.servers is the only mandatory producerConfig -->
             <producerConfig>bootstrap.servers=172.26.40.211:9092,172.26.40.212:9092,172.26.40.213:9092</producerConfig>
-
-            <!-- this is the fallback appender if kafka is not available. -->
             <appender-ref ref="TIME_BASED_FILE" />
         </appender>
     </springProfile>
@@ -60,13 +48,6 @@
             <appender-ref ref="TIME_BASED_FILE" />
         </appender>
     </springProfile>
-
-    <logger name="org.apache.kafka" level="WARN" />
-    <logger name="org.springframework.cloud.gateway" level="TRACE"/>
-    <logger name="org.springframework.http.server.reactive" level="DEBUG"/>
-    <logger name="org.springframework.web.reactive" level="DEBUG"/>
-    <logger name="reactor.ipc.netty" level="DEBUG"/>
-    <logger name="reactor.netty" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
