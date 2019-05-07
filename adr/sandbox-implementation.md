@@ -36,7 +36,7 @@ mistakes or unnecessary calls to the downstream production service. The new impl
 ## Consequences
 We are eliminating the need for a dedicated sandbox service by routing both sandbox and production URLs to the same downstream production service.
 We are also ensuring maximum uptime for the sandbox environment and handling scenarios where data needs to sync between sandbox and live databases.
-However, by sharing resources between live and sandbox environment, every production service needs to be aware of the potential performance impact.
-Production services should be monitored to prevent this and to ensure the production environment remains
+However, by sharing the same production service between live and sandbox environment, every production service needs to be aware of the potential performance impact.
+Production services should be monitored to prevent reduced performance and to ensure the production environment remains
  stable during testing. The possibility of the database getting filled with junk test data and scenarios of test data running live algorithms and vice versa should be rigorously tested for and eliminated.
 
