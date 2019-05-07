@@ -11,7 +11,7 @@ There is need to implement a sandbox environment that replicates the minimal fun
 Presently, the sandbox environment is isolated from the production environment and database. This can negatively affect Developer Experience because sandbox or
 UAT downstream services have significantly more downtime than their corresponding production services.
 It is therefore necessary to implement a solution that maximizes uptime of both sandbox and production environments.
-The current implementation for live and sandbox environments is represented below:
+The implementation for separating live and sandbox environments is represented below:
 
 ![alternativetext](assets/Drawing2.png)
 
