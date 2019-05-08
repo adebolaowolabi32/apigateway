@@ -102,7 +102,7 @@ public class CorsFilter implements WebFilter, Ordered {
         public HttpHeaders getHeaders() {
             headers = reduceHeaders(response.getHeaders());
             headers.setVary(Collections.singletonList("Origin"));
-            headers.setAccessControlAllowOrigin(ALLOWED_ORIGIN);
+            headers.setAccessControlAllowOrigin("*");
             headers.setAccessControlAllowHeaders(ALLOWED_HEADERS);
             headers.setAccessControlAllowMethods(ALLOWED_METHODS);
             headers.setAccessControlAllowCredentials(ALLOW_CREDENTIALS);
