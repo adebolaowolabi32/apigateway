@@ -90,6 +90,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private boolean checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {
         return filterDefinitions.stream().allMatch(filterDefinition -> {
             GatewayFilterFactory factory = this.gatewayFilterFactories.get(filterDefinition.getName());
+            if(factory!=null){
             Map<String, String> args = filterDefinition.getArgs();
             Map<String, Object> properties = factory.shortcutType().normalize(args,
                     factory, this.parser, this.beanFactory);
@@ -100,7 +101,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                     conversionService);}
                     catch (Exception e){
                         return false;
-                    }
+                    }}
             return factory != null;
         });
 
@@ -109,7 +110,8 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private boolean checkGatewayPredicatesExist (List<PredicateDefinition> predicateDefinitions){
         return predicateDefinitions.stream().allMatch(predicateDefinition -> {
             RoutePredicateFactory factory = this.routePredicateFactories.get(predicateDefinition.getName());
-            Map<String, String> args = predicateDefinition.getArgs();
+            if(factory!=null){
+                Map<String, String> args = predicateDefinition.getArgs();
             Map<String, Object> properties = factory.shortcutType().normalize(args,
                     factory, this.parser, this.beanFactory);
             Object configuration = factory.newConfig();
@@ -119,7 +121,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                         conversionService);}
             catch (Exception e){
                 return false;
-            }
+            }}
             return factory != null;
         });
     }
