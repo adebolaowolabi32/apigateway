@@ -22,6 +22,7 @@ import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.validation.Validator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -40,6 +41,9 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
 
     @MockBean
     private AutoBusRefresh autoBusRefresh;
+
+    @MockBean
+    private Validator validator;
 
     @Autowired
     private MongoRouteDefinitionRepository repository;
