@@ -21,7 +21,7 @@
         </triggeringPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
-    <springProfile name="uat, prod">
+    <springProfile name="uat | prod">
         <appender name="kafkaAppender" class="com.github.danielwegener.logback.kafka.KafkaAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
             <topic>${service_name}-logs</topic>
@@ -33,7 +33,7 @@
     </springProfile>
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <springProfile name="uat, prod">
+        <springProfile name="uat | prod">
             <appender-ref ref="kafkaAppender" />
         </springProfile>
 
