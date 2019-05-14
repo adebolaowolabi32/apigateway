@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.Client;
-import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ClientCacheRepository;
 import com.interswitch.apigateway.repository.ClientMongoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,9 +35,6 @@ public class ClientControllerTests {
 
     @MockBean
     private ClientCacheRepository cache;
-
-    @MockBean
-    private AutoBusRefresh autoBusRefresh;
 
     private Client client;
 

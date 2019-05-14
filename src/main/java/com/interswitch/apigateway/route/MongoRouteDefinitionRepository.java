@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.route;
 
-import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -40,14 +39,11 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     @Autowired
     private Validator validator;
-    private AutoBusRefresh autoBusRefresh;
 
     public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
-                                          AutoBusRefresh autoBusRefresh,
                                           List<GatewayFilterFactory> gatewayFilterFactories,
                                           List<RoutePredicateFactory> routePredicateFactories) {
         this.mongo = mongo;
-        this.autoBusRefresh = autoBusRefresh;
         initFactories(gatewayFilterFactories, routePredicateFactories);
     }
 
@@ -71,20 +67,14 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                         return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Is Invalid"));
                     }
             }
-            return mongo.save(r).then(Mono.defer(() -> {
-                autoBusRefresh.publishRefreshEvent();
-             return Mono.empty();
-            }));
+            return mongo.save(r).then();
 
         });
     }
 
     @Override
     public Mono<Void> delete(Mono<String> routeId) {
-        return mongo.deleteById(routeId).then(Mono.defer(() -> {
-            autoBusRefresh.publishRefreshEvent();
-            return Mono.empty();
-        }));
+        return mongo.deleteById(routeId).then();
     }
 
     private boolean checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {
