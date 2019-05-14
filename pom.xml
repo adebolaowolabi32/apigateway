@@ -16,8 +16,8 @@
 
     <properties>
         <java.version>11</java.version>
-        <spring-cloud.version>Greenwich.BUILD-SNAPSHOT</spring-cloud.version>
-        <spring.cloud.k8s.version>1.0.1.BUILD-SNAPSHOT</spring.cloud.k8s.version>
+        <spring-cloud.version>Greenwich.RELEASE</spring-cloud.version>
+        <spring.cloud.k8s.version>1.0.1.RELEASE</spring.cloud.k8s.version>
         <commons-pool2.version>2.6.0</commons-pool2.version>
         <logback-kafka-appender.version>0.2.0-RC2</logback-kafka-appender.version>
         <logstash-logback-encoder.version>5.2</logstash-logback-encoder.version>
