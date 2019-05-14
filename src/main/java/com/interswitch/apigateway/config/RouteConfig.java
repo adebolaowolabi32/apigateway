@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.config;
 
-import com.interswitch.apigateway.refresh.AutoBusRefresh;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import com.interswitch.apigateway.route.MongoRouteDefinitionRepository;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
@@ -13,7 +12,7 @@ import java.util.List;
 @Configuration
 public class RouteConfig {
     @Bean
-    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, AutoBusRefresh autoBusRefresh, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
-        return new MongoRouteDefinitionRepository(mongo,autoBusRefresh, gatewayFilterFactories,predicates);
+    public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
+        return new MongoRouteDefinitionRepository(mongo, gatewayFilterFactories,predicates);
     }
 }
