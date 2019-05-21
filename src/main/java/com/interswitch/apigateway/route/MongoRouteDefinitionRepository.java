@@ -13,10 +13,8 @@ import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.cloud.gateway.support.ConfigurationUtils;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.http.HttpStatus;
-import org.springframework.integration.support.utils.IntegrationUtils;
 import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,16 +33,18 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private final Map<String, RoutePredicateFactory> routePredicateFactories = new LinkedHashMap<>();
     private final SpelExpressionParser parser = new SpelExpressionParser();
     private BeanFactory beanFactory;
-    private volatile ConversionService conversionService = DefaultConversionService.getSharedInstance(); ;
 
+    private final ConversionService conversionService;
     @Autowired
     private Validator validator;
 
     public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
                                           List<GatewayFilterFactory> gatewayFilterFactories,
-                                          List<RoutePredicateFactory> routePredicateFactories) {
+                                          List<RoutePredicateFactory> routePredicateFactories,
+                                          ConversionService conversionService) {
         this.mongo = mongo;
         initFactories(gatewayFilterFactories, routePredicateFactories);
+        this.conversionService=conversionService;
     }
 
     @Override
@@ -125,12 +125,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        if (beanFactory != null) {
-            ConversionService integrationConversionService = IntegrationUtils.getConversionService(beanFactory);
-            if (integrationConversionService != null) {
-                this.conversionService = integrationConversionService;
-            }
-        }
+        this.beanFactory=beanFactory;
     }
 
 }

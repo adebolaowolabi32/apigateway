@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.route;
 
+import com.interswitch.apigateway.TestConfig;
 import com.interswitch.apigateway.config.RouteConfig;
 import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
@@ -18,6 +19,7 @@ import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Mono;
@@ -28,7 +30,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-@Import({RouteConfig.class})
+@Import({RouteConfig.class, TestConfig.class})
 @ActiveProfiles("dev")
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
@@ -45,11 +47,14 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
     private ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
+    @Autowired
+    private ConversionService conversionService;
+
     @BeforeEach
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
-        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories);
+        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories,conversionService);
 
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
