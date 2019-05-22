@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 @Configuration
-public class RouteConfig{
+public class RouteConfig {
     @Bean
     public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
-        return new MongoRouteDefinitionRepository(mongo, gatewayFilterFactories, predicates);
+        return new MongoRouteDefinitionRepository(mongo, gatewayFilterFactories,predicates);
     }
 
 }
