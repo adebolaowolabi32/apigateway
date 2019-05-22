@@ -33,18 +33,16 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
     private final Map<String, RoutePredicateFactory> routePredicateFactories = new LinkedHashMap<>();
     private final SpelExpressionParser parser = new SpelExpressionParser();
     private BeanFactory beanFactory;
+    private ConversionService conversionService;
 
-    private final ConversionService conversionService;
     @Autowired
     private Validator validator;
 
     public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
                                           List<GatewayFilterFactory> gatewayFilterFactories,
-                                          List<RoutePredicateFactory> routePredicateFactories,
-                                          ConversionService conversionService) {
+                                          List<RoutePredicateFactory> routePredicateFactories) {
         this.mongo = mongo;
         initFactories(gatewayFilterFactories, routePredicateFactories);
-        this.conversionService=conversionService;
     }
 
     @Override
@@ -125,7 +123,13 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        this.beanFactory=beanFactory;
+        if (beanFactory != null) {
+            if (beanFactory.containsBean("webFluxConversionService")) {
+                ConversionService webFluxConversionService = (ConversionService) beanFactory.getBean("webFluxConversionService");
+                if (webFluxConversionService != null) {
+                    this.conversionService = webFluxConversionService;
+                }
+            }
+        }
     }
-
 }
