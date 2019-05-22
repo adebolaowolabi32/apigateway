@@ -15,5 +15,4 @@ public class RouteConfig {
     public MongoRouteDefinitionRepository mongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo, List<GatewayFilterFactory> gatewayFilterFactories, List<RoutePredicateFactory> predicates) {
         return new MongoRouteDefinitionRepository(mongo, gatewayFilterFactories,predicates);
     }
-
 }
