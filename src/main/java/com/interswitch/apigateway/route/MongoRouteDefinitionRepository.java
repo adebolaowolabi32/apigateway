@@ -1,10 +1,8 @@
 package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
@@ -21,28 +19,31 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MongoRouteDefinitionRepository implements RouteDefinitionRepository, BeanFactoryAware {
+public class MongoRouteDefinitionRepository implements RouteDefinitionRepository {
 
     private ReactiveMongoRouteDefinitionRepository mongo;
-    private final Map<String, GatewayFilterFactory> gatewayFilterFactories = new HashMap<>();
-    private final Map<String, RoutePredicateFactory> routePredicateFactories = new LinkedHashMap<>();
+    private List<GatewayFilterFactory> gatewayFilterFactories;
+    private List<RoutePredicateFactory> routePredicateFactories;
     private final SpelExpressionParser parser = new SpelExpressionParser();
     private BeanFactory beanFactory;
     private ConversionService conversionService;
-
-    @Autowired
     private Validator validator;
 
     public MongoRouteDefinitionRepository(ReactiveMongoRouteDefinitionRepository mongo,
                                           List<GatewayFilterFactory> gatewayFilterFactories,
-                                          List<RoutePredicateFactory> routePredicateFactories) {
+                                          List<RoutePredicateFactory> routePredicateFactories,
+                                          Validator validator,
+                                          @Qualifier("webFluxConversionService") ConversionService conversionService,
+                                          BeanFactory beanFactory) {
         this.mongo = mongo;
-        initFactories(gatewayFilterFactories, routePredicateFactories);
+        this.gatewayFilterFactories=gatewayFilterFactories;
+        this.routePredicateFactories=routePredicateFactories;
+        this.validator=validator;
+        this.conversionService=conversionService;
+        this.beanFactory=beanFactory;
     }
 
     @Override
@@ -55,18 +56,9 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         return route.flatMap(r -> {
             List<PredicateDefinition> predicates = r.getPredicates();
             List<FilterDefinition> filters = r.getFilters();
-            if(!checkGatewayPredicatesExist(predicates)){
-                return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) Is Invalid"));
-            }
-            if(!filters.isEmpty())
-            {
-                if(!checkGatewayFiltersExists(filters))
-                    {
-                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) Is Invalid"));
-                    }
-            }
+            checkGatewayPredicatesExist(predicates);
+            checkGatewayFiltersExists(filters);
             return mongo.save(r).then();
-
         });
     }
 
@@ -75,61 +67,41 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         return mongo.deleteById(routeId).then();
     }
 
-    private boolean checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {
-        return filterDefinitions.stream().allMatch(filterDefinition -> {
-            GatewayFilterFactory factory = this.gatewayFilterFactories.get(filterDefinition.getName());
-            if(factory!=null){
-            Map<String, String> args = filterDefinition.getArgs();
-            Map<String, Object> properties = factory.shortcutType().normalize(args,
-                    factory, this.parser, this.beanFactory);
-            Object configuration = factory.newConfig();
-            try{
-                ConfigurationUtils.bind(configuration, properties,
-                    factory.shortcutFieldPrefix(), filterDefinition.getName(), validator,
-                    conversionService);}
-                    catch (Exception e){
-                        return false;
-                    }}
-            return factory != null;
+    private void checkGatewayFiltersExists(List<FilterDefinition> filterDefinitions) {
+        filterDefinitions.forEach(filterDefinition -> {
+            this.gatewayFilterFactories.stream()
+                    .filter(filterFactory -> filterFactory.name().equals(filterDefinition.getName())).findFirst()
+                    .ifPresentOrElse(filterFactory -> {
+                        Map<String, String> args = filterDefinition.getArgs();
+                        Map<String, Object> properties = filterFactory.shortcutType().normalize(args,
+                                filterFactory, this.parser, this.beanFactory);
+                        Object configuration = filterFactory.newConfig();
+                        try{ConfigurationUtils.bind(configuration, properties,
+                                filterFactory.shortcutFieldPrefix(), filterDefinition.getName(), validator,
+                                conversionService);}
+                                catch (Exception e){
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind Filter arguments");
+                                }
+                    }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) does not Exist");});
         });
-
     }
 
-    private boolean checkGatewayPredicatesExist (List<PredicateDefinition> predicateDefinitions){
-        return predicateDefinitions.stream().allMatch(predicateDefinition -> {
-            RoutePredicateFactory factory = this.routePredicateFactories.get(predicateDefinition.getName());
-            if(factory!=null){
+    private void checkGatewayPredicatesExist(List<PredicateDefinition> predicateDefinitions) {
+        predicateDefinitions.forEach(predicateDefinition -> {
+            this.routePredicateFactories.stream()
+                    .filter(predicateFactory -> predicateFactory.name().equals(predicateDefinition.getName())).findFirst()
+                    .ifPresentOrElse(predicateFactory -> {
                 Map<String, String> args = predicateDefinition.getArgs();
-            Map<String, Object> properties = factory.shortcutType().normalize(args,
-                    factory, this.parser, this.beanFactory);
-            Object configuration = factory.newConfig();
-            try{
-                ConfigurationUtils.bind(configuration, properties,
-                        factory.shortcutFieldPrefix(), predicateDefinition.getName(), validator,
-                        conversionService);}
-            catch (Exception e){
-                return false;
-            }}
-            return factory != null;
+                Map<String, Object> properties = predicateFactory.shortcutType().normalize(args,
+                        predicateFactory, this.parser, this.beanFactory);
+                Object configuration = predicateFactory.newConfig();
+                    try{ConfigurationUtils.bind(configuration, properties,
+                            predicateFactory.shortcutFieldPrefix(), predicateDefinition.getName(), validator,
+                            conversionService);}
+                            catch (Exception e){
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind Predicate arguments");
+                            }
+            }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) does not Exist");});
         });
-    }
-
-    private void initFactories(List<GatewayFilterFactory> filters, List<RoutePredicateFactory> predicates) {
-        filters.forEach(
-                factory -> this.gatewayFilterFactories.put(factory.name(), factory));
-        predicates.forEach(
-                factory -> this.routePredicateFactories.put(factory.name(), factory));
-    }
-
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        if (beanFactory != null) {
-            if (beanFactory.containsBean("webFluxConversionService")) {
-                ConversionService webFluxConversionService = (ConversionService) beanFactory.getBean("webFluxConversionService");
-                if (webFluxConversionService != null) {
-                    this.conversionService = webFluxConversionService;
-                }
-            }
-        }
     }
 }

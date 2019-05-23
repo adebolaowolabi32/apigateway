@@ -5,7 +5,9 @@ import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.bus.BusProperties;
@@ -18,6 +20,7 @@ import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Mono;
@@ -39,6 +42,13 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @MockBean
     private Validator validator;
 
+    @MockBean
+    private BeanFactory beanFactory;
+
+    @MockBean
+    @Qualifier("webFluxConversionService")
+    private ConversionService conversionService;
+
     @Autowired
     private MongoRouteDefinitionRepository repository;
 
@@ -49,7 +59,7 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
-        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories);
+        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories,validator,conversionService,beanFactory);
 
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
