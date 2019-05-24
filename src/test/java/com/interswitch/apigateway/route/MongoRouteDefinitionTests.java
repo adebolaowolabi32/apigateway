@@ -88,51 +88,49 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     }
 
     @Test
-    public void testWrongPredicates() throws URISyntaxException {
+    public void testWrongPredicateName() throws URISyntaxException {
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
         definition.setUri(new URI("http://httpbin.org:80"));
-        List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
-        List<PredicateDefinition> predicates = List.of(
-                new PredicateDefinition("Hot=**.apiaddrequestheader.org"),
-                new PredicateDefinition("Path=/headers"));
-        definition.setFilters(filters);
-        definition.setPredicates(predicates);
-        RouteDefinition definition2 = new RouteDefinition();
-        definition2.setId("testapi");
-        definition2.setUri(new URI("http://httpbin.org:80"));
-        List<FilterDefinition> filters2 = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
-        List<PredicateDefinition> predicates2 = List.of(
-                new PredicateDefinition("Host="),
-                new PredicateDefinition("Path=/headers"));
-        definition2.setFilters(filters2);
-        definition2.setPredicates(predicates2);
+        List<PredicateDefinition> wrongPredicateName = List.of(
+                new PredicateDefinition("Hot=**.apiaddrequestheader.org"));
+        definition.setPredicates(wrongPredicateName);
         StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
-        StepVerifier.create(repository.save(Mono.just(definition2))).expectError(ResponseStatusException.class).verify();
     }
 
     @Test
-    public void testWrongFilters() throws URISyntaxException {
+    public void testWrongPredicateArguments() throws URISyntaxException {
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
         definition.setUri(new URI("http://httpbin.org:80"));
-        List<FilterDefinition> filters = List.of(new FilterDefinition("NoFilter=X-Request-ApiFoo, ApiBaz"));
-        List<PredicateDefinition> predicates = List.of(
-                new PredicateDefinition("Host=**.apiaddrequestheader.org"),
-                new PredicateDefinition("Path=/headers"));
-        definition.setFilters(filters);
-        definition.setPredicates(predicates);
-        RouteDefinition definition2 = new RouteDefinition();
-        definition2.setId("testapi");
-        definition2.setUri(new URI("http://httpbin.org:80"));
-        List<FilterDefinition> filters2 = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo"));
-        List<PredicateDefinition> predicates2 = List.of(
-                new PredicateDefinition("Path=/headers"));
-        definition2.setFilters(filters2);
-        definition2.setPredicates(predicates2);
+        List<PredicateDefinition> wrongPredicateArgument = List.of(
+                new PredicateDefinition("Host="));
+        definition.setPredicates(wrongPredicateArgument);
         StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
-        StepVerifier.create(repository.save(Mono.just(definition2))).expectError(ResponseStatusException.class).verify();
-
+    }
+    @Test
+    public void testWrongFilterName() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> wrongFilterName = List.of(new FilterDefinition("NoFilter=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(wrongFilterName);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+    }
+    @Test
+    public void testWrongFilterArguments() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> wrongFilterArguments = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(wrongFilterArguments);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
     }
 
 }
