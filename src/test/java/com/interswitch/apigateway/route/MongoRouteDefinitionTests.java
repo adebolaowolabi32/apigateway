@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.bus.BusProperties;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
@@ -35,10 +34,6 @@ import java.util.List;
 @ActiveProfiles("dev")
 @DataMongoTest
 public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
-
-    @MockBean
-    private BusProperties busProperties;
-
     @MockBean
     private Validator validator;
 

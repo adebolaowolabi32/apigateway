@@ -80,7 +80,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                                 filterFactory.shortcutFieldPrefix(), filterDefinition.getName(), validator,
                                 conversionService);}
                                 catch (Exception e){
-                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind Filter arguments");
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind "+filterFactory.name()+" filter arguments");
                                 }
                     }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) does not Exist");});
         });
@@ -99,7 +99,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                             predicateFactory.shortcutFieldPrefix(), predicateDefinition.getName(), validator,
                             conversionService);}
                             catch (Exception e){
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind Predicate arguments");
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind "+predicateFactory.name()+" predicate arguments");
                             }
             }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) does not Exist");});
         });
