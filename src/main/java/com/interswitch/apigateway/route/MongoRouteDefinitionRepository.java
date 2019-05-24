@@ -82,7 +82,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                                 catch (Exception e){
                             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind "+filterFactory.name()+" filter arguments");
                                 }
-                    }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter(s) does not Exist");});
+                    }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Filter "+filterDefinition.getName()+" does not Exist");});
         });
     }
 
@@ -101,7 +101,7 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
                             catch (Exception e){
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to bind "+predicateFactory.name()+" predicate arguments");
                             }
-            }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate(s) does not Exist");});
+            }, () ->{throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gateway Predicate "+predicateDefinition.getName()+" does not Exist");});
         });
     }
 }
