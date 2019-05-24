@@ -131,5 +131,8 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
         definition2.setFilters(filters2);
         definition2.setPredicates(predicates2);
         StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+        StepVerifier.create(repository.save(Mono.just(definition2))).expectError(ResponseStatusException.class).verify();
+
     }
+
 }
