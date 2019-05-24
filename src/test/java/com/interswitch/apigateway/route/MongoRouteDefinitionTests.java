@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.validation.Validator;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -84,5 +85,51 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Test
     public void testGetRouteDefinitions() {
         StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2);
+    }
+
+    @Test
+    public void testWrongPredicates() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Hot=**.apiaddrequestheader.org"),
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(filters);
+        definition.setPredicates(predicates);
+        RouteDefinition definition2 = new RouteDefinition();
+        definition2.setId("testapi");
+        definition2.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters2 = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates2 = List.of(
+                new PredicateDefinition("Host="),
+                new PredicateDefinition("Path=/headers"));
+        definition2.setFilters(filters2);
+        definition2.setPredicates(predicates2);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+        StepVerifier.create(repository.save(Mono.just(definition2))).expectError(ResponseStatusException.class).verify();
+    }
+
+    @Test
+    public void testWrongFilters() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters = List.of(new FilterDefinition("NoFilter=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Host=**.apiaddrequestheader.org"),
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(filters);
+        definition.setPredicates(predicates);
+        RouteDefinition definition2 = new RouteDefinition();
+        definition2.setId("testapi");
+        definition2.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters2 = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo"));
+        List<PredicateDefinition> predicates2 = List.of(
+                new PredicateDefinition("Path=/headers"));
+        definition2.setFilters(filters2);
+        definition2.setPredicates(predicates2);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
     }
 }
