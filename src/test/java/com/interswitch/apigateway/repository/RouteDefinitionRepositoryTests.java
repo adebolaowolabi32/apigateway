@@ -48,4 +48,20 @@ public class RouteDefinitionRepositoryTests extends AbstractMongoRepositoryTests
                 .expectComplete()
                 .verify();
     }
+
+    @Test
+    public void testSaveRouteDefinition() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Host=**.apiaddrequestheader.org"),
+                new PredicateDefinition("Path=/headers")
+        );
+
+        definition.setFilters(filters);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(definition)).expectNext(definition).expectComplete().verify();
+    }
 }
