@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class MongoRouteDefinitionTests {
     @Autowired
     private ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
-    @BeforeEach
+    @Before
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
@@ -78,6 +78,20 @@ public class MongoRouteDefinitionTests {
     @Test
     public void testGetRouteDefinitions() {
         StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2);
+    }
+
+    @Test
+    public void testSaveRouteDefinitionSuccessful() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Host=**.apiaddrequestheader.org"),
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(filters);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectComplete().verify();
     }
 
     @Test
