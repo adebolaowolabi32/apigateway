@@ -18,7 +18,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -42,10 +44,10 @@ public class ClientControllerTests {
     public void setup() {
         List<String> origins;
         List<String> resourceIds;
-        String clientId = "testclientid";
+        String clientId = "clientidtesting";
         resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
         origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("id", clientId, Client.Status.APPROVED, origins, resourceIds);
+        client = new Client("b44f2191-0d4d-4a4c-b8dd-a18753632a63", clientId, Client.Status.APPROVED, origins, resourceIds);
     }
     
     @Test
@@ -73,8 +75,7 @@ public class ClientControllerTests {
                 .uri("/clients/save")
                 .body(BodyInserters.fromObject(client))
                 .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectBody(Client.class);
+                .exchange();
 
     }
 
@@ -98,8 +99,7 @@ public class ClientControllerTests {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(client))
-                .exchange()
-                .expectBody(Client.class);
+                .exchange();
     }
 
     @Test

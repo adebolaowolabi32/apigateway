@@ -1,14 +1,12 @@
 package com.interswitch.apigateway.route;
 
-import com.interswitch.apigateway.config.RouteConfig;
-import com.interswitch.apigateway.repository.AbstractMongoRepositoryTests;
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.bus.BusProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.filter.factory.AddRequestHeaderGatewayFilterFactory;
 import org.springframework.cloud.gateway.filter.factory.GatewayFilterFactory;
@@ -17,9 +15,10 @@ import org.springframework.cloud.gateway.handler.predicate.PathRoutePredicateFac
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.cloud.gateway.route.RouteDefinition;
-import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.validation.Validator;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,16 +27,18 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
-@Import({RouteConfig.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
-@DataMongoTest
-public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
+public class MongoRouteDefinitionTests {
+    @Autowired
+    private Validator validator ;
 
-    @MockBean
-    private BusProperties busProperties;
+    @Autowired
+    private BeanFactory beanFactory;
 
-    @MockBean
-    private Validator validator;
+    @Autowired
+    @Qualifier("webFluxConversionService")
+    private ConversionService conversionService;
 
     @Autowired
     private MongoRouteDefinitionRepository repository;
@@ -45,11 +46,11 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
     @Autowired
     private ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
-    @BeforeEach
+    @Before
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
-        MongoRouteDefinitionRepository repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories);
+        repository = new MongoRouteDefinitionRepository(reactiveMongo, gatewayFilterFactories,routePredicateFactories,validator,conversionService,beanFactory);
 
         RouteDefinition definition = new RouteDefinition();
         definition.setId("testapi");
@@ -70,14 +71,73 @@ public class MongoRouteDefinitionTests extends AbstractMongoRepositoryTests {
                 new PredicateDefinition("Path=/headers"));
         definition2.setFilters(filters2);
         definition2.setPredicates(predicates2);
-
         repository.save(Mono.just(definition)).block();
         repository.save(Mono.just(definition2)).block();
-
     }
 
     @Test
     public void testGetRouteDefinitions() {
         StepVerifier.create(repository.getRouteDefinitions().doOnNext(System.out::println)).expectNextCount(2);
     }
+
+    @Test
+    public void testSaveRouteDefinitionSuccessful() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> filters = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Host=**.apiaddrequestheader.org"),
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(filters);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectComplete().verify();
+    }
+
+    @Test
+    public void testWrongPredicateName() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<PredicateDefinition> wrongPredicateName = List.of(
+                new PredicateDefinition("Hot=**.apiaddrequestheader.org"));
+        definition.setPredicates(wrongPredicateName);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+    }
+
+    @Test
+    public void testWrongPredicateArguments() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<PredicateDefinition> wrongPredicateArgument = List.of(
+                new PredicateDefinition("Method=YUFHIF"));
+        definition.setPredicates(wrongPredicateArgument);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+    }
+    @Test
+    public void testWrongFilterName() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> wrongFilterName = List.of(new FilterDefinition("NoFilter=X-Request-ApiFoo, ApiBaz"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(wrongFilterName);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+    }
+    @Test
+    public void testWrongFilterArguments() throws URISyntaxException {
+        RouteDefinition definition = new RouteDefinition();
+        definition.setId("testapi");
+        definition.setUri(new URI("http://httpbin.org:80"));
+        List<FilterDefinition> wrongFilterArguments = List.of(new FilterDefinition("AddRequestHeader=X-Request-ApiFoo"));
+        List<PredicateDefinition> predicates = List.of(
+                new PredicateDefinition("Path=/headers"));
+        definition.setFilters(wrongFilterArguments);
+        definition.setPredicates(predicates);
+        StepVerifier.create(repository.save(Mono.just(definition))).expectError(ResponseStatusException.class).verify();
+    }
+
 }
