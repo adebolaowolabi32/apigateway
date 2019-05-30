@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.route;
 
 import com.interswitch.apigateway.repository.ReactiveMongoRouteDefinitionRepository;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class MongoRouteDefinitionTests {
     @Autowired
     private ReactiveMongoRouteDefinitionRepository reactiveMongo;
 
-    @Before
+    @BeforeEach
     public void setUp() throws URISyntaxException {
         List<RoutePredicateFactory> routePredicateFactories = Arrays.asList(new HostRoutePredicateFactory(),new PathRoutePredicateFactory());
         List<GatewayFilterFactory> gatewayFilterFactories = Arrays.asList(new AddRequestHeaderGatewayFilterFactory());
