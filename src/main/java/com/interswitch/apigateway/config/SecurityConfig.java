@@ -25,7 +25,7 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange()
-                .pathMatchers("/passport/oauth/**", "/actuator/prometheus").permitAll()
+                .pathMatchers("/passport/oauth/**", "/actuator/prometheus", "/actuator/health").permitAll()
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .anyExchange().authenticated()
                 .and().csrf().disable()
