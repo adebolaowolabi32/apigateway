@@ -17,6 +17,7 @@
     <properties>
         <java.version>11</java.version>
         <spring-cloud.version>Greenwich.RELEASE</spring-cloud.version>
+        <camel.version>3.0.0-M2</camel.version>
         <spring.cloud.k8s.version>1.0.1.RELEASE</spring.cloud.k8s.version>
         <commons-pool2.version>2.6.0</commons-pool2.version>
         <logback-kafka-appender.version>0.2.0-RC2</logback-kafka-appender.version>
