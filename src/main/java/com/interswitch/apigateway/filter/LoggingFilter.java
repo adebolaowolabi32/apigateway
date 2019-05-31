@@ -27,7 +27,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         String traceId = exchange.getAttribute(TRACE_REQUEST_ATTR).toString();
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String originalUri=route.getUri().toString();
-        log.trace("Incoming Request: "+exchange.getRequest().getId()+" TraceId: "+traceId+"To: "+originalUri+" Path: "+exchange.getRequest().getPath()+
+        log.debug("Incoming Request: "+exchange.getRequest().getId()+" TraceId: "+traceId+"To: "+originalUri+" Path: "+exchange.getRequest().getPath()+
                         " Method: "+exchange.getRequest().getMethodValue()+
                 " Headers: "+exchange.getRequest().getHeaders().values());
         return chain.filter(exchange);
