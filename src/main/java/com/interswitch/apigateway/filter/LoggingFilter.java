@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
 import org.springframework.core.Ordered;
@@ -15,7 +16,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 public class LoggingFilter implements GlobalFilter, Ordered {
     protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
             + ".TRACE";
-    Log log = LogFactory.getLog(getClass());
+    private final Log log = LogFactory.getLog(RoutePredicateHandlerMapping.class);
 
     @Override
     public int getOrder() {
@@ -27,9 +28,11 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         String traceId = exchange.getAttribute(TRACE_REQUEST_ATTR).toString();
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String originalUri=route.getUri().toString();
-        log.trace("Incoming Request: "+exchange.getRequest().getId()+" TraceId: "+traceId+"To: "+originalUri+" Path: "+exchange.getRequest().getPath()+
-                        " Method: "+exchange.getRequest().getMethodValue()+
-                " Headers: "+exchange.getRequest().getHeaders().values());
+        String message= "Incoming Request: "+exchange.getRequest().getId()+" TraceId: "+traceId+"To: "+originalUri+" Path: "+exchange.getRequest().getPath()+
+                " Method: "+exchange.getRequest().getMethodValue()+
+                " Headers: "+exchange.getRequest().getHeaders().values();
+        if (log.isDebugEnabled()) {
+        log.debug(message);}
         return chain.filter(exchange);
     }
 }
