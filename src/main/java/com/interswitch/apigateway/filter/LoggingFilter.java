@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.sleuth.instrument.web.TraceWebFilter;
 import org.springframework.core.Ordered;
@@ -15,7 +16,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 public class LoggingFilter implements GlobalFilter, Ordered {
     protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
             + ".TRACE";
-    private final Log log = LogFactory.getLog(LoggingFilter.class);
+    private final Log log = LogFactory.getLog(RoutePredicateHandlerMapping.class);
 
     @Override
     public int getOrder() {
