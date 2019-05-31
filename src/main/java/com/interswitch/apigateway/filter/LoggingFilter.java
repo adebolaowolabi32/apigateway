@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 public class LoggingFilter implements GlobalFilter, Ordered {
     protected static final String TRACE_REQUEST_ATTR = TraceWebFilter.class.getName()
             + ".TRACE";
+    Log log = LogFactory.getLog(getClass());
+
     @Override
     public int getOrder() {
         return -23456778;
@@ -19,7 +21,6 @@ public class LoggingFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        Log log = LogFactory.getLog(getClass());
         String traceId = exchange.getAttribute(TRACE_REQUEST_ATTR).toString();
         log.trace("Incoming Request: "+exchange.getRequest().getId()+ " TraceId: "+traceId+" Path: "+exchange.getRequest().getPath()+
                         " Method: "+exchange.getRequest().getMethodValue()+
