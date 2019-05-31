@@ -21,7 +21,7 @@ public class LoggingFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         Log log = LogFactory.getLog(getClass());
         String traceId = exchange.getAttribute(TRACE_REQUEST_ATTR).toString();
-        log.info("Incoming Request: "+exchange.getRequest().getId()+ " TraceId: "+traceId+" Path: "+exchange.getRequest().getPath()+
+        log.trace("Incoming Request: "+exchange.getRequest().getId()+ " TraceId: "+traceId+" Path: "+exchange.getRequest().getPath()+
                         " Method: "+exchange.getRequest().getMethodValue()+
                 " Headers: "+exchange.getRequest().getHeaders().values());
         return chain.filter(exchange);
