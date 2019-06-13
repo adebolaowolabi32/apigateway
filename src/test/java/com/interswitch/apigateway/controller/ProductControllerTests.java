@@ -1,7 +1,10 @@
 package com.interswitch.apigateway.controller;
 
+import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
+import com.interswitch.apigateway.model.Resource;
 import com.interswitch.apigateway.repository.MongoProductRepository;
+import com.interswitch.apigateway.repository.MongoResourceRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,36 +23,50 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static org.mockito.BDDMockito.when;
 
 @ActiveProfiles("dev")
 @WebFluxTest(value = {ProductController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveManagementWebSecurityAutoConfiguration.class,
         ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {MongoProductRepository.class, ProductController.class})
+@ContextConfiguration(classes = {ProductController.class})
 public class ProductControllerTests {
     @Autowired
     private WebTestClient webClient;
 
     @MockBean
-    private MongoProductRepository mongo;
+    private MongoProductRepository mongoProductRepository;
 
+    @MockBean
+    private MongoResourceRepository mongoResourceRepository;
 
-    private List testproductsIds = new ArrayList();
-    private Product products = new Product();
+    private Product product = new Product();
+
+    private Client client;
+    private Resource resource;
 
     @BeforeEach
     public void setup() throws URISyntaxException {
-        testproductsIds.add("passport/oauth/token");
-        testproductsIds.add("passport/oauth/authorize");
-        products = new Product("id","productId",testproductsIds,"Payment","Description");
+        client = new Client();
+        client.setId("test_client_id");
+        client.setClientId("test_client_id");
+        resource = new Resource();
+        resource.setId("test_resource_id");
+        resource.setName("resourceName");
+        resource.setMethod("GET");
+        resource.setPath("/path");
+        product = new Product();
+        product.setId("test_product_id");
+        product.setName("productName");
+        product.setDescription("productDes");
+        product.addResource(resource);
+        product.addClient(client);
     }
+
     @Test
-    public void testGetProducts(){
-        when(mongo.findAll()).thenReturn(Flux.just(products));
+    public void testGetAll(){
+        when(mongoProductRepository.findAll()).thenReturn(Flux.just(product));
         this.webClient.get()
                 .uri("/products")
                 .accept(MediaType.APPLICATION_JSON)
@@ -60,11 +77,11 @@ public class ProductControllerTests {
     }
 
     @Test
-    public void testSaveProducts(){
-        when(mongo.save(products)).thenReturn(Mono.just(products));
+    public void testSave(){
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
         this.webClient.post()
-                .uri("/products/save")
-                .body(BodyInserters.fromObject(products))
+                .uri("/products")
+                .body(BodyInserters.fromObject(product))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isCreated()
@@ -72,10 +89,10 @@ public class ProductControllerTests {
     }
 
     @Test
-    public void findByProductId(){
-        when(mongo.findByProductId(products.getProductId())).thenReturn(Mono.just(products));
+    public void findById(){
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         this.webClient.get()
-                .uri("/products/{productId}", Collections.singletonMap("productId",products.getProductId()))
+                .uri("/products/{productId}", Collections.singletonMap("productId",product.getId()))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -83,27 +100,93 @@ public class ProductControllerTests {
     }
 
     @Test
-    public void testUpdateProducts(){
-        when(this.mongo.findByProductId(products.getProductId())).thenReturn(Mono.just(products));
-        when(this. mongo.save(products)).thenReturn(Mono.just(products));
+    public void testUpdate(){
+        when(this.mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(this. mongoProductRepository.save(product)).thenReturn(Mono.just(product));
         this.webClient.put()
-                .uri("/products/update")
+                .uri("/products")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
-                .body(BodyInserters.fromObject(products))
+                .body(BodyInserters.fromObject(product))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBodyList(Product.class);
     }
+
     @Test
-    public void testDeleteProducts(){
-        when(mongo.deleteById(products.getId())).thenReturn(Mono.empty());
-        when(mongo.findById(products.getId())).thenReturn(Mono.just(products));
+    public void testDelete(){
+        when(mongoProductRepository.deleteById(product.getId())).thenReturn(Mono.empty());
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         this.webClient.delete()
-                .uri("/products/delete/{id}",  Collections.singletonMap("id",products.getId()))
+                .uri("/products/{productId}",  product.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    public void testGetResources(){
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        this.webClient.get()
+                .uri("/products/{productId}/resources", product.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
+                .expectBodyList(Resource.class);
+    }
+
+    @Test
+    public void testSaveResource(){
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
+        when(mongoResourceRepository.save(resource)).thenReturn(Mono.just(resource));
+        this.webClient.post()
+                .uri("/products/{productId}/resources", product.getId())
+                .body(BodyInserters.fromObject(resource))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Product.class);
+    }
+
+    @Test
+    public void findResourceById(){
+        when(mongoResourceRepository.findById(resource.getId())).thenReturn(Mono.just(resource));
+        this.webClient.get()
+                .uri("/products/{productId}/resources/{resourceId}", product.getId(), resource.getId())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Resource.class);
+    }
+
+    @Test
+    public void testUpdateResource(){
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(mongoResourceRepository.findById(resource.getId())).thenReturn(Mono.just(resource));
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
+        when(mongoResourceRepository.save(resource)).thenReturn(Mono.just(resource));
+        this.webClient.put()
+                .uri("/products/{productId}/resources", product.getId(), resource.getId())
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .body(BodyInserters.fromObject(resource))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Product.class);
+    }
+    @Test
+    public void testDeleteResource(){
+        when(mongoResourceRepository.deleteById(resource.getId())).thenReturn(Mono.empty());
+        when(mongoResourceRepository.findById(resource.getId())).thenReturn(Mono.just(resource));
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
+        this.webClient.delete()
+                .uri("/products/{productId}/resources/{resourceId}", product.getId(), resource.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Product.class);
     }
 }

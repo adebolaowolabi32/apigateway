@@ -1,8 +1,8 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.interswitch.apigateway.repository.ClientMongoRepository;
-import com.interswitch.apigateway.util.Client;
+import com.interswitch.apigateway.model.Client;
+import com.interswitch.apigateway.model.Product;
+import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -23,29 +23,20 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {ClientCacheRepository.class, ClientMongoRepository.class, Client.class, AccessControlFilter.class})
+@ContextConfiguration(classes = {MongoClientRepository.class, Client.class, AccessControlFilter.class})
 public class AccessControlFilterTests {
 
     @MockBean
-    private ClientCacheRepository repository;
-
-    @MockBean
-    private ClientMongoRepository mongo;
-
-    @Autowired
-    private Client util;
+    private MongoClientRepository mongo;
 
     @Autowired
     private AccessControlFilter filter;
@@ -55,8 +46,6 @@ public class AccessControlFilterTests {
 
     private String accessToken = "";
     private String client_id = "client-test-id";
-    private List<String> testresourceIds = new ArrayList<>();
-    private List <String> origin = null;
 
     @BeforeEach
     public void setup() throws JOSEException, ParseException {
@@ -65,6 +54,7 @@ public class AccessControlFilterTests {
                 .notBeforeTime(new Date())
                 .audience("isw-core")
                 .claim("client_id", client_id)
+                .claim("api_resources", Arrays.asList("GET/path"))
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
@@ -72,22 +62,25 @@ public class AccessControlFilterTests {
         JWSObject jws = new JWSObject(jwsHeader,payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = "Bearer " + jws.serialize();
-        testresourceIds.add("testid");
     }
 
 
     @Test
     public void testAccessControl (){
         MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/users/find/TestUser")
+                .get("http://localhost:8080/path")
                 .header("Authorization",accessToken)
                 .build();
         assertAuthorizationHeader(request);
     }
 
     private void assertAuthorizationHeader(MockServerHttpRequest request) {
-        com.interswitch.apigateway.model.Client client = new com.interswitch.apigateway.model.Client("testclient",client_id, com.interswitch.apigateway.model.Client.Status.APPROVED, origin,testresourceIds);
-        when(repository.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
+        List<Product> testProducts = new ArrayList<>();
+        Client client = new Client();
+        client.setId("testclient");
+        client.setClientId(client_id);
+        client.setProducts(testProducts);
+        when(mongo.findByClientId(client_id)).thenReturn(Mono.just(client));
         Route value = Route.async().id("testid").uri(request.getURI()).order(0)
                 .predicate(swe -> true).build();
         ServerWebExchange exchange = MockServerWebExchange.from(request);
