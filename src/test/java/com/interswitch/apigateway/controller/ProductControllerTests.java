@@ -139,12 +139,17 @@ public class ProductControllerTests {
 
     @Test
     public void testSaveResource(){
+        Resource r = new Resource();
+        r.setId("testresourceId");
+        r.setName("testresourceName");
+        r.setMethod("POST");
+        r.setPath("/path");
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
-        when(mongoResourceRepository.save(resource)).thenReturn(Mono.just(resource));
+        when(mongoResourceRepository.save(r)).thenReturn(Mono.just(r));
         this.webClient.post()
                 .uri("/products/{productId}/resources", product.getId())
-                .body(BodyInserters.fromObject(resource))
+                .body(BodyInserters.fromObject(r))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isCreated()
