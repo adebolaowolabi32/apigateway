@@ -36,7 +36,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 public class AccessControlFilterTests {
 
     @MockBean
-    private MongoClientRepository mongo;
+    private MongoClientRepository mongoClientRepository;
 
     @Autowired
     private AccessControlFilter filter;
@@ -80,7 +80,7 @@ public class AccessControlFilterTests {
         client.setId("testclient");
         client.setClientId(client_id);
         client.setProducts(testProducts);
-        when(mongo.findByClientId(client_id)).thenReturn(Mono.just(client));
+        when(mongoClientRepository.findByClientId(client_id)).thenReturn(Mono.just(client));
         Route value = Route.async().id("testid").uri(request.getURI()).order(0)
                 .predicate(swe -> true).build();
         ServerWebExchange exchange = MockServerWebExchange.from(request);
