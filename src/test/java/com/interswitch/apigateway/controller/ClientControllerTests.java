@@ -1,8 +1,9 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.Client;
-import com.interswitch.apigateway.repository.ClientCacheRepository;
-import com.interswitch.apigateway.repository.ClientMongoRepository;
+import com.interswitch.apigateway.model.Product;
+import com.interswitch.apigateway.repository.MongoClientRepository;
+import com.interswitch.apigateway.repository.MongoProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,43 +19,42 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
-@WebFluxTest(value = {ClientController.class}, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@WebFluxTest(excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes = {ClientController.class})
 public class ClientControllerTests {
     @Autowired
     private WebTestClient webClient;
 
     @MockBean
-    private ClientMongoRepository mongo;
+    private MongoClientRepository mongoClientRepository;
 
     @MockBean
-    private ClientCacheRepository cache;
+    private MongoProductRepository mongoProductRepository;
 
     private Client client;
 
+    private Product product;
+
     @BeforeEach
     public void setup() {
-        List<String> origins;
-        List<String> resourceIds;
-        String clientId = "clientidtesting";
-        resourceIds = Arrays.asList("passport/oauth/token", "passport/oauth/authorize");
-        origins = Arrays.asList("https://qa.interswitchng.com", "http://localhost:3000");
-        client = new Client("b44f2191-0d4d-4a4c-b8dd-a18753632a63", clientId, Client.Status.APPROVED, origins, resourceIds);
+       /* when(client.getClientId()).thenReturn("test_client_id");
+        when(product.getId()).thenReturn("test_product_id");*/
+        product = new Product();
+        product.setId("test_product_id");
+        client = new Client() ;
+        client.setId("test_client_id");
+        client.setClientId("test_client_id");
+        client.addProduct(product);
     }
-    
-    @Test
-    public void testGetAllClients(){
-        List<Client> listOfClients = Collections.singletonList(client);
 
-        when(cache.findAll()).thenReturn(Flux.fromIterable(listOfClients));
+    @Test
+    public void testGetAll(){
+        when(mongoClientRepository.findAll()).thenReturn(Flux.fromIterable(Collections.singletonList(client)));
 
         this.webClient.get()
                 .uri("/clients")
@@ -67,21 +67,22 @@ public class ClientControllerTests {
     }
 
     @Test
-    public void testSaveClient(){
-        when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
-        when(mongo.save(client)).thenReturn(Mono.just(client));
-        when(cache.save(Mono.just(client))).thenReturn(Mono.just(client));
+    public void testSave(){
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        when(mongoClientRepository.save(client)).thenReturn(Mono.just(client));
         this.webClient.post()
-                .uri("/clients/save")
+                .uri("/clients")
                 .body(BodyInserters.fromObject(client))
                 .accept(MediaType.APPLICATION_JSON)
-                .exchange();
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Client.class);
 
     }
 
     @Test
-    public void findClientByClientId(){
-        when(cache.findByClientId(any(Mono.class))).thenReturn(Mono.just(client));
+    public void findByClientId(){
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         this.webClient.get()
                 .uri("/clients/{clientId}", client.getClientId())
                 .exchange()
@@ -90,27 +91,70 @@ public class ClientControllerTests {
     }
 
     @Test
-    public void testUpdateClient(){
-        when(cache.save(Mono.just(client))).thenReturn(Mono.just(client));
-        when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
-        when(mongo.save(client)).thenReturn(Mono.just(client));
+    public void testUpdate(){
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        when(mongoClientRepository.save(client)).thenReturn(Mono.just(client));
         this.webClient.put()
-                .uri("/clients/update")
+                .uri("/clients")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(client))
-                .exchange();
+                .exchange()
+                .expectBody(Client.class);
     }
 
     @Test
-    public void testDeleteClient(){
-        when(mongo.deleteById(client.getId())).thenReturn(Mono.empty());
-        when(cache.deleteByClientId(any(Mono.class))).thenReturn(Mono.empty());
-        when(mongo.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+    public void testDelete(){
+        when(mongoClientRepository.deleteById(client.getId())).thenReturn(Mono.empty());
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
         this.webClient.delete()
-                .uri("/clients/delete/{clientId}",  client.getClientId())
+                .uri("/clients/{clientId}",  client.getClientId())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    public void testAssignProduct(){
+        Product p = new Product();
+        p.setId("testProductId");
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        when(mongoClientRepository.save(client)).thenReturn(Mono.just(client));
+        when(mongoProductRepository.findById(p.getId())).thenReturn(Mono.just(p));
+        when(mongoProductRepository.save(p)).thenReturn(Mono.just(p));
+        this.webClient.post()
+                .uri("/clients/{clientId}/products/{productId}",  client.getClientId(), p.getId())
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Client.class);
+        ;
+    }
+
+    @Test
+    public void testUnassignProduct(){
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        when(mongoClientRepository.save(client)).thenReturn(Mono.just(client));
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
+        this.webClient.delete()
+                .uri("/clients/{clientId}/products/{productId}",  client.getClientId(), product.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Client.class);
+        ;
+    }
+
+    @Test
+    public void testGetAssignedProducts(){
+        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
+        this.webClient.get()
+                .uri("/clients/{clientId}/products",  client.getClientId())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Product.class);
     }
 }

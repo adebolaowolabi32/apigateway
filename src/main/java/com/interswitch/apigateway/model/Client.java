@@ -1,98 +1,44 @@
 package com.interswitch.apigateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.io.Serializable;
+import javax.validation.constraints.NotBlank;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
-@Document
-public class Client implements Serializable {
+@Document(collection = "clients")
+@Data
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+public class Client{
     @Id
-    private String id = UUID.randomUUID().toString();
+    private String id;
 
+    @Indexed(unique = true)
+    @NotBlank(message = "Client ID is Required")
+    @Length(min = 5, max = 50, message = "Client ID must be between 5 and 50 characters long")
     private String clientId;
 
-    public enum Status{
-        APPROVED, REQUESTED, REJECTED
-    }
-    private Status status ;
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @DBRef(lazy = true)
+    private List<Product> products = new ArrayList<>();
 
-    private List<String> origins;
-
-    private List<String> resourceIds;
-
-    public Client() {
+    public void addProduct(Product product){
+        products.add(product);
     }
 
-    public Client(String id, String clientId, Status status, List<String> origins, List<String> resourceIds) {
-        this.id = id;
-        this.clientId = clientId;
-        this.status = status;
-        this.origins = origins;
-        this.resourceIds = resourceIds;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public Status getStatus() { return status; }
-
-    public void setStatus(Status status) { this.status = status; }
-
-    public List<String> getOrigins() { return origins; }
-
-    public void setOrigins(List<String> origins) { this.origins = origins; }
-
-    public List<String> getResourceIds() {
-        return resourceIds;
-    }
-
-    public void setResourceIds(List<String> resourceIds) {
-        this.resourceIds = resourceIds;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Client)) return false;
-        Client client = (Client) o;
-        return Objects.equals(getId(), client.getId()) &&
-                Objects.equals(getClientId(), client.getClientId()) &&
-                Objects.equals(getStatus(), client.getStatus()) &&
-                Objects.equals(getOrigins(), client.getOrigins()) &&
-                Objects.equals(getResourceIds(), client.getResourceIds());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getId(), getClientId(), getStatus(), getOrigins(), getResourceIds());
-    }
-
-    @Override
-    public String toString() {
-        return "Client{" +
-                "id='" + id + '\'' +
-                ", clientId='" + clientId + '\'' +
-                ", status='" + status + '\'' +
-                ", origins=" + origins +
-                ", resourceIds=" + resourceIds +
-                '}';
+    public void removeProduct(Product product){
+        products.remove(product);
     }
 }
 

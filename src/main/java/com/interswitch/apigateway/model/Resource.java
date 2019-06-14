@@ -2,7 +2,6 @@ package com.interswitch.apigateway.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,48 +13,29 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.List;
 
-@Document(collection = "products")
+@Document(collection = "resources")
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Product {
+public class Resource {
     @Id
     private String id;
 
     @Indexed(unique = true)
-    @NotBlank(message = "Name is Required")
-    @Length(min = 5, max = 50, message = "Name must be between 5 and 50 characters long")
+    @NotBlank(message = "Resource Name is Required")
+    @Length(min = 5, max = 50, message = "Resource Name must be between 5 and 50 characters long")
     private String name;
 
     @EqualsAndHashCode.Exclude
-    @Length(max = 500, message = "Description must less than 500 characters long")
-    private String description;
+    @NotBlank(message = "Method is Required")
+    private String method;
+
+    @EqualsAndHashCode.Exclude
+    @NotBlank(message = "Path is Required")
+    private String path;
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
-    private List<Resource> resources = new ArrayList<>();
-
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    @DBRef(lazy = true)
-    private List<Client> clients = new ArrayList<>();
-
-    public void addResource(Resource resource){
-        resources.add(resource);
-    }
-
-    public void removeResource(Resource resource){
-        resources.remove(resource);
-    }
-
-    public void addClient(Client client){
-        clients.add(client);
-    }
-
-    public void removeClient(Client client){
-        clients.remove(client);
-    }
+    private Product product;
 }
