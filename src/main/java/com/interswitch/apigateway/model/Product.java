@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -32,6 +33,11 @@ public class Product {
     @EqualsAndHashCode.Exclude
     @Length(max = 500, message = "Description must less than 500 characters long")
     private String description;
+
+    @EqualsAndHashCode.Exclude
+    @URL(message = "Documentation URL not valid")
+    @Length(max = 500, message = "Documentation URL must less than 500 characters long")
+    private String documentation;
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude

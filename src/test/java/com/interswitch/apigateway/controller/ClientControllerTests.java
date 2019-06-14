@@ -42,8 +42,6 @@ public class ClientControllerTests {
 
     @BeforeEach
     public void setup() {
-       /* when(client.getClientId()).thenReturn("test_client_id");
-        when(product.getId()).thenReturn("test_product_id");*/
         product = new Product();
         product.setId("test_product_id");
         client = new Client() ;
