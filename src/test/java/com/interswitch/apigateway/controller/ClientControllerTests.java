@@ -97,7 +97,7 @@ public class ClientControllerTests {
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromObject(client))
-                .exchange()
+                .exchange().expectStatus().isOk()
                 .expectBody(Client.class);
     }
 
