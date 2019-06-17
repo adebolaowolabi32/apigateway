@@ -31,14 +31,14 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
     }
 
     @Test
-    public void testFindById(){
+    public void testFindByUsername(){
         User user = new User();
         user.setId("userId");
         user.setUsername("testUsername");
         user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
-        StepVerifier.create(mongoUserRepository.findById(user.getId())).assertNext(u -> {
-            assertThat(u.getUsername()).isEqualTo(user.getUsername()).isEqualTo(savedUser.getUsername());
+        StepVerifier.create(mongoUserRepository.findByUsername(user.getUsername())).assertNext(u -> {
+            assertThat(u.getId()).isEqualTo(user.getId()).isEqualTo(savedUser.getId());
             assertThat(u.getRole()).isEqualTo(user.getRole()).isEqualTo(savedUser.getRole());
         }).expectComplete().verify();
     }
