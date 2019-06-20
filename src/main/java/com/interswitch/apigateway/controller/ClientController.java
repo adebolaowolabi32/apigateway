@@ -44,15 +44,15 @@ public class ClientController {
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
-    @PutMapping(produces = "application/json", consumes = "application/json")
-    private Mono<Client> update(@Validated @RequestBody Client client) {
-        return mongoClientRepository.findByClientId(client.getClientId())
-                .flatMap(existing -> {
-                    client.setId(existing.getId());
-                    client.setProducts(existing.getProducts());
-                    return mongoClientRepository.save(client);
-                });
-    }
+//    @PutMapping(produces = "application/json", consumes = "application/json")
+//    private Mono<Client> update(@Validated @RequestBody Client client) {
+//        return mongoClientRepository.findByClientId(client.getClientId())
+//                .flatMap(existing -> {
+//                    client.setId(existing.getId());
+//                    client.setProducts(existing.getProducts());
+//                    return mongoClientRepository.save(client);
+//                });
+//    }
 
     @DeleteMapping("/{clientId}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String clientId){
