@@ -2,7 +2,6 @@ package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -51,19 +50,6 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
         mongoClientRepository.save(c1).block();
         mongoClientRepository.save(c2).block();
         StepVerifier.create(mongoClientRepository.findAll()).expectNextCount(2);
-    }
-
-    @Test
-    public void testUpdate(){
-        Client client = new Client();
-        client.setId("testClientOne");
-        client.setClientId("testClientOne");
-        Client savedClient = mongoClientRepository.save(client).block();
-        savedClient.setClientId("testClient");
-        mongoClientRepository.save(savedClient).block();
-        StepVerifier.create(mongoClientRepository.findById(client.getId())).assertNext(c -> {
-            assertThat(c.getClientId()).isEqualTo(savedClient.getClientId());
-        }).expectComplete().verify();
     }
 
     @Test
