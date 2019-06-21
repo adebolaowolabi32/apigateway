@@ -40,15 +40,19 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product p2 = new Product();
         p2.setId("testProductTwo");
         p2.setName("testProductTwo");
-        mongoProductRepository.save(p1).block();
-        mongoProductRepository.save(p2).block();
         StepVerifier.create(mongoProductRepository.findAll()).expectNextCount(2);
     }
     @Test
     public void testUpdate(){
+        Resource resource = new Resource();
+        resource.setId("resourceId");
+        resource.setName("resource");
+        resource.setMethod("GET");
+        resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.addResource(resource);
         Product savedProduct = mongoProductRepository.save(product).block();
         savedProduct.setName("productNameTwo");
         mongoProductRepository.save(product).block();
@@ -74,7 +78,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
         resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setName("resource");
         resource.setMethod("GET");
         resource.setPath("/path");
         resource.setProduct(product);
@@ -98,8 +102,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         product.setName("testProductName");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("newResource");
+        resource.setName("newResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         resource.setProduct(product);
@@ -121,16 +125,14 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("productId");
         product.setName("productName");
-        Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
         client.setId("testClientOne");
         client.setClientId("testClientOne");
-        savedProduct.addClient(client);
-        mongoProductRepository.save(savedProduct).block();
+        product.addClient(client);
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
-            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
+            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(product.getName());
             assertThat(p.getClients()).hasSize(1);
-        }).expectComplete().verify();
+        });
 
     }
     @Test
@@ -138,17 +140,14 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("productId");
         product.setName("productName");
-        Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
         client.setId("testClientOne");
         client.setClientId("testClientOne");
-        savedProduct.addClient(client);
-        Product updatedProduct = mongoProductRepository.save(savedProduct).block();
-        updatedProduct.removeClient(client);
-        mongoProductRepository.save(updatedProduct).block();
+        product.addClient(client);
+        product.removeClient(client);
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
-            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
+            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(product.getName());
             assertThat(p.getClients()).isEmpty();
-        }).expectComplete().verify();
+        });
     }
 }

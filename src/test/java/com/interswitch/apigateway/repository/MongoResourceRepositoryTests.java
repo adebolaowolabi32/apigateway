@@ -24,8 +24,8 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         resource.setMethod("GET");
         resource.setPath("/path");
         Product product = new Product();
-        product.setId("productOne");
-        product.setName("productOne");
+        product.setId("testProductId");
+        product.setName("productNameTwo");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
         StepVerifier.create(mongoResourceRepository.findById(savedResource.getId())).assertNext(r -> {
@@ -41,8 +41,8 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindAll(){
         Product product = new Product();
-        product.setId("productOne");
-        product.setName("productOne");
+        product.setId("product");
+        product.setName("product");
         Resource r1 = new Resource();
         r1.setId("resourceOne");
         r1.setName("resourceOne");
@@ -55,8 +55,6 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         r2.setMethod("POST");
         r2.setPath("/path");
         r2.setProduct(product);
-        mongoResourceRepository.save(r1).block();
-        mongoResourceRepository.save(r2).block();
         StepVerifier.create(mongoResourceRepository.findAll()).expectNextCount(2);
     }
 
@@ -68,8 +66,8 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         resource.setMethod("GET");
         resource.setPath("/path");
         Product product = new Product();
-        product.setId("productOne");
-        product.setName("productOne");
+        product.setId("testProductId");
+        product.setName("productNameTwo");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
         savedResource.setName("resource");

@@ -43,7 +43,7 @@ public class ClientController {
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
-
+//
 //    @PutMapping(produces = "application/json", consumes = "application/json")
 //    private Mono<Client> update(@Validated @RequestBody Client client) {
 //        return mongoClientRepository.findByClientId(client.getClientId())
