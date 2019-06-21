@@ -18,6 +18,17 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
     MongoClientRepository mongoClientRepository;
 
     @Test
+    public void testCreate(){
+        Client client = new Client();
+        client.setId("testClientOne");
+        client.setClientId("testClientOne");
+        mongoClientRepository.save(client).block();
+        StepVerifier.create(mongoClientRepository.findById(client.getId())).assertNext(c -> {
+            assertThat(c.getClientId()).isEqualTo(client.getClientId());
+        }).expectComplete().verify();
+    }
+
+    @Test
     public void testFindById(){
         Client client = new Client();
         client.setId("testClientOne");
@@ -47,6 +58,10 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
         Client c2 = new Client();
         c2.setId("testClientTwo");
         c2.setClientId("testClientTwo");
+        Product product = new Product();
+        product.setId("productId");
+        product.setName("productName");
+        c2.addProduct(product);
         mongoClientRepository.save(c1).block();
         mongoClientRepository.save(c2).block();
         StepVerifier.create(mongoClientRepository.findAll()).expectNextCount(2);

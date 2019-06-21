@@ -125,12 +125,14 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("productId");
         product.setName("productName");
+        Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
-        client.setId("testClientOne");
-        client.setClientId("testClientOne");
-        product.addClient(client);
+        client.setId("testClientTwo");
+        client.setClientId("testClientTwo");
+        savedProduct.addClient(client);
+        mongoProductRepository.save(savedProduct).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
-            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(product.getName());
+            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
             assertThat(p.getClients()).hasSize(1);
         });
 
@@ -140,13 +142,16 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("productId");
         product.setName("productName");
+        Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
-        client.setId("testClientOne");
-        client.setClientId("testClientOne");
-        product.addClient(client);
+        client.setId("testClientTwo");
+        client.setClientId("testClientTwo");
+        savedProduct.addClient(client);
+        Product updatedProduct = mongoProductRepository.save(savedProduct).block();
+        mongoProductRepository.save(updatedProduct).block();
         product.removeClient(client);
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
-            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(product.getName());
+            assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
             assertThat(p.getClients()).isEmpty();
         });
     }
