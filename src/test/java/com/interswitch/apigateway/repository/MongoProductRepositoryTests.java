@@ -134,7 +134,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
             assertThat(p.getClients()).hasSize(1);
-        });
+        }).expectComplete().verify();
 
     }
     @Test
@@ -152,7 +152,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         product.removeClient(client);
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
-            assertThat(p.getClients()).isEmpty();
-        });
+            assertThat(p.getClients()).containsNull();
+        }).expectComplete().verify();
     }
 }
