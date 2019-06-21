@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -37,7 +38,9 @@ public class ProductController {
     private Mono<Product> save(@Validated @RequestBody Product product) {
         product.setResources(new ArrayList<>());
         product.setClients(new ArrayList<>());
-        return mongoProductRepository.save(product);
+        return mongoProductRepository.save(product).onErrorMap(throwable -> {
+            return new ResponseStatusException(HttpStatus.CONFLICT,"Product already exists");
+        });
     }
 
     @GetMapping(value = "/{productId}", produces = "application/json")
