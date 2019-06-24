@@ -19,18 +19,18 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindById(){
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
-        product.setName("productNameTwo");
+        product.setName("testproductName");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
         StepVerifier.create(mongoResourceRepository.findById(savedResource.getId())).assertNext(r -> {
-            assertThat(r.getId()).isEqualTo("resourceId");
-            assertThat(r.getName()).isEqualTo("resourceName");
+            assertThat(r.getId()).isEqualTo("testResourceId");
+            assertThat(r.getName()).isEqualTo("testResourceName");
             assertThat(r.getMethod()).isEqualTo("GET");
             assertThat(r.getPath()).isEqualTo("/path");
             assertThat(r.getProduct()).isNotNull();
@@ -41,48 +41,50 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindAll(){
         Product product = new Product();
-        product.setId("product");
-        product.setName("product");
+        product.setId("testProductId");
+        product.setName("testproductName");
         Resource r1 = new Resource();
-        r1.setId("resourceOne");
-        r1.setName("resourceOne");
+        r1.setId("testResourceOne");
+        r1.setName("testResourceOne");
         r1.setMethod("GET");
         r1.setPath("/path");
         r1.setProduct(product);
         Resource r2 = new Resource();
-        r2.setId("resourceTwo");
-        r2.setName("resourceTwo");
+        r2.setId("testResourceTwo");
+        r2.setName("testResourceTwo");
         r2.setMethod("POST");
         r2.setPath("/path");
         r2.setProduct(product);
+        mongoResourceRepository.save(r1).block();
+        mongoResourceRepository.save(r2).block();
         StepVerifier.create(mongoResourceRepository.findAll()).expectNextCount(2);
     }
 
     @Test
     public void testUpdate(){
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
-        product.setName("productNameTwo");
+        product.setName("testproductName");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
-        savedResource.setName("resource");
+        savedResource.setName("testResource");
         mongoResourceRepository.save(savedResource).block();
         StepVerifier.create(mongoResourceRepository.findById(resource.getId())).assertNext(r -> {
-            assertThat(r.getId()).isEqualTo("resourceId");
-            assertThat(r.getName()).isEqualTo("resource");
+            assertThat(r.getId()).isEqualTo("testResourceId");
+            assertThat(r.getName()).isEqualTo("testResource");
             assertThat(r.getProduct()).isNotNull();
         }).expectComplete().verify();
     }
     @Test
     public void testDelete(){
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         Resource savedResource = mongoResourceRepository.save(resource).block();
