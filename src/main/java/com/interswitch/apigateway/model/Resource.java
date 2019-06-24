@@ -1,8 +1,6 @@
 package com.interswitch.apigateway.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -16,7 +14,6 @@ import javax.validation.constraints.NotBlank;
 
 @Document(collection = "resources")
 @Data
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Resource {
     @Id
     private String id;
@@ -37,5 +34,6 @@ public class Resource {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
+    @JsonBackReference
     private Product product;
 }

@@ -27,10 +27,10 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.exceptionHandling()
-                .authenticationEntryPoint((serverWebExchange, e) -> Mono.fromRunnable(() -> {
-                    serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                .authenticationEntryPoint((exchange, exception) -> Mono.fromRunnable(() -> {
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 }))
-                .accessDeniedHandler((serverWebExchange, e) -> Mono.fromRunnable(() -> {
+                .accessDeniedHandler((serverWebExchange, exception) -> Mono.fromRunnable(() -> {
                     serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 })).and().authorizeExchange()
                 .pathMatchers("/passport/oauth/**", "/actuator/prometheus", "/actuator/health").permitAll()
