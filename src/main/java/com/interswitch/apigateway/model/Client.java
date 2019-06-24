@@ -28,7 +28,6 @@ public class Client{
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
-    @JsonBackReference
     private List<Product> products = new ArrayList<>();
 
     public void addProduct(Product product){

@@ -148,11 +148,11 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         client.setClientId("testClientTwo");
         savedProduct.addClient(client);
         Product updatedProduct = mongoProductRepository.save(savedProduct).block();
+        updatedProduct.removeClient(client);
         mongoProductRepository.save(updatedProduct).block();
-        product.removeClient(client);
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
-            assertThat(p.getClients()).containsNull();
+            assertThat(p.getClients()).isEmpty();
         }).expectComplete().verify();
     }
 }

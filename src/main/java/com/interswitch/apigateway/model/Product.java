@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -42,6 +43,7 @@ public class Product {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
+    @JsonBackReference
     private List<Client> clients = new ArrayList<>();
 
     public void addResource(Resource resource){
