@@ -46,11 +46,17 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     }
     @Test
     public void testUpdate(){
+        Resource resource = new Resource();
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
+        resource.setMethod("GET");
+        resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.addResource(resource);
         Product savedProduct = mongoProductRepository.save(product).block();
-        savedProduct.setName("productNameTwo");
+        savedProduct.setName("testproduct");
         mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(savedProduct.getName());
@@ -73,8 +79,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         product.setName("testProductName");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         resource.setProduct(product);
@@ -98,8 +104,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         product.setName("testProductName");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
-        resource.setId("resourceId");
-        resource.setName("resourceName");
+        resource.setId("testResourceId");
+        resource.setName("testResourceName");
         resource.setMethod("GET");
         resource.setPath("/path");
         resource.setProduct(product);
@@ -119,8 +125,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testAddClient(){
         Product product = new Product();
-        product.setId("productId");
-        product.setName("productName");
+        product.setId("testProductId");
+        product.setName("testProductName");
         Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
         client.setId("testClientOne");
