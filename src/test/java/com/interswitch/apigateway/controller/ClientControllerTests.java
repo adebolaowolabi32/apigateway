@@ -89,19 +89,6 @@ public class ClientControllerTests {
     }
 
     @Test
-    public void testUpdate(){
-        when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
-        when(mongoClientRepository.save(client)).thenReturn(Mono.just(client));
-        this.webClient.put()
-                .uri("/clients")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
-                .body(BodyInserters.fromObject(client))
-                .exchange()
-                .expectBody(Client.class);
-    }
-
-    @Test
     public void testDelete(){
         when(mongoClientRepository.deleteById(client.getId())).thenReturn(Mono.empty());
         when(mongoClientRepository.findByClientId(client.getClientId())).thenReturn(Mono.just(client));
