@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UserConfig {
     @Bean
-    public CommandLineRunner commandLineRunnerr(MongoUserRepository mongoUserRepository){
-        return commandLineRunnerr -> {
+    public CommandLineRunner commandLineRunr(MongoUserRepository mongoUserRepository){
+        return commandLineRunr -> {
            User user = new User();
            user.setId("systemAdmin");
            user.setUsername("systemAdministrator");
