@@ -7,6 +7,8 @@ import com.nimbusds.jwt.JWTParser;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -17,11 +19,11 @@ import java.util.List;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
-public class RestrictAccessFilter implements WebFilter, Ordered {
+public class AdminAccessFilter implements WebFilter, Ordered {
 
     private MongoUserRepository mongoUserRepository;
 
-    public RestrictAccessFilter(MongoUserRepository mongoUserRepository){
+    public AdminAccessFilter(MongoUserRepository mongoUserRepository){
         this.mongoUserRepository = mongoUserRepository;
     }
     @Override
@@ -30,12 +32,12 @@ public class RestrictAccessFilter implements WebFilter, Ordered {
         if(route != null){
             String username = GetUsernameFromBearerToken(exchange.getRequest().getHeaders());
             if (username != null)
-                mongoUserRepository.findByUsername(username).flatMap(user -> {
+                return mongoUserRepository.findByUsername(username).flatMap(user -> {
                     if(user.getRole().equals(User.Role.ADMIN))
                         return chain.filter(exchange);
-                    return chain.filter(exchange);
-
-                }).subscribe();
+                    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrator rights to access this resource"));
+                });
+            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrator rights to access this resource"));
         }
         return chain.filter(exchange);
     }
