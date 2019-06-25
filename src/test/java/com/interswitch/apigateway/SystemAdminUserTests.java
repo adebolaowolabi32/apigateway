@@ -17,7 +17,7 @@ public class SystemAdminUserTests {
     private MongoUserRepository mongoUserRepository;
 
    @Test
-    public void test(){
+    public void testForDefaultSystemUser(){
        StepVerifier.create(mongoUserRepository.findByUsername("systemAdministrator")).assertNext(u -> {
            assertThat(u.getId()).isEqualTo("systemAdmin");
            assertThat(u.getRole()).isEqualTo(User.Role.ADMIN);
