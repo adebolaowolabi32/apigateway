@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("dev")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SystemAdminUserTests {
+public class DefaultSystemUserTests {
     @Autowired
     private MongoUserRepository mongoUserRepository;
 
