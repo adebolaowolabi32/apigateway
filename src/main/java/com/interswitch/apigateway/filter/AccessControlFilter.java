@@ -93,7 +93,8 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                     if (!accesstoken.isEmpty()) {
                         try {
                             JWT jwtToken = JWTParser.parse(accesstoken);
-                            resources = (List<String>)jwtToken.getJWTClaimsSet().getClaim("api_resources");
+                            Object resource = jwtToken.getJWTClaimsSet().getClaim("api_resources");
+                            if(resource != null) resources = (List<String>) resource;
                         } catch (ParseException e) {
                             Mono.error(e).log();
                         }
