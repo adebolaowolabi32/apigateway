@@ -58,7 +58,7 @@ public class ProductController {
                     product.setClients(existing.getClients());
                     product.setResources(existing.getResources());
                     return mongoProductRepository.save(product).onErrorMap(throwable -> {
-                        return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"Product was not modified");
+                        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Product was not modified");
                     });
                 });
     }
@@ -116,7 +116,7 @@ public class ProductController {
                             product.removeResource(existing);
                             product.addResource(r);
                             return mongoProductRepository.save(product).onErrorMap(throwable -> {
-                                return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"Resource was not modified");
+                                return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Resource was not modified");
                             });
                         });
                     }

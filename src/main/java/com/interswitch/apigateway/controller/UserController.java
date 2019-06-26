@@ -48,7 +48,7 @@ public class UserController {
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
                     return mongoUserRepository.save(existing).onErrorMap(throwable -> {
-                        return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"User was not modified");
+                        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"User was not modified");
                     });
                 });
     }
