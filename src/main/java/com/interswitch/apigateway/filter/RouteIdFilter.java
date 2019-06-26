@@ -19,7 +19,7 @@ public class RouteIdFilter implements WebFilter, Ordered {
         int indexOfLastSlash = fullPath.lastIndexOf('/') + 1;
         String path = fullPath.substring(0, indexOfLastSlash);
         String GATEWAY_SAVE_URL = "/actuator/gateway/routes/";
-        List<String> passportRoutes = Arrays.asList("passport-oauth", "passport-user", "passport-client");
+        List<String> passportRoutes = Collections.singletonList("passport");
 
 
         if(request.getMethod() == HttpMethod.POST && path.equalsIgnoreCase(GATEWAY_SAVE_URL)){
