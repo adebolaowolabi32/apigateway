@@ -35,7 +35,8 @@ public class AudienceFilter implements WebFilter, Ordered {
                     if (!accesstoken.isEmpty()) {
                         try {
                             JWT jwtToken = JWTParser.parse(accesstoken);
-                            audience = (List<String>)jwtToken.getJWTClaimsSet().getClaim("aud");
+                            Object aud = jwtToken.getJWTClaimsSet().getClaim("aud");
+                            if(aud != null) audience = (List<String>)aud;
                         } catch (ParseException e) {
                             Mono.error(e).log();
                         }
