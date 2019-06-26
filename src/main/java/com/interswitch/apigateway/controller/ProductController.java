@@ -53,6 +53,7 @@ public class ProductController {
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<Product> update(@Validated @RequestBody Product product) {
         return mongoProductRepository.findById(product.getId())
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
                 .flatMap(existing -> {
                     product.setId(existing.getId());
                     product.setClients(existing.getClients());
