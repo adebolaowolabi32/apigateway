@@ -46,7 +46,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         List<String> resources = GetResourcesFromBearerToken(headers);
 
         return repository.findByClientId(clientId)
-                .switchIfEmpty(Mono.error(new Exception("Client not found")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))
                 .flatMap(clients -> {
                     for(var r : resources) {
                         int indexOfFirstSlash = r.indexOf('/');

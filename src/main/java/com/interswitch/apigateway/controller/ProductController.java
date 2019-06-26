@@ -57,7 +57,9 @@ public class ProductController {
                     product.setId(existing.getId());
                     product.setClients(existing.getClients());
                     product.setResources(existing.getResources());
-                    return mongoProductRepository.save(product);
+                    return mongoProductRepository.save(product).onErrorMap(throwable -> {
+                        return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"Product was not modified");
+                    });
                 });
     }
 
@@ -91,9 +93,9 @@ public class ProductController {
                             product.addResource(r);
                             return mongoProductRepository.save(product);
                         }
-                        return Mono.error(new RuntimeException("Resource already assigned to Product"));});
+                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"Resource already assigned to Product"));});
                 })
-                .switchIfEmpty(Mono.error(new RuntimeException("Product does not exist")));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
@@ -113,12 +115,14 @@ public class ProductController {
                         return mongoResourceRepository.save(resource).flatMap(r -> {
                             product.removeResource(existing);
                             product.addResource(r);
-                            return mongoProductRepository.save(product);
+                            return mongoProductRepository.save(product).onErrorMap(throwable -> {
+                                return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"Resource was not modified");
+                            });
                         });
                     }
-                    return Mono.error(new RuntimeException("Resource not found for Product"));
-                }).switchIfEmpty(Mono.error(new RuntimeException("Resource does not exist"))))
-                .switchIfEmpty(Mono.error(new RuntimeException("Product does not exist")));
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource not found for Product"));
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist"))))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 
     @DeleteMapping("/{productId}/resources/{resourceId}")
@@ -130,7 +134,7 @@ public class ProductController {
                              }
                             return mongoResourceRepository.deleteById(resourceId).then(mongoProductRepository.save(product));
                         })
-                        .switchIfEmpty(Mono.error(new RuntimeException("Resource does not exist"))))
-                .switchIfEmpty(Mono.error(new RuntimeException("Product does not exist")));
+                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist"))))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 }

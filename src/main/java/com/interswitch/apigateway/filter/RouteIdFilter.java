@@ -8,7 +8,9 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 public class RouteIdFilter implements WebFilter, Ordered {
 
@@ -19,7 +21,7 @@ public class RouteIdFilter implements WebFilter, Ordered {
         int indexOfLastSlash = fullPath.lastIndexOf('/') + 1;
         String path = fullPath.substring(0, indexOfLastSlash);
         String GATEWAY_SAVE_URL = "/actuator/gateway/routes/";
-        List<String> passportRoutes = Arrays.asList("passport-oauth", "passport-user", "passport-client");
+        List<String> passportRoutes = Arrays.asList("passport");
 
 
         if(request.getMethod() == HttpMethod.POST && path.equalsIgnoreCase(GATEWAY_SAVE_URL)){

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,7 +29,7 @@ public class UserController {
     private Mono<User> register(@Validated @RequestBody User user) {
         return mongoUserRepository.findByUsername(user.getUsername()).hasElement()
                 .flatMap(exists -> {
-                    if(exists) return Mono.error(new RuntimeException("User already exists"));
+                    if(exists) return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"User already exists"));
                     user.setRole(User.Role.USER);
                     return mongoUserRepository.save(user);
                 });
@@ -46,7 +47,9 @@ public class UserController {
         return mongoUserRepository.findByUsername(user.getUsername())
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
-                    return mongoUserRepository.save(existing);
+                    return mongoUserRepository.save(existing).onErrorMap(throwable -> {
+                        return new ResponseStatusException(HttpStatus.NOT_MODIFIED,"User was not modified");
+                    });
                 });
     }
 
