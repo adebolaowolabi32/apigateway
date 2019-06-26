@@ -47,8 +47,9 @@ public class UserController {
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")))
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
-                    return mongoUserRepository.save(existing).onErrorMap(throwable ->
-                            new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"User was not modified"));
+                    return mongoUserRepository.save(existing).onErrorMap(throwable -> {
+                        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"User was not modified");
+                    });
                 });
     }
 
