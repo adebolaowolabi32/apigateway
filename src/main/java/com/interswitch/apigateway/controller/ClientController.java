@@ -75,9 +75,9 @@ public class ClientController {
                             client.addProduct(product);
                             return mongoClientRepository.save(client);
                         }
-                        return Mono.error(new RuntimeException("Product already assigned to client"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Product already assigned to client"));
                     });
-                }).switchIfEmpty(Mono.error(new RuntimeException("Product does not exist")))
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
         ).switchIfEmpty(Mono.error(new RuntimeException("Client does not exist")));
     }
 
@@ -93,9 +93,9 @@ public class ClientController {
                             client.removeProduct(product);
                             return mongoClientRepository.save(client);
                         }
-                        return Mono.error(new RuntimeException("Product not assigned to Client"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product is not assigned to Client"));
                     });
-                }).switchIfEmpty(Mono.error(new RuntimeException("Product does not exist")))
-        ).switchIfEmpty(Mono.error(new RuntimeException("Client does not exist")));
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
+        ).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client does not exist")));
     }
 }

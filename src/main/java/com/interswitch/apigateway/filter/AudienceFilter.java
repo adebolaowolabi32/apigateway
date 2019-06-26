@@ -21,7 +21,7 @@ public class AudienceFilter implements WebFilter, Ordered {
         List<String> audience = GetAudienceFromBearerToken(exchange.getRequest().getHeaders());
         if(audience.contains("api-gateway"))
             return chain.filter(exchange);
-        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient rights"));
+        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
 
     public List<String> GetAudienceFromBearerToken(HttpHeaders headers) {
