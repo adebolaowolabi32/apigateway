@@ -3,7 +3,6 @@ package com.interswitch.apigateway.filter;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -18,7 +17,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
@@ -64,14 +62,12 @@ public class AudienceFilterTests {
     @Test
     public void requestsWithApiGatewayInAudienceClaimShouldPass() throws JOSEException, ParseException{
         this.setup("api-gateway");
-
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException, ParseException{
         this.setup("isw-core");
-
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
 }
