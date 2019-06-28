@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AudienceFilter implements WebFilter, Ordered {
-    private static String PassportRoute= "/passport/oauth/token";
+    private static String PassportToken= "/passport/oauth/token";
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         JWT token = DecodeBearerToken(exchange.getRequest().getHeaders());
@@ -24,7 +24,7 @@ public class AudienceFilter implements WebFilter, Ordered {
             String exchangePath = exchange.getRequest().getPath().toString();
             List<String> audience = GetAudience(token);
             String environment = GetEnvironment(token);
-            if (audience.contains("api-gateway") & environment == "TEST" & exchangePath == PassportRoute)
+            if (audience.contains("api-gateway")||environment == "TEST" ||exchangePath == PassportToken)
                 return chain.filter(exchange);
             return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
         }
