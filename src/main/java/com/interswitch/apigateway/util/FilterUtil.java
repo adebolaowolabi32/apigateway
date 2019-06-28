@@ -59,4 +59,29 @@ public class FilterUtil {
 
     }
 
+    public String GetClientIdFromBearerToken(JWT accessToken) {
+        String client_id = "";
+        if (accessToken!=null) {
+            try {
+                client_id = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
+            } catch (ParseException e) {
+                Mono.error(e).log();
+            }
+        }
+        return client_id;
+    }
+
+    public List<String> GetResourcesFromBearerToken(JWT accessToken) {
+        List<String> resources = new ArrayList<>();
+        if (accessToken!=null) {
+            try {
+                Object resource = accessToken.getJWTClaimsSet().getClaim("api_resources");
+                if(resource != null) resources = (List<String>) resource;
+            } catch (ParseException e) {
+                Mono.error(e).log();
+            }
+        }
+        return resources;
+    }
+
 }
