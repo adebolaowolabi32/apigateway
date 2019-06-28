@@ -1,8 +1,8 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.repository.MongoClientRepository;
+import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -27,8 +27,11 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
 
-    public  AccessControlFilter(MongoClientRepository repository) {
+    private FilterUtil filterUtil;
+
+    public  AccessControlFilter(MongoClientRepository repository, FilterUtil filterUtil) {
         this.repository = repository;
+        this.filterUtil =filterUtil;
     }
 
     @Override
@@ -41,9 +44,9 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         if(!routeId.isBlank())
             if(PERMIT_ALL.contains(routeId))
                 return chain.filter(exchange);
-
-        String clientId = GetClientIdFromBearerToken(headers);
-        List<String> resources = GetResourcesFromBearerToken(headers);
+        JWT token = filterUtil.DecodeBearerToken(headers);
+        String clientId = GetClientIdFromBearerToken(token);
+        List<String> resources = GetResourcesFromBearerToken(token);
 
         return repository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))
@@ -60,46 +63,26 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                 });
     }
 
-    public String GetClientIdFromBearerToken(HttpHeaders headers) {
+    public String GetClientIdFromBearerToken(JWT accessToken) {
         String client_id = "";
-        if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
-            List<String> accesstokens = headers.get(HttpHeaders.AUTHORIZATION);
-            if (accesstokens != null && !accesstokens.isEmpty()) {
-                String accesstoken = accesstokens.get(0);
-                if (accesstoken.contains("Bearer ")) {
-                    accesstoken = accesstoken.replaceFirst("Bearer ", "");
-                    if (!accesstoken.isEmpty()) {
-                        try {
-                            JWT jwtToken = JWTParser.parse(accesstoken);
-                            client_id = jwtToken.getJWTClaimsSet().getClaim("client_id").toString();
-                        } catch (ParseException e) {
-                            Mono.error(e).log();
-                        }
-                    }
-                }
+        if (accessToken!=null) {
+            try {
+                client_id = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
+            } catch (ParseException e) {
+                Mono.error(e).log();
             }
-        }
+            }
         return client_id;
     }
 
-    public List<String> GetResourcesFromBearerToken(HttpHeaders headers) {
+    public List<String> GetResourcesFromBearerToken(JWT accessToken) {
         List<String> resources = new ArrayList<>();
-        if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
-            List<String> accesstokens = headers.get(HttpHeaders.AUTHORIZATION);
-            if (accesstokens != null && !accesstokens.isEmpty()) {
-                String accesstoken = accesstokens.get(0);
-                if (accesstoken.contains("Bearer ")) {
-                    accesstoken = accesstoken.replaceFirst("Bearer ", "");
-                    if (!accesstoken.isEmpty()) {
-                        try {
-                            JWT jwtToken = JWTParser.parse(accesstoken);
-                            Object resource = jwtToken.getJWTClaimsSet().getClaim("api_resources");
-                            if(resource != null) resources = (List<String>) resource;
-                        } catch (ParseException e) {
-                            Mono.error(e).log();
-                        }
-                    }
-                }
+        if (accessToken!=null) {
+            try {
+                Object resource = accessToken.getJWTClaimsSet().getClaim("api_resources");
+                if(resource != null) resources = (List<String>) resource;
+            } catch (ParseException e) {
+                Mono.error(e).log();
             }
         }
         return resources;
