@@ -4,19 +4,17 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
-import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.web.server.ServerWebExchange;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,60 +25,52 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FilterUtilTests {
     @Autowired
     FilterUtil filterUtil;
-    JWTClaimsSet claims;
-    JWSHeader jwsHeader;
+    HttpHeaders headers = new HttpHeaders();
+    JWT token;
+    String client_id = "testClient";
+    String environment = "TEST";
+    List<String> audience = Arrays.asList("api-gateway");
     String accessToken;
-    private ServerWebExchange exchange;
 
-    public void setup(String aud) throws JOSEException, ParseException {
-        claims = new JWTClaimsSet.Builder()
+    @BeforeEach
+    public void setup() throws JOSEException {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
                 .claim("env", "TEST")
                 .claim("client_id", "testClient")
-                .audience(aud)
+                .audience(audience)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
 
-        jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
+        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
         Payload payload = new Payload(claims.toJSONObject());
         JWSObject jws = new JWSObject(jwsHeader, payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = jws.serialize();
-
-        MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/path")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-        exchange = MockServerWebExchange.from(request);
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        token = filterUtil.decodeBearerToken(headers);
     }
 
     @Test
-    public void testDecodeBearerToken() throws ParseException, JOSEException {
-        this.setup("api-gateway");
-        assertThat(filterUtil.decodeBearerToken(exchange.getRequest().getHeaders()).serialize()).isEqualTo(accessToken);
+    public void testDecodeBearerToken() {
+        assertThat(filterUtil.decodeBearerToken(headers).serialize()).isEqualTo(accessToken);
     }
 
     @Test
-    public void testGetAudienceFromBearerToken() throws ParseException, JOSEException {
-        this.setup("api-gateway");
-        JWT accessToken = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-        assertThat(filterUtil.getAudienceFromBearerToken(accessToken)).isEqualTo(Arrays.asList("api-gateway"));
+    public void testGetAudienceFromBearerToken() {
+        assertThat(filterUtil.getAudienceFromBearerToken(token)).isEqualTo(audience);
     }
 
     @Test
-    public void testGetEnvironmentFromBearerToken() throws ParseException, JOSEException {
-        this.setup("api-gateway");
-        JWT accessToken = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-        assertThat(filterUtil.getEnvironmentFromBearerToken(accessToken)).isEqualTo("TEST");
+    public void testGetEnvironmentFromBearerToken() {
+        assertThat(filterUtil.getEnvironmentFromBearerToken(token)).isEqualTo(environment);
 
     }
 
     @Test
-    public void testGetClientIdFromBearerToken() throws ParseException, JOSEException {
-        this.setup("api-gateway");
-        JWT accessToken = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-        assertThat(filterUtil.getClientIdFromBearerToken(accessToken)).isEqualTo("testClient");
+    public void testGetClientIdFromBearerToken() {
+        assertThat(filterUtil.getClientIdFromBearerToken(token)).isEqualTo(client_id);
     }
 
 }
