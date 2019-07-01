@@ -49,7 +49,6 @@ public class FilterUtil {
         try {
             Object env = jwtToken.getJWTClaimsSet().getClaim("env");
             if (env != null) environment = env.toString();
-            return environment;
         }
         catch (ParseException e){
             Mono.error(e).log();

@@ -19,6 +19,11 @@ public class AudienceFilter implements WebFilter, Ordered {
     private static List<String> passportRoutes = Arrays.asList("/passport/oauth/token", "/passport/api/v1/accounts", "/passport/api/v1/clients");
     private FilterUtil filterUtil;
     private boolean isPassport;
+
+    public AudienceFilter(FilterUtil filterUtil) {
+        this.filterUtil = filterUtil;
+    }
+    
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         Iterator<String> passportIterate = passportRoutes.iterator();
@@ -31,9 +36,6 @@ public class AudienceFilter implements WebFilter, Ordered {
         if (audience.contains("api-gateway") || isPassport)
                     return chain.filter(exchange);
                 return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
-    }
-    public AudienceFilter(FilterUtil filterUtil){
-        this.filterUtil=filterUtil;
     }
 
     @Override
