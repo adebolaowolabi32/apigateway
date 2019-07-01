@@ -38,14 +38,14 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         HttpHeaders headers = exchange.getRequest().getHeaders();
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String routeId = (route != null) ? route.getId() : "";
-        JWT token = filterUtil.DecodeBearerToken(headers);
-        String environment =(token != null) ? filterUtil.GetEnvironmentFromBearerToken(token): "";
+        JWT token = filterUtil.decodeBearerToken(headers);
+        String environment = (token != null) ? filterUtil.getEnvironmentFromBearerToken(token) : "";
 
         if(!routeId.isBlank())
         if(PERMIT_ALL.contains(routeId) || environment=="TEST")
                 return chain.filter(exchange);
-        String clientId =(token != null) ?  filterUtil.GetClientIdFromBearerToken(token): "";
-        List<String> resources = (token != null) ? filterUtil.GetResourcesFromBearerToken(token): Collections.emptyList();
+        String clientId = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
+        List<String> resources = (token != null) ? filterUtil.getResourcesFromBearerToken(token) : Collections.emptyList();
 
         return repository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))
@@ -54,7 +54,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                         int indexOfFirstSlash = r.indexOf('/');
                         String method = r.substring(0, indexOfFirstSlash);
                         String path = r.substring(indexOfFirstSlash);
-                        if(exchange.getRequest().getPath().toString().equals(path))
+                        if (exchange.getRequest().getPath().toString().contains(path))
                             if (exchange.getRequest().getMethodValue().equals(method))
                                 return chain.filter(exchange);
                     }

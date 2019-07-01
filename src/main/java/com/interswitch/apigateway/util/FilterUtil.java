@@ -11,7 +11,7 @@ import java.util.List;
 
 public class FilterUtil {
 
-    public JWT DecodeBearerToken(HttpHeaders headers) {
+    public JWT decodeBearerToken(HttpHeaders headers) {
         JWT jwtToken= null;
         if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
             List<String> accesstokens = headers.get(HttpHeaders.AUTHORIZATION);
@@ -31,7 +31,8 @@ public class FilterUtil {
         }
         return jwtToken ;
     }
-    public List<String> GetAudienceFromBearerToken(JWT jwtToken){
+
+    public List<String> getAudienceFromBearerToken(JWT jwtToken) {
         List<String> audience = new ArrayList<>();
         try {
             Object aud = jwtToken.getJWTClaimsSet().getClaim("aud");
@@ -43,7 +44,7 @@ public class FilterUtil {
         return audience;
     }
 
-    public String GetEnvironmentFromBearerToken(JWT jwtToken){
+    public String getEnvironmentFromBearerToken(JWT jwtToken) {
         String environment = "";
         try {
             Object env = jwtToken.getJWTClaimsSet().getClaim("env");
@@ -56,7 +57,7 @@ public class FilterUtil {
         return environment;
     }
 
-    public String GetClientIdFromBearerToken(JWT accessToken) {
+    public String getClientIdFromBearerToken(JWT accessToken) {
         String client_id = "";
         if (accessToken!=null) {
             try {
@@ -69,7 +70,7 @@ public class FilterUtil {
         return client_id;
     }
 
-    public List<String> GetResourcesFromBearerToken(JWT accessToken) {
+    public List<String> getResourcesFromBearerToken(JWT accessToken) {
         List<String> resources = new ArrayList<>();
         if (accessToken!=null) {
             try {
