@@ -27,11 +27,12 @@ public class UserController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
-        return mongoUserRepository.findByUsername(user.getUsername())
-                .switchIfEmpty(mongoUserRepository.save(user).onErrorMap(throwable -> {
-                    return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Product was not modified");
-                }))
-                .flatMap(exists -> Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"User already exists")));
+        return mongoUserRepository.findByUsername(user.getUsername()).hasElement()
+                .flatMap(exists -> {
+                    if(exists)return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"User already exists"));
+                    user.setRole(User.Role.USER);
+                    return mongoUserRepository.save(user);
+                });
     }
 
     @GetMapping(value = "/{username}", produces = "application/json")

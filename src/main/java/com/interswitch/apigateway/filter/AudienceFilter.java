@@ -1,9 +1,8 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -11,40 +10,32 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class AudienceFilter implements WebFilter, Ordered {
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        List<String> audience = GetAudienceFromBearerToken(exchange.getRequest().getHeaders());
-        if(audience.contains("api-gateway"))
-            return chain.filter(exchange);
-        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+    private static List<String> passportRoutes = Arrays.asList("/passport/oauth/token", "/passport/api/v1/accounts", "/passport/api/v1/clients");
+    private FilterUtil filterUtil;
+    private boolean isPassport;
+
+    public AudienceFilter(FilterUtil filterUtil) {
+        this.filterUtil = filterUtil;
     }
 
-    public List<String> GetAudienceFromBearerToken(HttpHeaders headers) {
-        List<String> audience = new ArrayList<>();
-        if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
-            List<String> accesstokens = headers.get(HttpHeaders.AUTHORIZATION);
-            if (accesstokens != null && !accesstokens.isEmpty()) {
-                String accesstoken = accesstokens.get(0);
-                if (accesstoken.contains("Bearer ")) {
-                    accesstoken = accesstoken.replaceFirst("Bearer ", "");
-                    if (!accesstoken.isEmpty()) {
-                        try {
-                            JWT jwtToken = JWTParser.parse(accesstoken);
-                            Object aud = jwtToken.getJWTClaimsSet().getClaim("aud");
-                            if(aud != null) audience = (List<String>)aud;
-                        } catch (ParseException e) {
-                            Mono.error(e).log();
-                        }
-                    }
-                }
-            }
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        Iterator<String> passportIterate = passportRoutes.iterator();
+        JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
+        String exchangePath = exchange.getRequest().getPath().toString();
+        List<String> audience = (token != null) ? filterUtil.getAudienceFromBearerToken(token) : Collections.emptyList();
+        while (passportIterate.hasNext()) {
+            if (exchangePath.contains(passportIterate.next())) isPassport |= true;
         }
-        return audience;
+        if (audience.contains("api-gateway") || isPassport)
+                    return chain.filter(exchange);
+                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
 
     @Override

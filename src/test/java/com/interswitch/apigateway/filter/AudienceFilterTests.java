@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -24,10 +25,13 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {AudienceFilter.class})
+@ContextConfiguration(classes = {AudienceFilter.class, FilterUtil.class})
 public class AudienceFilterTests {
     @Autowired
     AudienceFilter filter;
+
+    @Autowired
+    FilterUtil filterUtil;
 
     @MockBean
     private WebFilterChain filterChain  ;
