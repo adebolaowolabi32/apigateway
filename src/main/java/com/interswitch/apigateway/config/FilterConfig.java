@@ -24,6 +24,11 @@ public class FilterConfig {
     public AudienceFilter audienceFilter(FilterUtil filterUtil) {return new AudienceFilter(filterUtil); }
     @Bean
     public LoggingFilter loggingFilter(){return new LoggingFilter();}
+
+    @Bean
+    public FilterUtil filterUtil(){
+        return new FilterUtil();
+    }
 }
 
 

@@ -31,7 +31,7 @@ public class FilterUtil {
         }
         return jwtToken ;
     }
-    public List<String> GetAudience(JWT jwtToken){
+    public List<String> GetAudienceFromBearerToken(JWT jwtToken){
         List<String> audience = new ArrayList<>();
         try {
             Object aud = jwtToken.getJWTClaimsSet().getClaim("aud");
@@ -41,10 +41,9 @@ public class FilterUtil {
             Mono.error(e).log();
         }
         return audience;
-
     }
 
-    public String GetEnvironment(JWT jwtToken){
+    public String GetEnvironmentFromBearerToken(JWT jwtToken){
         String environment = "";
         try {
             Object env = jwtToken.getJWTClaimsSet().getClaim("env");
@@ -55,8 +54,6 @@ public class FilterUtil {
             Mono.error(e).log();
         }
         return environment;
-
-
     }
 
     public String GetClientIdFromBearerToken(JWT accessToken) {
@@ -83,5 +80,4 @@ public class FilterUtil {
         }
         return resources;
     }
-
 }

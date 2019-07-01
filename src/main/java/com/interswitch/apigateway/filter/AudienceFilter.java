@@ -21,8 +21,8 @@ public class AudienceFilter implements WebFilter, Ordered {
         JWT token = filterUtil.DecodeBearerToken(exchange.getRequest().getHeaders());
         if(token!=null) {
             String exchangePath = exchange.getRequest().getPath().toString();
-            List<String> audience = filterUtil.GetAudience(token);
-            String environment = filterUtil.GetEnvironment(token);
+            List<String> audience = filterUtil.GetAudienceFromBearerToken(token);
+            String environment = filterUtil.GetEnvironmentFromBearerToken(token);
             if (audience.contains("api-gateway")||environment == "TEST" ||exchangePath == PassportToken)
                 return chain.filter(exchange);
             return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
