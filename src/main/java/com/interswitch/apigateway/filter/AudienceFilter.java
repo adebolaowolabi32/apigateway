@@ -11,6 +11,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class AudienceFilter implements WebFilter, Ordered {
@@ -19,17 +20,18 @@ public class AudienceFilter implements WebFilter, Ordered {
     private FilterUtil filterUtil;
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        JWT token = filterUtil.DecodeBearerToken(exchange.getRequest().getHeaders());
-        if(token!=null) {
-            String exchangePath = exchange.getRequest().getPath().toString();
-            List<String> audience = filterUtil.GetAudienceFromBearerToken(token);
-            if (audience.contains("api-gateway") || PassportToken.contains(exchangePath))
+        Iterator<String> iterate = PassportToken.iterator();
+            JWT token = filterUtil.DecodeBearerToken(exchange.getRequest().getHeaders());
+            if (token != null) {
+                String exchangePath = exchange.getRequest().getPath().toString();
+                List<String> audience = filterUtil.GetAudienceFromBearerToken(token);
+                while (iterate.hasNext())
+                if (audience.contains("api-gateway") || exchangePath.contains(iterate.next()))
+                    return chain.filter(exchange);
+                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+            } else {
                 return chain.filter(exchange);
-            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
-        }
-        else{
-            return chain.filter(exchange);
-        }
+            }
     }
     public AudienceFilter(FilterUtil filterUtil){
         this.filterUtil=filterUtil;
