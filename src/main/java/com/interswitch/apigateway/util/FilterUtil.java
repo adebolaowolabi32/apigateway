@@ -58,7 +58,7 @@ public class FilterUtil {
 
     public String getClientIdFromBearerToken(JWT accessToken) {
         String client_id = "";
-        if (accessToken!=null) {
+        if (accessToken != null) {
             try {
                 Object client = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
                 if(client!=null) client_id=client.toString();
@@ -71,7 +71,7 @@ public class FilterUtil {
 
     public List<String> getResourcesFromBearerToken(JWT accessToken) {
         List<String> resources = new ArrayList<>();
-        if (accessToken!=null) {
+        if (accessToken != null) {
             try {
                 Object resource = accessToken.getJWTClaimsSet().getClaim("api_resources");
                 if(resource != null) resources = (List<String>) resource;

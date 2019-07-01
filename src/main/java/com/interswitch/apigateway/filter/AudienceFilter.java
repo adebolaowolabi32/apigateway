@@ -23,7 +23,7 @@ public class AudienceFilter implements WebFilter, Ordered {
     public AudienceFilter(FilterUtil filterUtil) {
         this.filterUtil = filterUtil;
     }
-    
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         Iterator<String> passportIterate = passportRoutes.iterator();
