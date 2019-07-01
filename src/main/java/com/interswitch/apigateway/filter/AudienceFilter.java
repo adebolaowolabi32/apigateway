@@ -20,13 +20,13 @@ public class AudienceFilter implements WebFilter, Ordered {
     private FilterUtil filterUtil;
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        Iterator<String> iterate = PassportToken.iterator();
+        Iterator<String> passportIterate = PassportToken.iterator();
             JWT token = filterUtil.DecodeBearerToken(exchange.getRequest().getHeaders());
             if (token != null) {
                 String exchangePath = exchange.getRequest().getPath().toString();
                 List<String> audience = filterUtil.GetAudienceFromBearerToken(token);
-                while (iterate.hasNext())
-                if (audience.contains("api-gateway") || exchangePath.contains(iterate.next()))
+                while (passportIterate.hasNext())
+                if (audience.contains("api-gateway") || exchangePath.contains(passportIterate.next()))
                     return chain.filter(exchange);
                 return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
             } else {
