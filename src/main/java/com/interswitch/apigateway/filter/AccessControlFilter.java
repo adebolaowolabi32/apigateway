@@ -38,13 +38,14 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         HttpHeaders headers = exchange.getRequest().getHeaders();
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String routeId = (route != null) ? route.getId() : "";
+        JWT token = filterUtil.DecodeBearerToken(headers);
+        String environment =(token != null) ? filterUtil.GetEnvironmentFromBearerToken(token): "";
 
         if(!routeId.isBlank())
-            if(PERMIT_ALL.contains(routeId))
+        if(PERMIT_ALL.contains(routeId) || environment=="TEST")
                 return chain.filter(exchange);
-        JWT token = filterUtil.DecodeBearerToken(headers);
-        String clientId = filterUtil.GetClientIdFromBearerToken(token);
-        List<String> resources = filterUtil.GetResourcesFromBearerToken(token);
+        String clientId =(token != null) ?  filterUtil.GetClientIdFromBearerToken(token): "";
+        List<String> resources = (token != null) ? filterUtil.GetResourcesFromBearerToken(token): Collections.emptyList();
 
         return repository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))

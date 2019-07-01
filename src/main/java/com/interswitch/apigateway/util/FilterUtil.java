@@ -60,7 +60,8 @@ public class FilterUtil {
         String client_id = "";
         if (accessToken!=null) {
             try {
-                client_id = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
+                Object client = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
+                if(client!=null) client_id=client.toString();
             } catch (ParseException e) {
                 Mono.error(e).log();
             }

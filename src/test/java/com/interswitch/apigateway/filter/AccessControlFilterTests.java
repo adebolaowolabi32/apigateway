@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
 import com.interswitch.apigateway.repository.MongoClientRepository;
+import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -24,7 +25,6 @@ import reactor.test.StepVerifier;
 
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -32,7 +32,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {MongoClientRepository.class, Client.class, AccessControlFilter.class})
+@ContextConfiguration(classes = {MongoClientRepository.class, Client.class, AccessControlFilter.class, FilterUtil.class})
 public class AccessControlFilterTests {
 
     @MockBean
@@ -43,6 +43,9 @@ public class AccessControlFilterTests {
 
     @MockBean
     private GatewayFilterChain filterChain  ;
+
+    @Autowired
+    private FilterUtil filterUtil;
 
     private String accessToken = "";
     private String client_id = "client-test-id";

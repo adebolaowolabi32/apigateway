@@ -10,10 +10,11 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AudienceFilter implements WebFilter, Ordered {
-    private static String PassportToken= "/passport/oauth/token";
+    private static List<String> PassportToken= Arrays.asList("/passport/oauth/token","/passport/api/v1/accounts","/passport/api/v1/clients");
 
     private FilterUtil filterUtil;
     @Override
@@ -22,8 +23,7 @@ public class AudienceFilter implements WebFilter, Ordered {
         if(token!=null) {
             String exchangePath = exchange.getRequest().getPath().toString();
             List<String> audience = filterUtil.GetAudienceFromBearerToken(token);
-            String environment = filterUtil.GetEnvironmentFromBearerToken(token);
-            if (audience.contains("api-gateway")||environment == "TEST" ||exchangePath == PassportToken)
+            if (audience.contains("api-gateway") || PassportToken.contains(exchangePath))
                 return chain.filter(exchange);
             return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
         }

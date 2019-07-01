@@ -29,7 +29,7 @@ public class UserController {
     private Mono<User> register(@Validated @RequestBody User user) {
         return mongoUserRepository.findByUsername(user.getUsername()).hasElement()
                 .flatMap(exists -> {
-                    if(exists)return Mono.error(new RuntimeException("User already exists"));
+                    if(exists)return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"User already exists"));
                     user.setRole(User.Role.USER);
                     return mongoUserRepository.save(user);
                 });
