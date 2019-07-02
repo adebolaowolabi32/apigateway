@@ -74,4 +74,14 @@ public class AudienceFilterTests {
         this.setup("isw-core");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
+
+    @Test
+    public void allRequestsFromPassportShouldPass(){
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("http://localhost:8080/passport/api/v1/clients")
+                .build();
+        exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
 }
