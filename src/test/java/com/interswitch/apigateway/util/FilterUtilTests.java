@@ -29,6 +29,7 @@ public class FilterUtilTests {
     JWT token;
     String client_id = "testClient";
     String environment = "TEST";
+    String username = "username";
     List<String> audience = Arrays.asList("api-gateway");
     String accessToken;
 
@@ -37,8 +38,9 @@ public class FilterUtilTests {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
-                .claim("env", "TEST")
-                .claim("client_id", "testClient")
+                .claim("env", environment)
+                .claim("client_id", client_id)
+                .claim("user_name", username)
                 .audience(audience)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -71,6 +73,11 @@ public class FilterUtilTests {
     @Test
     public void testGetClientIdFromBearerToken() {
         assertThat(filterUtil.getClientIdFromBearerToken(token)).isEqualTo(client_id);
+    }
+
+    @Test
+    public void testGetUsernameFromBearerToken() {
+        assertThat(filterUtil.getUsernameFromBearerToken(token)).isEqualTo(username);
     }
 
 }

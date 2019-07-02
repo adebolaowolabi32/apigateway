@@ -18,7 +18,7 @@ import java.util.List;
 public class AudienceFilter implements WebFilter, Ordered {
     private static List<String> passportRoutes = Arrays.asList("/passport/oauth/token", "/passport/api/v1/accounts", "/passport/api/v1/clients");
     private FilterUtil filterUtil;
-    private boolean isPassport;
+    private boolean isPassport = false;
 
     public AudienceFilter(FilterUtil filterUtil) {
         this.filterUtil = filterUtil;
@@ -31,15 +31,15 @@ public class AudienceFilter implements WebFilter, Ordered {
         String exchangePath = exchange.getRequest().getPath().toString();
         List<String> audience = (token != null) ? filterUtil.getAudienceFromBearerToken(token) : Collections.emptyList();
         while (passportIterate.hasNext()) {
-            if (exchangePath.contains(passportIterate.next())) isPassport |= true;
+            if (exchangePath.contains(passportIterate.next())) isPassport = true;
         }
         if (audience.contains("api-gateway") || isPassport)
-                    return chain.filter(exchange);
-                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+            return chain.filter(exchange);
+        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
 
     @Override
     public int getOrder() {
-        return -33456778;
+        return HIGHEST_PRECEDENCE;
     }
 }

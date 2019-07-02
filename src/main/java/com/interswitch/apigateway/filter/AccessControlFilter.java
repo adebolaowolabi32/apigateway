@@ -29,7 +29,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     public  AccessControlFilter(MongoClientRepository repository, FilterUtil filterUtil) {
         this.repository = repository;
-        this.filterUtil =filterUtil;
+        this.filterUtil = filterUtil;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         String environment = (token != null) ? filterUtil.getEnvironmentFromBearerToken(token) : "";
 
         if(!routeId.isBlank())
-        if(PERMIT_ALL.contains(routeId) || environment=="TEST")
+        if(PERMIT_ALL.contains(routeId) || environment.equals("TEST"))
                 return chain.filter(exchange);
         String clientId = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
         List<String> resources = (token != null) ? filterUtil.getResourcesFromBearerToken(token) : Collections.emptyList();

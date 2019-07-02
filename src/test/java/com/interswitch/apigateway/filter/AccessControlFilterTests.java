@@ -1,13 +1,11 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.Client;
-import com.interswitch.apigateway.model.Product;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,54 +40,82 @@ public class AccessControlFilterTests {
     private AccessControlFilter filter;
 
     @MockBean
-    private GatewayFilterChain filterChain  ;
+    private GatewayFilterChain filterChain;
 
-    @Autowired
-    private FilterUtil filterUtil;
+    private ServerWebExchange exchange;
 
-    private String accessToken = "";
-    private String client_id = "client-test-id";
+    private Client client = new Client();
 
-    @BeforeEach
-    public void setup() throws JOSEException, ParseException {
+    private String clientId = "clientId";
+
+    public void setup(String env, String routeId, List<String> resources) throws JOSEException, ParseException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .notBeforeTime(new Date())
                 .audience("isw-core")
-                .claim("client_id", client_id)
-                .claim("api_resources", Arrays.asList("GET/path"))
+                .claim("env", env)
+                .claim("client_id", clientId)
+                .claim("api_resources", resources)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
         Payload payload = new Payload(claims.toJSONObject());
         JWSObject jws = new JWSObject(jwsHeader,payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
-        accessToken = "Bearer " + jws.serialize();
-    }
+        String accessToken = "Bearer " + jws.serialize();
 
-
-    @Test
-    public void testAccessControl (){
         MockServerHttpRequest request = MockServerHttpRequest
                 .get("http://localhost:8080/path")
                 .header("Authorization",accessToken)
                 .build();
-        assertAuthorizationHeader(request);
+        exchange = MockServerWebExchange.from(request);
+
+        Route route = Route.async().id(routeId).uri(request.getURI()).order(0)
+                .predicate(swe -> true).build();
+
+        exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, route);
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+
+        client.setId(clientId);
+        client.setClientId(clientId);
     }
 
-    private void assertAuthorizationHeader(MockServerHttpRequest request) {
-        List<Product> testProducts = new ArrayList<>();
-        Client client = new Client();
-        client.setId("testclient");
-        client.setClientId(client_id);
-        client.setProducts(testProducts);
-        when(mongoClientRepository.findByClientId(client_id)).thenReturn(Mono.just(client));
-        Route value = Route.async().id("testid").uri(request.getURI()).order(0)
-                .predicate(swe -> true).build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
-        exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, value);
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-        filter.filter(exchange, filterChain).block();
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete();
+    @Test
+    public void allRequestsWithEnvironmentTestClaimShouldPass() throws JOSEException, ParseException{
+        this.setup("TEST", "id", Collections.emptyList());
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void allRequestsFromPassportShouldPass() throws JOSEException, ParseException{
+        this.setup(null, "passport", Collections.emptyList());
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void liveRequestsWithNonExistentClientShouldFail() throws JOSEException, ParseException{
+        this.setup("LIVE","id", Collections.emptyList());
+        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
+    }
+
+    @Test
+    public void liveRequestsWithoutResourcePermissionsShouldFail() throws JOSEException, ParseException{
+        this.setup("LIVE","id", Collections.emptyList());
+        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
+    }
+
+    @Test
+    public void liveRequestsWithProperClientAndResourcePermissionsShouldPass() throws JOSEException, ParseException{
+        List<String> resources = Collections.singletonList("GET/path");
+        this.setup("LIVE", "id", resources);
+        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 }
