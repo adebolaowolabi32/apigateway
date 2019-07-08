@@ -16,9 +16,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AudienceFilter implements WebFilter, Ordered {
-    private static List<String> passportRoutes = Arrays.asList("/passport/oauth/token", "/passport/api/v1/accounts", "/passport/api/v1/clients");
+    private static List<String> excludedEndpoints = Arrays.asList("/passport/oauth/token", "/passport/oauth/authorize", "/passport/api/v1/accounts", "/passport/api/v1/clients", "/actuator/health", "/actuator/prometheus");
     private FilterUtil filterUtil;
-    private boolean isPassport = false;
 
     public AudienceFilter(FilterUtil filterUtil) {
         this.filterUtil = filterUtil;
@@ -26,14 +25,15 @@ public class AudienceFilter implements WebFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        Iterator<String> passportIterate = passportRoutes.iterator();
+        boolean isExcluded = false;
+        Iterator<String> iterator = excludedEndpoints.iterator();
         JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
         String exchangePath = exchange.getRequest().getPath().toString();
         List<String> audience = (token != null) ? filterUtil.getAudienceFromBearerToken(token) : Collections.emptyList();
-        while (passportIterate.hasNext()) {
-            if (exchangePath.contains(passportIterate.next())) isPassport = true;
+        while (iterator.hasNext()) {
+            if (exchangePath.contains(iterator.next())) isExcluded = true;
         }
-        if (audience.contains("api-gateway") || isPassport)
+        if (audience.contains("api-gateway") || isExcluded)
             return chain.filter(exchange);
         return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }

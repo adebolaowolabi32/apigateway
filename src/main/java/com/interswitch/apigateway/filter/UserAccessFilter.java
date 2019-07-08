@@ -13,7 +13,12 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class UserAccessFilter implements WebFilter, Ordered {
+
+    private static List<String> excludedEndpoints = Arrays.asList("/actuator/health", "/actuator/prometheus");
 
     private MongoUserRepository mongoUserRepository;
 
@@ -23,7 +28,6 @@ public class UserAccessFilter implements WebFilter, Ordered {
     private RouteUtil routeUtil;
 
     public UserAccessFilter(MongoUserRepository mongoUserRepository, FilterUtil filterUtil, RouteUtil routeUtil){
-
         this.mongoUserRepository = mongoUserRepository;
         this.filterUtil = filterUtil;
         this.routeUtil = routeUtil;
@@ -32,7 +36,7 @@ public class UserAccessFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
             return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-                if(!isRouteBasedEndpoint){
+                if(!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString())){
                     JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
                     String username = (token != null) ? filterUtil.getUsernameFromBearerToken(token) : "";
                     return mongoUserRepository.findByUsername(username)

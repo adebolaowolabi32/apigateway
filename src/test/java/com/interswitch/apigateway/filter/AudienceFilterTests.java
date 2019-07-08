@@ -38,7 +38,7 @@ public class AudienceFilterTests {
 
     private ServerWebExchange exchange;
 
-    public void setup(String aud) throws JOSEException, ParseException {
+    public void setup(String aud, String path) throws JOSEException, ParseException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .notBeforeTime(new Date())
@@ -53,7 +53,7 @@ public class AudienceFilterTests {
         String accessToken = "Bearer " + jws.serialize();
 
         MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/path")
+                .get("http://localhost:8080" + path)
                 .header("Authorization", accessToken)
                 .build();
 
@@ -65,23 +65,19 @@ public class AudienceFilterTests {
 
     @Test
     public void requestsWithApiGatewayInAudienceClaimShouldPass() throws JOSEException, ParseException{
-        this.setup("api-gateway");
+        this.setup("api-gateway", "/anypath");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException, ParseException{
-        this.setup("isw-core");
+        this.setup("isw-core", "/anypath");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
 
     @Test
-    public void allRequestsFromPassportShouldPass(){
-        MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/passport/api/v1/clients")
-                .build();
-        exchange = MockServerWebExchange.from(request);
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+    public void allRequestsToExcludedEndpointsShouldPass()throws JOSEException, ParseException{
+       this.setup("", "/passport/api/v1/clients");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 }
