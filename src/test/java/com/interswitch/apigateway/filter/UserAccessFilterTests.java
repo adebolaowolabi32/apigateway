@@ -3,22 +3,19 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.model.User;
 import com.interswitch.apigateway.repository.MongoUserRepository;
 import com.interswitch.apigateway.util.FilterUtil;
+import com.interswitch.apigateway.util.RouteUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.web.reactive.ControllerEndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -31,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest
 @ActiveProfiles("dev")
-@ContextConfiguration(classes = {UserAccessFilter.class, FilterUtil.class})
+@ContextConfiguration(classes = {UserAccessFilter.class, FilterUtil.class, RouteUtil.class})
 public class UserAccessFilterTests {
     @Autowired
     private UserAccessFilter filter;
@@ -40,19 +37,10 @@ public class UserAccessFilterTests {
     private MongoUserRepository mongoUserRepository;
 
     @MockBean
+    private RouteUtil routeUtil;
+
+    @MockBean
     private WebFilterChain filterChain  ;
-
-    @MockBean
-    private RequestMappingHandlerMapping requestMappingHandlerMapping;
-
-    @MockBean
-    private ControllerEndpointHandlerMapping controllerEndpointHandlerMapping;
-
-    @MockBean
-    private WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping;
-
-    @MockBean
-    private HandlerMethod handlerMethod;
 
     private ServerWebExchange exchange;
 
@@ -86,20 +74,15 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void allRequestsToExternalEndpointsShouldPass(){
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
+    public void allRequestsToRouteBasedEndpointsShouldPass(){
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(true));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
-    public void adminRequestsToInternalEndpointsShouldPass(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
+    public void adminRequestsToNonRouteBasedEndpointsShouldPass(){
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
 
         user.setRole(User.Role.ADMIN);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
@@ -108,63 +91,8 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void adminRequestsToActuatorEndpointsShouldPass(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-
-        user.setRole(User.Role.ADMIN);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
-
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
-    }
-
-    @Test
-    public void adminRequestsToGatewayEndpointsShouldPass(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
-
-        user.setRole(User.Role.ADMIN);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
-
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
-    }
-
-    @Test
-    public void userRequestsToInternalEndpointsShouldFail(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-
-        user.setRole(User.Role.USER);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
-
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
-    }
-
-    @Test
-    public void userRequestsToActuatorEndpointsShouldFail(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-
-        user.setRole(User.Role.USER);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
-
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
-    }
-
-    @Test
-    public void userRequestsToGatewayEndpointsShouldFail(){
-
-        when(requestMappingHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(webFluxEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.empty());
-        when(controllerEndpointHandlerMapping.getHandlerInternal(exchange)).thenReturn(Mono.just(handlerMethod));
+    public void userRequestsToNonRouteBasedEndpointsShouldFail(){
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
 
         user.setRole(User.Role.USER);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));

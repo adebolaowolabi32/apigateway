@@ -1,9 +1,11 @@
 package com.interswitch.apigateway.config;
 
 import com.interswitch.apigateway.filter.*;
+import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
 import com.interswitch.apigateway.util.FilterUtil;
+import com.interswitch.apigateway.util.RouteUtil;
 import org.springframework.boot.actuate.endpoint.web.reactive.ControllerEndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
@@ -21,8 +23,8 @@ public class FilterConfig {
         return new AccessControlFilter(mongo,filterUtil);
     }
     @Bean
-    public UserAccessFilter userAccessFilter(MongoUserRepository mongoUserRepository, FilterUtil filterUtil, RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping){
-        return new UserAccessFilter(mongoUserRepository, filterUtil, requestMappingHandlerMapping, controllerEndpointHandlerMapping, webFluxEndpointHandlerMapping);
+    public UserAccessFilter userAccessFilter(MongoUserRepository mongoUserRepository, FilterUtil filterUtil, RouteUtil routeUtil){
+        return new UserAccessFilter(mongoUserRepository, filterUtil, routeUtil);
     }
     @Bean
     public RouteIdFilter routeIdFilter(){
@@ -37,6 +39,17 @@ public class FilterConfig {
     public FilterUtil filterUtil(){
         return new FilterUtil();
     }
+
+    @Bean
+    public RouteUtil routeUtil(RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping) {
+        return new RouteUtil(requestMappingHandlerMapping, controllerEndpointHandlerMapping, webFluxEndpointHandlerMapping);
+    }
+
+    @Bean
+    public AccessLogsFilter accessLogsFilter(MongoAccessLogsRepository mongoAccessLogsRepository, FilterUtil filterUtil, RouteUtil routeUtil){
+        return new AccessLogsFilter(mongoAccessLogsRepository, filterUtil, routeUtil);
+    }
+
 }
 
 
