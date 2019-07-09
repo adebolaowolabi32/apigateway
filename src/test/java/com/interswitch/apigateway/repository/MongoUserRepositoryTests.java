@@ -19,11 +19,11 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
     public void testFindAll(){
         User u1 = new User();
         u1.setId("userId1");
-        u1.setUsername("testUsernameOne");
+        u1.setUsername("testusernameone");
         u1.setRole(User.Role.USER);
         User u2 = new User();
         u2.setId("userId2");
-        u2.setUsername("testUsernameTwo");
+        u2.setUsername("testusernametwo");
         u2.setRole(User.Role.USER);
         mongoUserRepository.save(u1).block();
         mongoUserRepository.save(u2).block();
@@ -34,7 +34,7 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
     public void testFindByUsername(){
         User user = new User();
         user.setId("userId");
-        user.setUsername("testUsername");
+        user.setUsername("testusername");
         user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
         StepVerifier.create(mongoUserRepository.findByUsername(user.getUsername())).assertNext(u -> {
@@ -47,10 +47,10 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
     public void testUpdate(){
         User user = new User();
         user.setId("userId");
-        user.setUsername("testUsername");
+        user.setUsername("testusername");
         user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
-        savedUser.setUsername("usernameTwo");
+        savedUser.setUsername("usernametwo");
         savedUser.setRole(User.Role.ADMIN);
         mongoUserRepository.save(user).block();
         StepVerifier.create(mongoUserRepository.findById(user.getId())).assertNext(u -> {
@@ -63,7 +63,7 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
     public void testDelete(){
         User user = new User();
         user.setId("userId");
-        user.setUsername("testUsername");
+        user.setUsername("testusername");
         user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
         mongoUserRepository.deleteById(savedUser.getId()).block();
