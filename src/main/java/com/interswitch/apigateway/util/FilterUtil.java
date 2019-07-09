@@ -94,6 +94,6 @@ public class FilterUtil {
                 Mono.error(e).log();
             }
         }
-        return username;
+        return username.toLowerCase();
     }
 }

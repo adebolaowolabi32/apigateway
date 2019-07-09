@@ -19,6 +19,7 @@ public class UserController {
     public UserController(MongoUserRepository mongoUserRepository){
         this.mongoUserRepository = mongoUserRepository;
     }
+
     @GetMapping(produces = "application/json")
     private Flux<User> getAll() {
         return mongoUserRepository.findAll();
@@ -27,7 +28,7 @@ public class UserController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
-        return mongoUserRepository.findByUsername(user.getUsername()).hasElement()
+        return mongoUserRepository.findByUsername(user.getUsername().toLowerCase()).hasElement()
                 .flatMap(exists -> {
                     if(exists)return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"User already exists"));
                     user.setRole(User.Role.USER);
@@ -37,14 +38,14 @@ public class UserController {
 
     @GetMapping(value = "/{username}", produces = "application/json")
     private Mono<ResponseEntity<User>> findByUsername(@Validated @PathVariable String username) {
-        return mongoUserRepository.findByUsername(username)
+        return mongoUserRepository.findByUsername(username.toLowerCase())
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<User> assignRole(@Validated @RequestBody User user) {
-        return mongoUserRepository.findByUsername(user.getUsername())
+        return mongoUserRepository.findByUsername(user.getUsername().toLowerCase())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")))
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
@@ -57,7 +58,7 @@ public class UserController {
     @DeleteMapping("/{username}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String username) {
         try {
-            return mongoUserRepository.findByUsername(username)
+            return mongoUserRepository.findByUsername(username.toLowerCase())
                     .flatMap(user -> mongoUserRepository.deleteById(user.getId())
                             .then(Mono.just(new ResponseEntity<>(HttpStatus.OK))));
         } catch (Exception e) {

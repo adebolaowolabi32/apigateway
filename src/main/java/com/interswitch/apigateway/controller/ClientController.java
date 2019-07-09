@@ -60,7 +60,9 @@ public class ClientController {
 
     @GetMapping(value= "/{clientId}/products", produces = "application/json")
     private Mono<List<Product>> GetAssignedProducts(@PathVariable String clientId){
-        return mongoClientRepository.findByClientId(clientId).map(client -> client.getProducts());
+        return mongoClientRepository.findByClientId(clientId)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client does not exist")))
+                .map(client -> client.getProducts());
     }
 
     @PostMapping(value= "/{clientId}/products/{productId}", produces = "application/json", consumes = "application/json")
