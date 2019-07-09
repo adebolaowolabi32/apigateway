@@ -99,4 +99,17 @@ public class UserAccessFilterTests {
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
+
+    @Test
+    public void allRequestsToExcludedEndpointsShouldPass(){
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("http://localhost:8080/actuator/health")
+                .build();
+
+        exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
 }
