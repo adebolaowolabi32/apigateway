@@ -50,8 +50,8 @@ public class ClientController {
     @DeleteMapping("/{clientId}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String clientId){
         try {
-            return mongoClientRepository.deleteById(clientId)
-                    .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
+            return mongoClientRepository.findByClientId(clientId)
+                    .flatMap(client -> mongoClientRepository.deleteById(client.getId()).then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK))));
         }
         catch (Exception e) {
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());

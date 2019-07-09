@@ -69,7 +69,9 @@ public class ProductController {
         try {
             return mongoProductRepository.findById(productId)
                     .flatMap(product -> {
-                        product.getResources().forEach(resource -> mongoResourceRepository.deleteById(resource.getId()));
+                        product.getResources().forEach(resource -> {
+                            mongoResourceRepository.deleteById(resource.getId()).subscribe();
+                        });
                         return mongoProductRepository.deleteById(productId).then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
                     });
         } catch (Exception e) {
