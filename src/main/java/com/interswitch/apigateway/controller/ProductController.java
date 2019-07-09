@@ -80,7 +80,9 @@ public class ProductController {
 
     @GetMapping(value = "/{productId}/resources", produces = "application/json")
     private Mono<List<Resource>> getResources(@PathVariable String productId) {
-        return mongoProductRepository.findById(productId).map(product -> product.getResources());
+        return mongoProductRepository.findById(productId)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
+                .map(product -> product.getResources());
     }
 
     @PostMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
