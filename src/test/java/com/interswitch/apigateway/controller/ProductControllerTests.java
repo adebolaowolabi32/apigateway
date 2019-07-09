@@ -112,7 +112,7 @@ public class ProductControllerTests {
                 .expectBodyList(Product.class);
     }
 
-    @Test
+    /*@Test
     public void testDelete(){
         when(mongoProductRepository.deleteById(product.getId())).thenReturn(Mono.empty());
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
@@ -121,7 +121,7 @@ public class ProductControllerTests {
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
-    }
+    }*/
 
     @Test
     public void testGetResources(){
