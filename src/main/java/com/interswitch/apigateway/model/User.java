@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -20,6 +21,7 @@ public class User {
     @Length(min = 5, max = 50, message = "Username must be between 5 and 50 characters long")
     private String username;
 
+    @EqualsAndHashCode.Exclude
     @NotNull
     private Role role;
 

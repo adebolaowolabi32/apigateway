@@ -43,7 +43,7 @@ public class AccessLogsControllerTests {
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(HttpStatus.OK);
+        accessLogs.setResponseCode(HttpStatus.OK);
     }
 
     @Test

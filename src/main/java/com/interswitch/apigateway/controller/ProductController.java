@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @RestController
@@ -69,11 +70,36 @@ public class ProductController {
         try {
             return mongoProductRepository.findById(productId)
                     .flatMap(product -> {
+                        return mongoProductRepository.deleteById(productId)
+                                .then(Mono.defer(() -> {
+                                        return Mono.fromRunnable(()-> {
+                                            Flux.fromIterable(product.getResources()).flatMap(r -> {
+                                                return mongoResourceRepository.deleteById(r.getId());
+                                            }).subscribe();
+                                        }).subscribe();
+                                    }))
+                                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
+                    });
+
+
+                       /* return product.getResources().stream().map(r -> {
+                                return mongoResourceRepository.deleteById(r.getId());
+                        });*/
+
+                        /*Iterator<Resource> iterator = product.getResources().iterator();
+                        while(iterator.hasNext()){
+                            return mongoResourceRepository.deleteById(iterator.next().getId());
+
+                        }*/
+                        /*return mongoProductRepository.deleteById(productId)
+                                .doOnSuccess(product.getResources().stream().forEach(resource -> {
+                                    mongoResourceRepository.deleteById(resource.getId());
+                                }).subscribe());
+
                         product.getResources().forEach(resource -> {
                             mongoResourceRepository.deleteById(resource.getId()).subscribe();
                         });
-                        return mongoProductRepository.deleteById(productId).then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
-                    });
+                        .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));*/
         } catch (Exception e) {
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
         }

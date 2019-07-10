@@ -29,7 +29,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
         a1.setApi("/products");
         a1.setTimestamp(LocalDateTime.now());
         a1.setUsername("user.name");
-        a1.setStatus(HttpStatus.OK);
+        a1.setResponseCode(HttpStatus.OK);
 
         AccessLogs a2 = new AccessLogs();
         a2.setId("accessLogs2");
@@ -39,7 +39,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
         a2.setApi("/products");
         a2.setTimestamp(LocalDateTime.now());
         a2.setUsername("user.name");
-        a2.setStatus(HttpStatus.OK);
+        a2.setResponseCode(HttpStatus.OK);
         mongoAccessLogsRepository.save(a1).block();
         mongoAccessLogsRepository.save(a2).block();
         StepVerifier.create(mongoAccessLogsRepository.findAll()).expectNextCount(2);
@@ -55,7 +55,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(HttpStatus.CREATED);
+        accessLogs.setResponseCode(HttpStatus.CREATED);
         AccessLogs savedAccessLogs = mongoAccessLogsRepository.save(accessLogs).block();
         StepVerifier.create(mongoAccessLogsRepository.findById(accessLogs.getId())).assertNext(a -> {
             assertThat(a.getId()).isEqualTo(accessLogs.getId()).isEqualTo(savedAccessLogs.getId());
@@ -64,7 +64,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
             assertThat(a.getEntityId()).isEqualTo(accessLogs.getEntityId()).isEqualTo(savedAccessLogs.getEntityId());
             assertThat(a.getUsername()).isEqualTo(accessLogs.getUsername()).isEqualTo(savedAccessLogs.getUsername());
             assertThat(a.getAction()).isEqualTo(accessLogs.getAction()).isEqualTo(savedAccessLogs.getAction());
-            assertThat(a.getStatus()).isEqualTo(accessLogs.getStatus()).isEqualTo(savedAccessLogs.getStatus());
+            assertThat(a.getResponseCode()).isEqualTo(accessLogs.getResponseCode()).isEqualTo(savedAccessLogs.getResponseCode());
         }).expectComplete().verify();
     }
 
@@ -78,7 +78,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(HttpStatus.OK);
+        accessLogs.setResponseCode(HttpStatus.OK);
         AccessLogs savedAccessLogs = mongoAccessLogsRepository.save(accessLogs).block();
         mongoAccessLogsRepository.deleteById(accessLogs.getId()).block();
         StepVerifier.create(mongoAccessLogsRepository.findById(savedAccessLogs.getId())).expectComplete().verify();
