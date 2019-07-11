@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -33,7 +34,7 @@ public class AudienceFilter implements WebFilter, Ordered {
         while (iterator.hasNext()) {
             if (exchangePath.contains(iterator.next())) isExcluded = true;
         }
-        if (audience.contains("api-gateway") || isExcluded)
+        if (audience.contains("api-gateway") || isExcluded || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
         return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
