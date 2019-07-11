@@ -63,18 +63,15 @@ public class UserAccessFilterTests {
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         String accessToken = "Bearer " + jws.serialize();
 
-        MockServerHttpRequest request = MockServerHttpRequest
+        exchange = MockServerWebExchange.from(MockServerHttpRequest
                 .get("http://localhost:8080/path")
                 .header("Authorization", accessToken)
-                .build();
-
-        exchange = MockServerWebExchange.from(request);
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-        user.setUsername(username);
+                .build());
     }
 
     @Test
     public void allRequestsToRouteBasedEndpointsShouldPass(){
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(true));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
@@ -82,8 +79,9 @@ public class UserAccessFilterTests {
 
     @Test
     public void adminRequestsToNonRouteBasedEndpointsShouldPass(){
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-
+        user.setUsername(username);
         user.setRole(User.Role.ADMIN);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
@@ -92,8 +90,9 @@ public class UserAccessFilterTests {
 
     @Test
     public void userRequestsToNonRouteBasedEndpointsShouldFail(){
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-
+        user.setUsername(username);
         user.setRole(User.Role.USER);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
@@ -102,11 +101,16 @@ public class UserAccessFilterTests {
 
     @Test
     public void allRequestsToExcludedEndpointsShouldPass(){
-        MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/actuator/health")
-                .build();
+        exchange = MockServerWebExchange.from(MockServerHttpRequest.get("http://localhost:8080/actuator/health"));
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
 
-        exchange = MockServerWebExchange.from(request);
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void allOptionsRequestsToShouldPass(){
+        exchange = MockServerWebExchange.from(MockServerHttpRequest.options("http://localhost:8080/anypath").build());
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
 
