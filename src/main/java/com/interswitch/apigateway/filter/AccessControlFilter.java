@@ -8,6 +8,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -41,8 +42,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         JWT token = filterUtil.decodeBearerToken(headers);
         String environment = (token != null) ? filterUtil.getEnvironmentFromBearerToken(token) : "";
 
-        if(!routeId.isBlank())
-        if(PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST"))
+        if(PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") ||HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
                 return chain.filter(exchange);
         String clientId = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
         List<String> resources = (token != null) ? filterUtil.getResourcesFromBearerToken(token) : Collections.emptyList();

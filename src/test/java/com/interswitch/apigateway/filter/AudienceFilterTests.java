@@ -17,7 +17,6 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -38,7 +37,7 @@ public class AudienceFilterTests {
 
     private ServerWebExchange exchange;
 
-    public void setup(String aud, String path) throws JOSEException, ParseException {
+    public void setup(String aud, String path) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .notBeforeTime(new Date())
@@ -52,32 +51,36 @@ public class AudienceFilterTests {
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         String accessToken = "Bearer " + jws.serialize();
 
-        MockServerHttpRequest request = MockServerHttpRequest
+        exchange = MockServerWebExchange.from(MockServerHttpRequest
                 .get("http://localhost:8080" + path)
                 .header("Authorization", accessToken)
-                .build();
-
-        exchange = MockServerWebExchange.from(request);
+                .build());
 
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-
     }
 
     @Test
-    public void requestsWithApiGatewayInAudienceClaimShouldPass() throws JOSEException, ParseException{
+    public void requestsWithApiGatewayInAudienceClaimShouldPass() throws JOSEException {
         this.setup("api-gateway", "/anypath");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
-    public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException, ParseException{
+    public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException {
         this.setup("isw-core", "/anypath");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
 
     @Test
-    public void allRequestsToExcludedEndpointsShouldPass()throws JOSEException, ParseException{
+    public void allRequestsToExcludedEndpointsShouldPass()throws JOSEException {
        this.setup("", "/passport/api/v1/clients");
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void allOptionsRequestsShouldPass() {
+        exchange = MockServerWebExchange.from(MockServerHttpRequest.options("http://localhost:8080/path").build());
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 }
