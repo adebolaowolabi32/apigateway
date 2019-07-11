@@ -6,6 +6,7 @@ import com.interswitch.apigateway.util.FilterUtil;
 import com.interswitch.apigateway.util.RouteUtil;
 import com.nimbusds.jwt.JWT;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -36,7 +37,7 @@ public class UserAccessFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
             return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-                if(!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString())){
+                if(!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())){
                     JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
                     String username = (token != null) ? filterUtil.getUsernameFromBearerToken(token) : "";
                     return mongoUserRepository.findByUsername(username)
