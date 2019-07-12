@@ -21,14 +21,14 @@ public class AccessLogsController {
     }
 
     @GetMapping(produces = "application/json")
-    private Flux<AccessLogs> getAll(@RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
+    private Flux<AccessLogs> getAll(@RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
                                     @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         Pageable page = PageRequest.of(pageNum, pageSize);
         return mongoAccessLogsRepository.retrieveAllPaged(page);
     }
 
     @GetMapping(value = "/search", produces = "application/json")
-    private Flux<AccessLogs> getSearchPaged(@RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
+    private Flux<AccessLogs> getSearchPaged(@RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
                                             @RequestParam(value = "searchValue") String searchValue,
                                             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         Pageable page = PageRequest.of(pageNum, pageSize);

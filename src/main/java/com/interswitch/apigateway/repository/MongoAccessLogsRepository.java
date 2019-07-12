@@ -10,7 +10,7 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface MongoAccessLogsRepository extends ReactiveMongoRepository<AccessLogs, String> {
     @Query(value = "{ $or: [ { 'username' : {$regex:?0,$options:'i'} }, { 'client' : {$regex:?0,$options:'i'} }," +
-            " { 'api' : {$regex:?0,$options:'i'} }, { 'entity' : {$regex:?0,$options:'i'} }, { 'action' : {$regex:?0,$options:'i'} }," +
+            " { 'entity' : {$regex:?0,$options:'i'} }, { 'action' : {$regex:?0,$options:'i'} }," +
             "{ 'state' : {$regex:?0,$options:'i'} } ] }")
     Flux<AccessLogs> query(String query, Pageable page);
 
