@@ -55,7 +55,7 @@ public class FilterUtil {
                 Mono.error(e).log();
             }
         }
-        return environment;
+        return environment.trim();
     }
 
     public String getClientIdFromBearerToken(JWT accessToken) {
@@ -68,7 +68,7 @@ public class FilterUtil {
                 Mono.error(e).log();
             }
         }
-        return client_id;
+        return client_id.trim();
     }
 
     public List<String> getResourcesFromBearerToken(JWT accessToken) {
@@ -94,6 +94,6 @@ public class FilterUtil {
                 Mono.error(e).log();
             }
         }
-        return username.toLowerCase();
+        return username.toLowerCase().trim();
     }
 }
