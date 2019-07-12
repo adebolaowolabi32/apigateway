@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,13 +28,19 @@ public class Product {
     private String name;
 
     @EqualsAndHashCode.Exclude
+    @NotNull
     @Length(max = 500, message = "Description must less than 500 characters long")
-    private String description;
+    private String description = "";
 
     @EqualsAndHashCode.Exclude
+    @NotBlank(message = "Documentation URL is Required")
     @URL(message = "Documentation URL not valid")
     @Length(max = 500, message = "Documentation URL must less than 500 characters long")
     private String documentation;
+
+    @EqualsAndHashCode.Exclude
+    @NotNull
+    private Category category = Category.PUBLIC;
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
@@ -60,5 +67,9 @@ public class Product {
 
     public void removeClient(Client client){
         clients.remove(client);
+    }
+
+    private enum Category {
+        PUBLIC, RESTRICTED
     }
 }

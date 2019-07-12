@@ -21,7 +21,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URISyntaxException;
 import java.util.Collections;
 
 import static org.mockito.BDDMockito.when;
@@ -42,10 +41,11 @@ public class ProductControllerTests {
     private Product product = new Product();
 
     private Client client;
+
     private Resource resource;
 
     @BeforeEach
-    public void setup() throws URISyntaxException {
+    public void setup() {
         client = new Client();
         client.setId("test_client_id");
         client.setClientId("test_client_id");
@@ -57,7 +57,7 @@ public class ProductControllerTests {
         product = new Product();
         product.setId("test_product_id");
         product.setName("productName");
-        product.setDescription("productDes");
+        product.setDocumentation("http://interswitch/docs");
         product.addResource(resource);
         product.addClient(client);
     }
@@ -112,16 +112,17 @@ public class ProductControllerTests {
                 .expectBodyList(Product.class);
     }
 
-    /*@Test
+    @Test
     public void testDelete(){
-        when(mongoProductRepository.deleteById(product.getId())).thenReturn(Mono.empty());
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
+        when(mongoProductRepository.deleteById(product.getId())).thenReturn(Mono.empty());
+        when(mongoResourceRepository.deleteById(resource.getId())).thenReturn(Mono.empty());
         this.webClient.delete()
                 .uri("/products/{productId}",  product.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();
-    }*/
+    }
 
     @Test
     public void testGetResources(){
