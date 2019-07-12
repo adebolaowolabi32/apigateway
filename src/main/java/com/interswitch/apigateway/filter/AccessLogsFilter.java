@@ -63,15 +63,15 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 return chain.filter(exchange).then(Mono.fromRunnable(() -> {
                     HttpStatus status = exchange.getResponse().getStatusCode();
-                    accessLogs.setResponseCode(status);
-                    LOG.info("Audit Log Event: timestamp: {}, username: {}, api: {}, entity: {}, action: {}, entityID: {}, responseCode: {}",
+                    accessLogs.setStatus(status);
+                    LOG.info("Audit Log Event: timestamp: {}, username: {}, api: {}, entity: {}, action: {}, entityID: {}, status: {}",
                             accessLogs.getTimestamp(),
                             accessLogs.getUsername(),
                             accessLogs.getApi(),
                             accessLogs.getEntity(),
                             accessLogs.getAction(),
                             accessLogs.getEntityId(),
-                            accessLogs.getResponseCode());
+                            accessLogs.getStatus());
                     mongoAccessLogsRepository.save(accessLogs).subscribe();
                 }));
             }

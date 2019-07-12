@@ -1,6 +1,5 @@
 package com.interswitch.apigateway.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -11,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +28,7 @@ public class Client{
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
+    @NotNull
     private List<Product> products = new ArrayList<>();
 
     public void addProduct(Product product){

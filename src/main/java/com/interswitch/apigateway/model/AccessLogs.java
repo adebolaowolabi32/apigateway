@@ -29,7 +29,7 @@ public class AccessLogs {
     private Action action;
 
     @NotNull
-    private HttpStatus responseCode;
+    private HttpStatus status;
 
     @NotNull
     private LocalDateTime timestamp = LocalDateTime.now();
