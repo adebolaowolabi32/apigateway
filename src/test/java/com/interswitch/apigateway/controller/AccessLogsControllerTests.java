@@ -37,14 +37,14 @@ public class AccessLogsControllerTests {
     public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATED);
+        accessLogs.setAction(AccessLogs.Action.CREATION);
         accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(HttpStatus.OK);
-    }
+        accessLogs.setStatus("");
+        accessLogs.setState(AccessLogs.State.SUCCESSFUL);    }
 
     @Test
     public void testGetAll(){
