@@ -71,11 +71,9 @@ public class ProductController {
                     .flatMap(product -> {
                         return mongoProductRepository.deleteById(productId)
                                 .then(Mono.defer(() -> {
-                                        return Mono.fromCallable(()-> {
-                                            return Flux.fromIterable(product.getResources()).flatMap(r -> {
-                                                return mongoResourceRepository.deleteById(r.getId());
-                                            }).subscribe();
-                                        });
+                                        return Flux.fromIterable(product.getResources()).flatMap(r -> {
+                                            return mongoResourceRepository.deleteById(r.getId());
+                                        }).then();
                                     }))
                                 .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
                     });
