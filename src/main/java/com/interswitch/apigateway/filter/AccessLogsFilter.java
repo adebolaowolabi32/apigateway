@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.util.StringUtils.capitalize;
+
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
@@ -35,10 +37,11 @@ public class AccessLogsFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-            if (!isRouteBasedEndpoint) {
+            if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
                 JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
                 String username = (token != null) ? filterUtil.getUsernameFromBearerToken(token) : "";
+                String client = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
                 LocalDateTime timestamp = LocalDateTime.now();
@@ -58,20 +61,29 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 }
                 accessLogs.setUsername(username);
+                accessLogs.setClient(client);
+
                 accessLogs.setApi(path);
                 accessLogs.setTimestamp(timestamp);
 
                 return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-                    HttpStatus status = exchange.getResponse().getStatusCode();
-                    accessLogs.setStatus(status);
-                    LOG.info("Audit Log Event: timestamp: {}, username: {}, api: {}, entity: {}, action: {}, entityID: {}, status: {}",
+                    HttpStatus status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode() : HttpStatus.OK;
+                    accessLogs.setStatus(status.getReasonPhrase());
+                    if(status.isError())
+                        accessLogs.setState(AccessLogs.State.FAILED);
+                    else
+                        accessLogs.setState(AccessLogs.State.SUCCESSFUL);
+                    accessLogs.setSummary(String.format("%s %s - %s", capitalize(accessLogs.getEntity().toString().toLowerCase()), capitalize(accessLogs.getAction().toString().toLowerCase()), capitalize(accessLogs.getState().toString().toLowerCase())));
+                    LOG.info("Audit Log Event: timestamp: {}, username: {}, client: {}, api: {}, entity: {}, entityID: {}, action: {}, status: {}, summary: {}",
                             accessLogs.getTimestamp(),
                             accessLogs.getUsername(),
+                            accessLogs.getClient(),
                             accessLogs.getApi(),
                             accessLogs.getEntity(),
-                            accessLogs.getAction(),
                             accessLogs.getEntityId(),
-                            accessLogs.getStatus());
+                            accessLogs.getAction(),
+                            accessLogs.getStatus(),
+                            accessLogs.getSummary());
                     mongoAccessLogsRepository.save(accessLogs).subscribe();
                 }));
             }
@@ -79,6 +91,15 @@ public class AccessLogsFilter implements WebFilter, Ordered {
         });
     }
 
+    private boolean isAuditMethod(String requestMethod){
+        boolean isAuditMethod = false;
+        AccessLogs.Action[] methods = AccessLogs.Action.values();
+        for (var method : methods) {
+            if(method.getValue().equals(requestMethod))
+                isAuditMethod = true;
+        }
+        return isAuditMethod;
+    }
 
     private String getId(String subPath, String fullPath){
         int endOfSubPath = fullPath.indexOf(subPath) + subPath.length();

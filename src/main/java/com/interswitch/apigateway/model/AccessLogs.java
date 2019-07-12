@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,18 +19,29 @@ public class AccessLogs {
     private String username;
 
     @NotNull
+    private String client;
+
+    @NotNull
     private String api;
 
     @NotNull
     private Entity entity;
 
-    private String entityId;
+    @NotNull
+    private String entityId = "";
 
     @NotNull
     private Action action;
 
     @NotNull
-    private HttpStatus status;
+    private String status;
+
+    @JsonIgnore
+    @NotNull
+    private State state ;
+
+    @NotNull
+    private String summary;
 
     @NotNull
     private LocalDateTime timestamp = LocalDateTime.now();
@@ -54,10 +66,9 @@ public class AccessLogs {
     }
 
     public enum Action {
-        VIEWED("GET"),
-        CREATED("POST"),
-        UPDATED("PUT"),
-        DELETED("DELETE");
+        CREATION("POST"),
+        UPDATE("PUT"),
+        DELETION("DELETE");
 
         private String value;
 
@@ -68,5 +79,9 @@ public class AccessLogs {
         Action(String value){
             this.value = value;
         }
+    }
+
+    public enum State {
+        SUCCESSFUL, FAILED
     }
 }
