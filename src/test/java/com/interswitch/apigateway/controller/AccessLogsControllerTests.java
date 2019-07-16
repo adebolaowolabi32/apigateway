@@ -36,7 +36,7 @@ public class AccessLogsControllerTests {
     public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATED);
+        accessLogs.setAction(AccessLogs.Action.CREATE);
         accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");

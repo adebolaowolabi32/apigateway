@@ -22,7 +22,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testFindAll(){
         AccessLogs a1 = new AccessLogs();
         a1.setId("accessLogs1");
-        a1.setAction(AccessLogs.Action.CREATED);
+        a1.setAction(AccessLogs.Action.CREATE);
         a1.setEntity(AccessLogs.Entity.PRODUCT);
         a1.setEntityId("productId");
         a1.setApi("/products");
@@ -32,7 +32,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
 
         AccessLogs a2 = new AccessLogs();
         a2.setId("accessLogs2");
-        a2.setAction(AccessLogs.Action.UPDATED);
+        a2.setAction(AccessLogs.Action.UPDATE);
         a2.setEntity(AccessLogs.Entity.PRODUCT);
         a2.setEntityId("productId");
         a2.setApi("/products");
@@ -48,7 +48,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testFindById(){
         AccessLogs accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATED);
+        accessLogs.setAction(AccessLogs.Action.CREATE);
         accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
@@ -72,7 +72,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testDelete(){
         AccessLogs accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATED);
+        accessLogs.setAction(AccessLogs.Action.CREATE);
         accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");

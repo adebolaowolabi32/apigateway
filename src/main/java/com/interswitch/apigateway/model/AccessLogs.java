@@ -57,9 +57,9 @@ public class AccessLogs {
     }
 
     public enum Action {
-        CREATED("POST"),
-        UPDATED("PUT"),
-        DELETED("DELETE");
+        CREATE("POST"),
+        UPDATE("PUT"),
+        DELETE("DELETE");
 
         private String value;
 
