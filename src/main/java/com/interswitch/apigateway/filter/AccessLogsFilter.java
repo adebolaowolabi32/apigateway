@@ -16,8 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
-import static org.springframework.util.StringUtils.capitalize;
-
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
@@ -68,13 +66,11 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 return chain.filter(exchange).then(Mono.fromRunnable(() -> {
                     HttpStatus status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode() : HttpStatus.OK;
-                    accessLogs.setStatus(status.getReasonPhrase());
                     if(status.isError())
-                        accessLogs.setState(AccessLogs.State.FAILED);
+                        accessLogs.setStatus(AccessLogs.Status.FAILED);
                     else
-                        accessLogs.setState(AccessLogs.State.SUCCESSFUL);
-                    accessLogs.setSummary(String.format("%s %s - %s", capitalize(accessLogs.getEntity().toString().toLowerCase()), capitalize(accessLogs.getAction().toString().toLowerCase()), capitalize(accessLogs.getState().toString().toLowerCase())));
-                    LOG.info("Audit Log Event: timestamp: {}, username: {}, client: {}, api: {}, entity: {}, entityID: {}, action: {}, status: {}, summary: {}",
+                        accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
+                    LOG.info("Audit Log Event: timestamp: {}, username: {}, client: {}, api: {}, entity: {}, entityID: {}, action: {}, status: {}",
                             accessLogs.getTimestamp(),
                             accessLogs.getUsername(),
                             accessLogs.getClient(),
@@ -82,9 +78,8 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                             accessLogs.getEntity(),
                             accessLogs.getEntityId(),
                             accessLogs.getAction(),
-                            accessLogs.getStatus(),
-                            accessLogs.getSummary());
-                    mongoAccessLogsRepository.save(accessLogs).subscribe();
+                            accessLogs.getStatus());
+                            mongoAccessLogsRepository.save(accessLogs).subscribe();
                 }));
             }
         return chain.filter(exchange);

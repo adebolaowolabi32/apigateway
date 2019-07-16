@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -37,14 +36,13 @@ public class AccessLogsControllerTests {
     public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATION);
+        accessLogs.setAction(AccessLogs.Action.CREATE);
         accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus("");
-        accessLogs.setState(AccessLogs.State.SUCCESSFUL);    }
+        accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);    }
 
     @Test
     public void testGetAll(){
