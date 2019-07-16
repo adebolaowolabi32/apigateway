@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.AccessLogs;
+import com.interswitch.apigateway.model.AccessLogs.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -22,23 +23,25 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testFindAll(){
         AccessLogs a1 = new AccessLogs();
         a1.setId("accessLogs1");
-        a1.setAction(AccessLogs.Action.CREATE);
-        a1.setEntity(AccessLogs.Entity.PRODUCT);
+        a1.setAction(Action.CREATE);
+        a1.setEntity(Entity.PRODUCT);
         a1.setEntityId("productId");
         a1.setApi("/products");
         a1.setTimestamp(LocalDateTime.now());
         a1.setUsername("user.name");
-        a1.setStatus(AccessLogs.Status.SUCCESSFUL);
+        a1.setClient("client.id");
+        a1.setStatus(Status.SUCCESSFUL);
 
         AccessLogs a2 = new AccessLogs();
         a2.setId("accessLogs2");
-        a2.setAction(AccessLogs.Action.UPDATE);
-        a2.setEntity(AccessLogs.Entity.PRODUCT);
+        a2.setAction(Action.UPDATE);
+        a2.setEntity(Entity.PRODUCT);
         a2.setEntityId("productId");
         a2.setApi("/products");
         a2.setTimestamp(LocalDateTime.now());
         a2.setUsername("user.name");
-        a2.setStatus(AccessLogs.Status.SUCCESSFUL);
+        a2.setClient("client.id");
+        a2.setStatus(Status.SUCCESSFUL);
         mongoAccessLogsRepository.save(a1).block();
         mongoAccessLogsRepository.save(a2).block();
         StepVerifier.create(mongoAccessLogsRepository.findAll()).expectNextCount(2);
@@ -48,13 +51,14 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testFindById(){
         AccessLogs accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATE);
-        accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
+        accessLogs.setAction(Action.CREATE);
+        accessLogs.setEntity(Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
+        accessLogs.setClient("client.id");
+        accessLogs.setStatus(Status.SUCCESSFUL);
         AccessLogs savedAccessLogs = mongoAccessLogsRepository.save(accessLogs).block();
         StepVerifier.create(mongoAccessLogsRepository.findById(accessLogs.getId())).assertNext(a -> {
             assertThat(a.getId()).isEqualTo(accessLogs.getId()).isEqualTo(savedAccessLogs.getId());
@@ -62,9 +66,9 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
             assertThat(a.getEntity()).isEqualTo(accessLogs.getEntity()).isEqualTo(savedAccessLogs.getEntity());
             assertThat(a.getEntityId()).isEqualTo(accessLogs.getEntityId()).isEqualTo(savedAccessLogs.getEntityId());
             assertThat(a.getUsername()).isEqualTo(accessLogs.getUsername()).isEqualTo(savedAccessLogs.getUsername());
+            assertThat(a.getClient()).isEqualTo(accessLogs.getClient()).isEqualTo(savedAccessLogs.getClient());
             assertThat(a.getAction()).isEqualTo(accessLogs.getAction()).isEqualTo(savedAccessLogs.getAction());
-            assertThat(a.getStatus()).isEqualTo(accessLogs.getStatus()).isEqualTo(savedAccessLogs.getStatus()
-            );
+            assertThat(a.getStatus()).isEqualTo(accessLogs.getStatus()).isEqualTo(savedAccessLogs.getStatus());
         }).expectComplete().verify();
     }
 
@@ -72,13 +76,14 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void testDelete(){
         AccessLogs accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATE);
-        accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
+        accessLogs.setAction(Action.CREATE);
+        accessLogs.setEntity(Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name");
-        accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
+        accessLogs.setClient("client.id");
+        accessLogs.setStatus(Status.SUCCESSFUL);
         AccessLogs savedAccessLogs = mongoAccessLogsRepository.save(accessLogs).block();
         mongoAccessLogsRepository.deleteById(accessLogs.getId()).block();
         StepVerifier.create(mongoAccessLogsRepository.findById(savedAccessLogs.getId())).expectComplete().verify();
