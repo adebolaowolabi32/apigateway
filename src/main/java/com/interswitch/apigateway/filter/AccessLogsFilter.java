@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.AccessLogs;
+import com.interswitch.apigateway.model.AccessLogs.*;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.interswitch.apigateway.util.RouteUtil;
@@ -43,8 +44,8 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
                 LocalDateTime timestamp = LocalDateTime.now();
-                AccessLogs.Entity[] entities = AccessLogs.Entity.values();
-                AccessLogs.Action[] actions = AccessLogs.Action.values();
+                Entity[] entities = Entity.values();
+                Action[] actions = Action.values();
                 for (var entity : entities) {
                     if (path.contains(entity.getValue())) {
                         String id = getId(entity.getValue(), path);
@@ -56,7 +57,18 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 for (var action : actions) {
                     if (method.equals(action.getValue()))
                         accessLogs.setAction(action);
+                }
 
+                if(accessLogs.getEntity().equals(Entity.SYSTEM)){
+                    for(var actuatorEndpoint : ActuatorEndpoint.values()){
+                        if(path.contains(actuatorEndpoint.getValue())){
+                            if(actuatorEndpoint.equals(ActuatorEndpoint.ROUTE_REFRESH) || actuatorEndpoint.equals(ActuatorEndpoint.BUS_REFRESH)){
+                                accessLogs.setEntityId("");
+                                accessLogs.setAction(Action.REFRESH);
+                            }
+                            break;
+                        }
+                    }
                 }
                 accessLogs.setUsername(username);
                 accessLogs.setClient(client);
@@ -88,7 +100,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
     private boolean isAuditMethod(String requestMethod){
         boolean isAuditMethod = false;
-        AccessLogs.Action[] methods = AccessLogs.Action.values();
+        Action[] methods = Action.values();
         for (var method : methods) {
             if(method.getValue().equals(requestMethod))
                 isAuditMethod = true;

@@ -42,7 +42,8 @@ public class AccessLogs {
         RESOURCE("/resources"),
         CLIENT("/clients"),
         PRODUCT("/products"),
-        USER("/users");
+        USER("/users"),
+        SYSTEM("/actuator");
 
         private String value;
 
@@ -59,7 +60,8 @@ public class AccessLogs {
     public enum Action {
         CREATE("POST"),
         UPDATE("PUT"),
-        DELETE("DELETE");
+        DELETE("DELETE"),
+        REFRESH("REFRESH");
 
         private String value;
 
@@ -74,5 +76,20 @@ public class AccessLogs {
 
     public enum Status {
         SUCCESSFUL, FAILED
+    }
+
+    public enum ActuatorEndpoint {
+        ROUTE_REFRESH("/actuator/gateway/refresh"),
+        BUS_REFRESH("/actuator/bus-refresh");
+
+        private String value;
+
+        public String getValue(){
+            return value;
+        }
+
+        ActuatorEndpoint(String value){
+            this.value = value;
+        }
     }
 }
