@@ -77,7 +77,7 @@ public class ClientController {
                         return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Product already assigned to client"));
                     });
                 }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
-        ).switchIfEmpty(Mono.error(new RuntimeException("Client does not exist")));
+        ).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Client does not exist")));
     }
 
     @DeleteMapping(value= "/{clientId}/products/{productId}", produces = "application/json")
