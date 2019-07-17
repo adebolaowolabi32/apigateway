@@ -35,9 +35,10 @@ public class ClientController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Client> save(@Validated @RequestBody Client client){
         client.setProducts(new ArrayList<>());
-        return mongoClientRepository.save(client).onErrorMap(throwable -> {
-            return new ResponseStatusException(HttpStatus.CONFLICT,"Client already exists");
-        });
+        return mongoClientRepository.save(client);
+//                .onErrorMap(throwable -> {
+//            return new ResponseStatusException(HttpStatus.CONFLICT,"Client already exists");
+//        });
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
