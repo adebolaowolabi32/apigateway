@@ -37,10 +37,9 @@ public class UserController {
     }
 
     @GetMapping(value = "/{username}", produces = "application/json")
-    private Mono<ResponseEntity<User>> findByUsername(@Validated @PathVariable String username) {
+    private Mono<User> findByUsername(@Validated @PathVariable String username) {
         return mongoUserRepository.findByUsername(username.toLowerCase())
-                .map(ResponseEntity::ok)
-                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
@@ -50,19 +49,16 @@ public class UserController {
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
                     return mongoUserRepository.save(existing).onErrorMap(throwable -> {
-                        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"User was not modified");
+                        return new ResponseStatusException(HttpStatus.CONFLICT, "User was not modified");
                     });
                 });
     }
 
     @DeleteMapping("/{username}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String username) {
-        try {
             return mongoUserRepository.findByUsername(username.toLowerCase())
                     .flatMap(user -> mongoUserRepository.deleteById(user.getId())
-                            .then(Mono.just(new ResponseEntity<>(HttpStatus.OK))));
-        } catch (Exception e) {
-            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-        }
+                            .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK))))
+                    .switchIfEmpty(Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
     }
 }

@@ -1,0 +1,23 @@
+db.getCollection("routeDefinition").insert({
+    "_id" : "passport",
+    "predicates" : [
+        {
+            "name" : "Path",
+            "args" : {
+                "_genkey_0" : "/passport/**"
+            }
+        }
+    ],
+    "filters" : [],
+    "uri" : {
+        "scheme" : "http",
+        "authority" : "passport-v2-uat.k8.isw.la",
+        "host" : "passport-v2-uat.k8.isw.la",
+        "port" : -1,
+        "path" : "",
+        "hash" : 0,
+        "string" : "http://passport-v2-uat.k8.isw.la"
+    },
+    "order" : 0,
+    "_class" : "org.springframework.cloud.gateway.route.RouteDefinition"
+   })

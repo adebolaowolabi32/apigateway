@@ -5,28 +5,33 @@ import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
-@EnableAutoConfiguration
-@WebFluxTest(excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class, MongoAccessLogsRepository.class})
+@WebFluxTest( excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ContextConfiguration(classes = AccessLogsController.class)
 public class AccessLogsControllerTests {
     @Autowired
     private WebTestClient webClient;
 
-    @Autowired
-    MongoAccessLogsRepository mongoAccessLogsRepository;
+    @MockBean
+    private MongoAccessLogsRepository mongoAccessLogsRepository;
 
-    @Autowired
-    AccessLogsController accessLogsController;
     private AccessLogs accessLogs;
 
     @BeforeEach
@@ -38,12 +43,14 @@ public class AccessLogsControllerTests {
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
+        accessLogs.setClient("client_id");
         accessLogs.setUsername("user.name");
         accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
     }
 
     @Test
     public void testGetPagedDefaultValues(){
+        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri("/audit")
                 .accept(MediaType.APPLICATION_JSON)
@@ -55,10 +62,11 @@ public class AccessLogsControllerTests {
 
     @Test
     public void testGetPaged(){
+        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit")
-                        .queryParam("pageNum", "40")
+                        .queryParam("pageNum", "2")
                         .queryParam("pageSize", "20")
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
@@ -70,12 +78,13 @@ public class AccessLogsControllerTests {
 
     @Test
     public void testGetSearchValue(){
+        when(mongoAccessLogsRepository.query(any(String.class), any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit/search")
-                        .queryParam("pageNum", "0")
+                        .queryParam("pageNum", "1")
                         .queryParam("pageSize", "30")
-                        .queryParam("searchValue", "adebola.owolabi")
+                        .queryParam("searchValue", "user.name")
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()

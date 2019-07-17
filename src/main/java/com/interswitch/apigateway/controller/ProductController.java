@@ -44,10 +44,9 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{productId}", produces = "application/json")
-    private Mono<ResponseEntity<Product>> findById(@Validated @PathVariable String productId) {
+    private Mono<Product> findById(@Validated @PathVariable String productId) {
         return mongoProductRepository.findById(productId)
-                .map(ResponseEntity::ok)
-                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
@@ -59,27 +58,23 @@ public class ProductController {
                     product.setClients(existing.getClients());
                     product.setResources(existing.getResources());
                     return mongoProductRepository.save(product).onErrorMap(throwable -> {
-                        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Product was not modified");
+                        return new ResponseStatusException(HttpStatus.CONFLICT,"Product was not modified");
                     });
                 });
     }
 
     @DeleteMapping("/{productId}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String productId) {
-        try {
-            return mongoProductRepository.findById(productId)
-                    .flatMap(product -> {
-                        return mongoProductRepository.deleteById(productId)
-                                .then(Mono.defer(() -> {
-                                        return Flux.fromIterable(product.getResources()).flatMap(r -> {
-                                            return mongoResourceRepository.deleteById(r.getId());
-                                        }).then();
-                                    }))
-                                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
-                    });
-        } catch (Exception e) {
-            return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-        }
+        return mongoProductRepository.findById(productId)
+                .flatMap(product -> {
+                    return mongoProductRepository.deleteById(productId)
+                            .then(Mono.defer(() -> {
+                                    return Flux.fromIterable(product.getResources()).flatMap(r -> {
+                                        return mongoResourceRepository.deleteById(r.getId());
+                                    }).then();
+                                }))
+                            .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
+                }).switchIfEmpty(Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
 
     }
 
@@ -99,50 +94,62 @@ public class ProductController {
                     return mongoResourceRepository.save(resource).flatMap(r -> {
                         if(!product.getResources().contains(r)){
                             product.addResource(r);
-                            return mongoProductRepository.save(product);
                         }
-                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT,"Resource already assigned to Product"));});
-                })
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
+                        return mongoProductRepository.save(product);
+                    }).onErrorMap(throwable -> {
+                                return new ResponseStatusException(HttpStatus.CONFLICT,"Resource already exists"); });
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
-    private Mono<ResponseEntity<Resource>> findResourceById(@PathVariable String resourceId) {
-        return mongoResourceRepository.findById(resourceId)
-                .map(ResponseEntity::ok)
-                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+    private Mono<Resource> findResourceById(@PathVariable String productId, @PathVariable String resourceId) {
+        return mongoProductRepository.findById(productId)
+                .flatMap(product -> {
+                    return mongoResourceRepository.findById(resourceId).flatMap(resource -> {
+                        if(product.getResources().contains(resource))
+                            return Mono.just(resource);
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist in Product"));
+                    }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist")));
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
+
     }
 
     @PutMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
     private Mono<Product> updateResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
-                .flatMap(product -> mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
-                    if(product.getResources().contains(existing)) {
-                        resource.setId(existing.getId());
-                        resource.setProduct(product);
-                        return mongoResourceRepository.save(resource).flatMap(r -> {
-                            product.removeResource(existing);
-                            product.addResource(r);
-                            return mongoProductRepository.save(product).onErrorMap(throwable -> {
-                                return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Resource was not modified");
+                .flatMap(product -> {
+                    return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
+                        if(product.getResources().contains(existing)) {
+                            resource.setId(existing.getId());
+                            resource.setProduct(product);
+                            return mongoResourceRepository.save(resource).flatMap(r -> {
+                                product.removeResource(existing);
+                                product.addResource(r);
+                                return mongoProductRepository.save(product).onErrorMap(throwable -> {
+                                    return new ResponseStatusException(HttpStatus.CONFLICT,"Product was not modified");
+                                });
+                            }).onErrorMap(throwable -> {
+                                return new ResponseStatusException(HttpStatus.CONFLICT,"Resource was not modified");
                             });
-                        });
-                    }
-                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource not found for Product"));
-                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist"))))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
+                        }
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource not found for Product"));
+                    }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist")));
+                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
     }
 
     @DeleteMapping("/{productId}/resources/{resourceId}")
-    private Mono<Product> deleteResource(@PathVariable String productId, @PathVariable String resourceId) {
-        return mongoProductRepository.findById(productId).flatMap(product ->
-                        mongoResourceRepository.findById(resourceId).flatMap(resource -> {
-                             if(product.getResources().contains(resource)) {
-                                    product.removeResource(resource);
-                             }
-                            return mongoResourceRepository.deleteById(resourceId).then(mongoProductRepository.save(product));
-                        })
-                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Resource does not exist"))))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")));
+    private Mono<ResponseEntity<Void>> deleteResource(@PathVariable String productId, @PathVariable String resourceId) {
+        return mongoProductRepository.findById(productId).flatMap(product -> {
+                    return mongoResourceRepository.findById(resourceId).flatMap(resource -> {
+                        if(product.getResources().contains(resource)) {
+                            product.removeResource(resource);
+                            return mongoResourceRepository.deleteById(resourceId)
+                                    .then(mongoProductRepository.save(product))
+                                    .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)));
+                        }
+                        return Mono.just(new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
+
+                    }).switchIfEmpty(Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
+                }).switchIfEmpty(Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
     }
 }

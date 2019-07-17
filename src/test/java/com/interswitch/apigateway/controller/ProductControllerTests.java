@@ -157,6 +157,7 @@ public class ProductControllerTests {
 
     @Test
     public void findResourceById(){
+        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         when(mongoResourceRepository.findById(resource.getId())).thenReturn(Mono.just(resource));
         this.webClient.get()
                 .uri("/products/{productId}/resources/{resourceId}", product.getId(), resource.getId())
