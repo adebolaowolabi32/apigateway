@@ -2,51 +2,40 @@ package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.AccessLogs;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.UUID;
+import java.util.Collections;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WebFluxTest( excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ContextConfiguration(classes = AccessLogsController.class)
 public class AccessLogsControllerTests {
     @Autowired
     private WebTestClient webClient;
 
-    @Autowired
-    MongoAccessLogsRepository mongoAccessLogsRepository;
+    @MockBean
+    private MongoAccessLogsRepository mongoAccessLogsRepository;
 
-    @Autowired
-    AccessLogsController accessLogsController;
     private AccessLogs accessLogs;
-    private String accessToken;
 
     @BeforeEach
-    public void setup() throws JOSEException {
-        JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .expirationTime(new Date(new Date().getTime()+1000*60^10))
-                .notBeforeTime(new Date())
-                .audience("api-gateway")
-                .claim("user_name", "adesegun.adeyemo")
-                .jwtID(UUID.randomUUID().toString())
-                .build();
-
-        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
-        Payload payload = new Payload(claims.toJSONObject());
-        JWSObject jws = new JWSObject(jwsHeader,payload);
-        jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
-        accessToken = "Bearer " + jws.serialize();
-
+    public void setup(){
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
         accessLogs.setAction(AccessLogs.Action.CREATE);
@@ -54,15 +43,16 @@ public class AccessLogsControllerTests {
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
+        accessLogs.setClient("client_id");
         accessLogs.setUsername("user.name");
         accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
     }
 
     @Test
-    public void testGetPagedDefaultValues(){
+    public void testGetPagedDefaultValues() {
+        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri("/audit")
-                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -72,10 +62,11 @@ public class AccessLogsControllerTests {
 
     @Test
     public void testGetPaged(){
+        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit")
-                        .queryParam("pageNum", "40")
+                        .queryParam("pageNum", "2")
                         .queryParam("pageSize", "20")
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
@@ -87,12 +78,13 @@ public class AccessLogsControllerTests {
 
     @Test
     public void testGetSearchValue(){
+        when(mongoAccessLogsRepository.query(any(String.class), any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit/search")
-                        .queryParam("pageNum", "0")
-                        .queryParam("pageSize", "30")
-                        .queryParam("searchValue", "adebola.owolabi")
+                        .queryParam("pageNum", "1")
+                        .queryParam("pageSize", "10")
+                        .queryParam("searchValue", "user.name")
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
