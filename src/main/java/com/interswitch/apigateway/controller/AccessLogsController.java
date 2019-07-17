@@ -14,7 +14,7 @@ import reactor.core.publisher.Flux;
 @RestController
 @RequestMapping("/audit")
 public class AccessLogsController {
-    MongoAccessLogsRepository mongoAccessLogsRepository;
+    private MongoAccessLogsRepository mongoAccessLogsRepository;
 
     public AccessLogsController(MongoAccessLogsRepository mongoAccessLogsRepository) {
         this.mongoAccessLogsRepository = mongoAccessLogsRepository;

@@ -25,6 +25,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
@@ -37,9 +38,11 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product p1 = new Product();
         p1.setId("testProductOne");
         p1.setName("testProductOne");
+        p1.setDocumentation("/docs");
         Product p2 = new Product();
         p2.setId("testProductTwo");
         p2.setName("testProductTwo");
+        p2.setDocumentation("/docs");
         mongoProductRepository.save(p1).block();
         mongoProductRepository.save(p2).block();
         StepVerifier.create(mongoProductRepository.findAll()).expectNextCount(2);
@@ -54,12 +57,15 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         product.addResource(resource);
         Product savedProduct = mongoProductRepository.save(product).block();
         savedProduct.setName("testproduct");
+        savedProduct.setDocumentation("/books");
         mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(savedProduct.getName());
+            assertThat(p.getDocumentation()).isEqualTo(savedProduct.getDocumentation());
         }).expectComplete().verify();
     }
     @Test
@@ -67,6 +73,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         mongoProductRepository.deleteById(savedProduct.getId()).block();
         StepVerifier.create(mongoProductRepository.findById(savedProduct.getId())).expectComplete().verify();
@@ -77,6 +84,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
         resource.setId("testResourceId");
@@ -102,6 +110,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
         resource.setId("testResourceId");
@@ -127,6 +136,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("testProductId");
         product.setName("testProductName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
         client.setId("testClientOne");
@@ -144,6 +154,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("productId");
         product.setName("productName");
+        product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
         client.setId("testClientOne");
