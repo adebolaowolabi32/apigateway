@@ -45,7 +45,7 @@ public class UserController {
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<User> assignRole(@Validated @RequestBody User user) {
         return mongoUserRepository.findByUsername(user.getUsername().toLowerCase())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist")))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")))
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
                     return mongoUserRepository.save(existing).onErrorMap(throwable -> {

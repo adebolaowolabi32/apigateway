@@ -92,7 +92,7 @@ public class ProductController {
                 .flatMap(product -> {
                     resource.setProduct(product);
                     return mongoResourceRepository.save(resource).flatMap(r -> {
-                        if(!product.getResources().contains(r)) {
+                        if(!product.getResources().contains(r)){
                             product.addResource(r);
                         }
                         return mongoProductRepository.save(product);

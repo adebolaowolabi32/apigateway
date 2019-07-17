@@ -35,7 +35,7 @@ public class AccessLogsControllerTests {
     private AccessLogs accessLogs;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
         accessLogs.setAction(AccessLogs.Action.CREATE);
@@ -49,7 +49,7 @@ public class AccessLogsControllerTests {
     }
 
     @Test
-    public void testGetPagedDefaultValues() {
+    public void testGetPagedDefaultValues(){
         when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri("/audit")
@@ -83,7 +83,7 @@ public class AccessLogsControllerTests {
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit/search")
                         .queryParam("pageNum", "1")
-                        .queryParam("pageSize", "10")
+                        .queryParam("pageSize", "30")
                         .queryParam("searchValue", "user.name")
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
