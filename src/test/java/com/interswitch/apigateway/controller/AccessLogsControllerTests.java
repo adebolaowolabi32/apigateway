@@ -2,22 +2,23 @@ package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.AccessLogs;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.UUID;
 
 @ActiveProfiles("dev")
-@EnableAutoConfiguration
-@WebFluxTest(excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class, MongoAccessLogsRepository.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AccessLogsControllerTests {
     @Autowired
     private WebTestClient webClient;
@@ -28,9 +29,24 @@ public class AccessLogsControllerTests {
     @Autowired
     AccessLogsController accessLogsController;
     private AccessLogs accessLogs;
+    private String accessToken;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws JOSEException {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .expirationTime(new Date(new Date().getTime()+1000*60^10))
+                .notBeforeTime(new Date())
+                .audience("api-gateway")
+                .claim("user_name", "adesegun.adeyemo")
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+
+        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
+        Payload payload = new Payload(claims.toJSONObject());
+        JWSObject jws = new JWSObject(jwsHeader,payload);
+        jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
+        accessToken = "Bearer " + jws.serialize();
+
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
         accessLogs.setAction(AccessLogs.Action.CREATE);
@@ -46,6 +62,7 @@ public class AccessLogsControllerTests {
     public void testGetPagedDefaultValues(){
         this.webClient.get()
                 .uri("/audit")
+                .header("Authorization", accessToken)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
