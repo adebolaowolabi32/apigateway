@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.controller;
 
+import com.interswitch.apigateway.exceptions.NotExistException;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
 import com.interswitch.apigateway.repository.MongoClientRepository;
@@ -36,16 +37,13 @@ public class ClientController {
     private Mono<Client> save(@Validated @RequestBody Client client){
         client.setProducts(new ArrayList<>());
         return mongoClientRepository.save(client);
-//                .onErrorMap(throwable -> {
-//            return new ResponseStatusException(HttpStatus.CONFLICT,"Client already exists");
-//        });
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
     private Mono<ResponseEntity<Client>> findByClientId(@PathVariable String clientId){
         return mongoClientRepository.findByClientId(clientId)
                 .map(ResponseEntity::ok)
-                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+                .switchIfEmpty(Mono.error(NotExistException.createWith(clientId)));
     }
 
     @DeleteMapping("/{clientId}")
