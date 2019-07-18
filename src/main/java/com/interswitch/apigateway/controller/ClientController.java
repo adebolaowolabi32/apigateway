@@ -4,11 +4,12 @@ import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.repository.MongoProductRepository;
+import org.springframework.cloud.gateway.support.NotFoundException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,15 +36,14 @@ public class ClientController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Client> save(@Validated @RequestBody Client client){
         client.setProducts(new ArrayList<>());
-        return mongoClientRepository.save(client).onErrorMap(throwable -> {
-            return new ResponseStatusException(HttpStatus.CONFLICT,"Client already exists");
-        });
+        return mongoClientRepository.save(client);
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
-    private Mono<Client> findByClientId(@PathVariable String clientId){
+    private Mono<ResponseEntity<Client>> findByClientId(@PathVariable String clientId) {
         return mongoClientRepository.findByClientId(clientId)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client does not exist")));
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")));
     }
 
     @DeleteMapping("/{clientId}")
@@ -58,7 +58,7 @@ public class ClientController {
     @GetMapping(value= "/{clientId}/products", produces = "application/json")
     private Mono<List<Product>> GetAssignedProducts(@PathVariable String clientId){
         return mongoClientRepository.findByClientId(clientId)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client does not exist")))
+                .switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")))
                 .map(client -> client.getProducts());
     }
 
@@ -74,10 +74,10 @@ public class ClientController {
                             client.addProduct(product);
                             return mongoClientRepository.save(client);
                         }
-                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Product already assigned to client"));
+                        return Mono.error(new DuplicateKeyException("Product is already assigned to client"));
                     });
-                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
-        ).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Client does not exist")));
+                }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
+        ).switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")));
     }
 
     @DeleteMapping(value= "/{clientId}/products/{productId}", produces = "application/json")
@@ -92,9 +92,9 @@ public class ClientController {
                             client.removeProduct(product);
                             return mongoClientRepository.save(client);
                         }
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product is not assigned to Client"));
+                        return Mono.error(new NotFoundException("Product is not assigned to Client"));
                     });
-                }).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Product does not exist")))
-        ).switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client does not exist")));
+                }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
+        ).switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")));
     }
 }
