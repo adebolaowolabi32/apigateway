@@ -54,6 +54,13 @@ public class ErrorHandler {
         return handleExceptionInternal(response, status);
     }
 
+    @ExceptionHandler(Throwable.class)
+    public ResponseEntity<ErrorResponse> handleThrowable(final Throwable ex, ServerWebExchange exchange) {
+        String path = exchange.getRequest().getPath().toString();
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse response = new ErrorResponse(path, status.value(), WordUtils.capitalize(status.name().toLowerCase()), "An unexpected server error has occurred, please try again later.");
+        return handleExceptionInternal(response, status);
+    }
 
 
     protected ResponseEntity<ErrorResponse> handleExceptionInternal(ErrorResponse error, HttpStatus status) {
