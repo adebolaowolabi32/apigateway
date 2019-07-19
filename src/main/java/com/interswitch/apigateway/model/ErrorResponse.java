@@ -3,13 +3,12 @@ package com.interswitch.apigateway.model;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Data
 public class ErrorResponse {
-
     @NotNull
-    private ZonedDateTime timestamp = ZonedDateTime.now();
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     @NotNull
     private String path;

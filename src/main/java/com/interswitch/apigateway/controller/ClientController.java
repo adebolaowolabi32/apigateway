@@ -40,9 +40,8 @@ public class ClientController {
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
-    private Mono<ResponseEntity<Client>> findByClientId(@PathVariable String clientId) {
+    private Mono<Client> findByClientId(@PathVariable String clientId) {
         return mongoClientRepository.findByClientId(clientId)
-                .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")));
     }
 
