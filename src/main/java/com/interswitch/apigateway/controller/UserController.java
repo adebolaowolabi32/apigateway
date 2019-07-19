@@ -2,11 +2,11 @@ package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.User;
 import com.interswitch.apigateway.repository.MongoUserRepository;
+import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,27 +30,23 @@ public class UserController {
     private Mono<User> register(@Validated @RequestBody User user) {
         user.setUsername(user.getUsername().toLowerCase());
         user.setRole(User.Role.USER);
-        return mongoUserRepository.save(user).onErrorMap(throwable -> {
-            return new ResponseStatusException(HttpStatus.CONFLICT, "User already exists");
-        });
+        return mongoUserRepository.save(user);
 
     }
 
     @GetMapping(value = "/{username}", produces = "application/json")
     private Mono<User> findByUsername(@Validated @PathVariable String username) {
         return mongoUserRepository.findByUsername(username.toLowerCase())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")));
+                .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<User> assignRole(@Validated @RequestBody User user) {
         return mongoUserRepository.findByUsername(user.getUsername().toLowerCase())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"User does not exist")))
+                .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")))
                 .flatMap(existing -> {
                     existing.setRole(user.getRole());
-                    return mongoUserRepository.save(existing).onErrorMap(throwable -> {
-                        return new ResponseStatusException(HttpStatus.CONFLICT, "User was not modified");
-                    });
+                    return mongoUserRepository.save(existing);
                 });
     }
 

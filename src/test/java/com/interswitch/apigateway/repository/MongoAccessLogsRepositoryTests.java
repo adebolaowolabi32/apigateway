@@ -1,7 +1,9 @@
 package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.AccessLogs;
-import com.interswitch.apigateway.model.AccessLogs.*;
+import com.interswitch.apigateway.model.AccessLogs.Action;
+import com.interswitch.apigateway.model.AccessLogs.Entity;
+import com.interswitch.apigateway.model.AccessLogs.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     private AccessLogs accessLogs;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
         accessLogs.setAction(Action.CREATE);
@@ -52,22 +54,22 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     }
 
     @Test
-    public void testRetrieveAllPaged(){
+    public void testRetrieveAllPaged() {
         StepVerifier.create(mongoAccessLogsRepository.retrieveAllPaged(PageRequest.of(0, 10))).expectNextCount(2);
     }
 
     @Test
-    public void testQuery(){
+    public void testQuery() {
         StepVerifier.create(mongoAccessLogsRepository.query("user.name.other", PageRequest.of(0, 10))).expectNextCount(1);
     }
-    
+
     @Test
-    public void testFindAll(){
+    public void testFindAll() {
         StepVerifier.create(mongoAccessLogsRepository.findAll()).expectNextCount(2);
     }
 
     @Test
-    public void testFindById(){
+    public void testFindById() {
         AccessLogs savedAccessLogs = mongoAccessLogsRepository.save(accessLogs).block();
         StepVerifier.create(mongoAccessLogsRepository.findById(accessLogs.getId())).assertNext(a -> {
             assertThat(a.getId()).isEqualTo(accessLogs.getId()).isEqualTo(savedAccessLogs.getId());
