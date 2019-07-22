@@ -78,23 +78,20 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void adminRequestsToNonRouteBasedEndpointsShouldPass(){
+    public void requestsToNonRouteBasedEndpointsFromRegisteredUserShouldPass() {
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         user.setUsername(username);
-        user.setRole(User.Role.ADMIN);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
-    public void userRequestsToNonRouteBasedEndpointsShouldFail(){
+    public void requestsToNonRouteBasedEndpointsFromNonRegisteredUserShouldFail() {
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-        user.setUsername(username);
-        user.setRole(User.Role.USER);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
+        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.empty());
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
@@ -109,11 +106,62 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void allOptionsRequestsToShouldPass(){
+    public void allOptionsRequestsShouldPass() {
         exchange = MockServerWebExchange.from(MockServerHttpRequest.options("http://localhost:8080/anypath").build());
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void allGetRequestsFromInterswitchDomainEmailShouldPass() throws JOSEException {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
+                .notBeforeTime(new Date())
+                .claim("email", "sample@interswitch.com")
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+
+        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
+        Payload payload = new Payload(claims.toJSONObject());
+        JWSObject jws = new JWSObject(jwsHeader, payload);
+        jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
+        String accessToken = "Bearer " + jws.serialize();
+
+        exchange = MockServerWebExchange.from(MockServerHttpRequest
+                .get("http://localhost:8080/anypath")
+                .header("Authorization", accessToken)
+                .build());
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void allGetRequestsFromNonInterswitchDomainEmailShouldFail() throws JOSEException {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
+                .notBeforeTime(new Date())
+                .claim("email", "sample@email.com")
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+
+        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
+        Payload payload = new Payload(claims.toJSONObject());
+        JWSObject jws = new JWSObject(jwsHeader, payload);
+        jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
+        String accessToken = "Bearer " + jws.serialize();
+
+        exchange = MockServerWebExchange.from(MockServerHttpRequest
+                .get("http://localhost:8080/anypath")
+                .header("Authorization", accessToken)
+                .build());
+
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
 }

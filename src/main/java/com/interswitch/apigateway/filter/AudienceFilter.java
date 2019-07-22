@@ -30,7 +30,7 @@ public class AudienceFilter implements WebFilter, Ordered {
         Iterator<String> iterator = excludedEndpoints.iterator();
         JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
         String exchangePath = exchange.getRequest().getPath().toString();
-        List<String> audience = (token != null) ? filterUtil.getAudienceFromBearerToken(token) : Collections.emptyList();
+        List<String> audience = (token != null) ? filterUtil.getClaimAsListFromBearerToken(token, "aud") : Collections.emptyList();
         while (iterator.hasNext()) {
             if (exchangePath.contains(iterator.next())) isExcluded = true;
         }
@@ -41,6 +41,6 @@ public class AudienceFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return HIGHEST_PRECEDENCE;
+        return -43456778;
     }
 }

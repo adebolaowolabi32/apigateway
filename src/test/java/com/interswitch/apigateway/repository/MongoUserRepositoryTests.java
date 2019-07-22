@@ -20,11 +20,9 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
         User u1 = new User();
         u1.setId("userId1");
         u1.setUsername("testusernameone");
-        u1.setRole(User.Role.USER);
         User u2 = new User();
         u2.setId("userId2");
         u2.setUsername("testusernametwo");
-        u2.setRole(User.Role.USER);
         mongoUserRepository.save(u1).block();
         mongoUserRepository.save(u2).block();
         StepVerifier.create(mongoUserRepository.findAll()).expectNextCount(2);
@@ -35,7 +33,6 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
         User user = new User();
         user.setId("userId");
         user.setUsername("testusername");
-        user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
         StepVerifier.create(mongoUserRepository.findByUsername(user.getUsername())).assertNext(u -> {
             assertThat(u.getId()).isEqualTo(user.getId()).isEqualTo(savedUser.getId());
@@ -48,7 +45,6 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
         User user = new User();
         user.setId("userId");
         user.setUsername("testusername");
-        user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
         savedUser.setUsername("usernametwo");
         savedUser.setRole(User.Role.ADMIN);
@@ -64,7 +60,6 @@ public class MongoUserRepositoryTests extends AbstractMongoRepositoryTests {
         User user = new User();
         user.setId("userId");
         user.setUsername("testusername");
-        user.setRole(User.Role.USER);
         User savedUser = mongoUserRepository.save(user).block();
         mongoUserRepository.deleteById(savedUser.getId()).block();
         StepVerifier.create(mongoUserRepository.findById(savedUser.getId())).expectComplete().verify();

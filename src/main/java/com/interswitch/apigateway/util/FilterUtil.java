@@ -29,71 +29,28 @@ public class FilterUtil {
                 }
             }
         }
-        return jwtToken ;
+        return jwtToken;
     }
 
-    public List<String> getAudienceFromBearerToken(JWT jwtToken) {
-        List<String> audience = new ArrayList<>();
-        if (jwtToken != null) {
-            try {
-                Object aud = jwtToken.getJWTClaimsSet().getClaim("aud");
-                if (aud != null) audience = (List<String>) aud;
-            } catch (ParseException e) {
-                Mono.error(e).log();
-            }
+    public String getClaimAsStringFromBearerToken(JWT jwtToken, String claim) {
+        String claimAsString = "";
+        try {
+            Object claimObject = jwtToken.getJWTClaimsSet().getClaim(claim);
+            if (claimObject != null) claimAsString = claimObject.toString().trim();
+        } catch (ParseException e) {
+            Mono.error(e).log();
         }
-        return audience;
+        return claimAsString;
     }
 
-    public String getEnvironmentFromBearerToken(JWT jwtToken) {
-        String environment = "";
-        if (jwtToken != null) {
-            try {
-                Object env = jwtToken.getJWTClaimsSet().getClaim("env");
-                if (env != null) environment = env.toString();
-            } catch (ParseException e) {
-                Mono.error(e).log();
-            }
+    public List<String> getClaimAsListFromBearerToken(JWT jwtToken, String claim) {
+        List<String> claimAsList = new ArrayList<>();
+        try {
+            Object claimObject = jwtToken.getJWTClaimsSet().getClaim(claim);
+            if (claimObject != null) claimAsList = (List<String>) claimObject;
+        } catch (ParseException e) {
+            Mono.error(e).log();
         }
-        return environment.trim();
-    }
-
-    public String getClientIdFromBearerToken(JWT accessToken) {
-        String client_id = "";
-        if (accessToken != null) {
-            try {
-                Object client = accessToken.getJWTClaimsSet().getClaim("client_id").toString();
-                if(client != null) client_id = client.toString();
-            } catch (ParseException e) {
-                Mono.error(e).log();
-            }
-        }
-        return client_id.trim();
-    }
-
-    public List<String> getResourcesFromBearerToken(JWT accessToken) {
-        List<String> resources = new ArrayList<>();
-        if (accessToken != null) {
-            try {
-                Object resource = accessToken.getJWTClaimsSet().getClaim("api_resources");
-                if(resource != null) resources = (List<String>) resource;
-            } catch (ParseException e) {
-                Mono.error(e).log();
-            }
-        }
-        return resources;
-    }
-
-    public String getUsernameFromBearerToken(JWT accessToken) {
-        String username = "";
-        if (accessToken != null) {
-            try {
-                Object user = accessToken.getJWTClaimsSet().getClaim("user_name");
-                if(user != null) username = user.toString();
-            } catch (ParseException e) {
-                Mono.error(e).log();
-            }
-        }
-        return username.toLowerCase().trim();
+        return claimAsList;
     }
 }

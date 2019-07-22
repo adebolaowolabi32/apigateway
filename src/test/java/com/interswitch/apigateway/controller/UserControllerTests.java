@@ -38,7 +38,6 @@ public class UserControllerTests {
         user = new User();
         user.setId("test_user_id");
         user.setUsername("test_username");
-        user.setRole(User.Role.USER);
     }
 
     @Test
@@ -77,20 +76,6 @@ public class UserControllerTests {
     }
 
     @Test
-    public void testAssignRole(){
-        user.setRole(User.Role.ADMIN);
-        when(mongoUserRepository.findByUsername(user.getUsername())).thenReturn(Mono.just(user));
-        when(mongoUserRepository.save(user)).thenReturn(Mono.just(user));
-        this.webClient.put()
-                .uri("/users")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
-                .body(BodyInserters.fromObject(user))
-                .exchange()
-                .expectBody(User.class);
-    }
-
-    @Test
     public void testDelete(){
         when(mongoUserRepository.deleteById(user.getId())).thenReturn(Mono.empty());
         when(mongoUserRepository.findByUsername(user.getUsername())).thenReturn(Mono.just(user));
@@ -102,4 +87,3 @@ public class UserControllerTests {
     }
 
 }
-
