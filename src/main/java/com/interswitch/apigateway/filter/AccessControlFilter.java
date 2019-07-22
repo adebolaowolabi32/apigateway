@@ -40,17 +40,18 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String routeId = (route != null) ? route.getId() : "";
         JWT token = filterUtil.decodeBearerToken(headers);
-        String environment = (token != null) ? filterUtil.getEnvironmentFromBearerToken(token) : "";
+        String environment = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "env") : "";
 
-        if(PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") ||HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
                 return chain.filter(exchange);
-        String clientId = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
-        List<String> resources = (token != null) ? filterUtil.getResourcesFromBearerToken(token) : Collections.emptyList();
+        String clientId = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "client_id") : "";
+        List<String> resources = (token != null) ? filterUtil.getClaimAsListFromBearerToken(token, "api_resources") : Collections.emptyList();
 
         return repository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))
                 .flatMap(clients -> {
                     for(var r : resources) {
+                        r = r.replaceAll(" ", "");
                         int indexOfFirstSlash = r.indexOf('/');
                         String method = r.substring(0, indexOfFirstSlash);
                         String path = r.substring(indexOfFirstSlash);

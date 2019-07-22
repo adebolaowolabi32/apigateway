@@ -29,7 +29,6 @@ public class UserController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
         user.setUsername(user.getUsername().toLowerCase());
-        user.setRole(User.Role.USER);
         return mongoUserRepository.save(user);
 
     }
@@ -38,16 +37,6 @@ public class UserController {
     private Mono<User> findByUsername(@Validated @PathVariable String username) {
         return mongoUserRepository.findByUsername(username.toLowerCase())
                 .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")));
-    }
-
-    @PutMapping(produces = "application/json", consumes = "application/json")
-    private Mono<User> assignRole(@Validated @RequestBody User user) {
-        return mongoUserRepository.findByUsername(user.getUsername().toLowerCase())
-                .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")))
-                .flatMap(existing -> {
-                    existing.setRole(user.getRole());
-                    return mongoUserRepository.save(existing);
-                });
     }
 
     @DeleteMapping("/{username}")

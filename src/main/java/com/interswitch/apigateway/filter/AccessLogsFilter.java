@@ -1,7 +1,9 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.AccessLogs;
-import com.interswitch.apigateway.model.AccessLogs.*;
+import com.interswitch.apigateway.model.AccessLogs.Action;
+import com.interswitch.apigateway.model.AccessLogs.ActuatorEndpoint;
+import com.interswitch.apigateway.model.AccessLogs.Entity;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.interswitch.apigateway.util.RouteUtil;
@@ -16,10 +18,14 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
+
+    private List<String> passportRoutes = Collections.singletonList("passport");
 
     private MongoAccessLogsRepository mongoAccessLogsRepository;
 
@@ -39,8 +45,8 @@ public class AccessLogsFilter implements WebFilter, Ordered {
             if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
                 JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = (token != null) ? filterUtil.getUsernameFromBearerToken(token) : "";
-                String client = (token != null) ? filterUtil.getClientIdFromBearerToken(token) : "";
+                String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name") : "";
+                String client = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "client_id") : "";
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
                 LocalDateTime timestamp = LocalDateTime.now();
@@ -70,6 +76,12 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                         }
                     }
                 }
+
+                if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
+                    if (accessLogs.getEntityId().contains(":") || passportRoutes.contains(accessLogs.getEntityId()))
+                        accessLogs.setAction(Action.UPDATE);
+                }
+
                 accessLogs.setUsername(username);
                 accessLogs.setClient(client);
 
@@ -77,7 +89,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 accessLogs.setTimestamp(timestamp);
 
                 return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-                    HttpStatus status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode() : HttpStatus.OK;
+                    HttpStatus status = exchange.getResponse().getStatusCode();
                     if(status.isError())
                         accessLogs.setStatus(AccessLogs.Status.FAILED);
                     else

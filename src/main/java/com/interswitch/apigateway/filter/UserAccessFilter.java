@@ -36,10 +36,14 @@ public class UserAccessFilter implements WebFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        HttpMethod method = exchange.getRequest().getMethod();
             return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-                if(!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())){
+                if (!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(method)) {
                     JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-                    String username = (token != null) ? filterUtil.getUsernameFromBearerToken(token) : "";
+                    String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name") : "";
+                    String email = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "email") : "";
+                    if (HttpMethod.GET.equals(method) && shouldAllowRequest(email))
+                        return chain.filter(exchange);
                     return mongoUserRepository.findByUsername(username)
                             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrator rights to access this resource")))
                             .flatMap(user -> {
@@ -50,6 +54,12 @@ public class UserAccessFilter implements WebFilter, Ordered {
                 }
                 return chain.filter(exchange);
             });
+    }
+
+    private boolean shouldAllowRequest(String email) {
+        return email.endsWith("@interswitchgroup.com") ||
+                email.endsWith("@interswitch.com") ||
+                email.endsWith("@interswitchng.com");
     }
 
     @Override

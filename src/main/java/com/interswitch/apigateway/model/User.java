@@ -23,10 +23,9 @@ public class User {
 
     @EqualsAndHashCode.Exclude
     @NotNull
-    private Role role;
+    private Role role = Role.ADMIN;
 
     public enum Role {
-       ADMIN, USER
+        ADMIN
     }
-
 }
