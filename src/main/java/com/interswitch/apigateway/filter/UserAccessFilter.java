@@ -40,8 +40,8 @@ public class UserAccessFilter implements WebFilter, Ordered {
             return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
                 if (!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(method)) {
                     JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-                    String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name") : "";
-                    String email = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "email") : "";
+                    String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
+                    String email = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "email").toLowerCase() : "";
                     if (HttpMethod.GET.equals(method) && shouldAllowRequest(email))
                         return chain.filter(exchange);
                     return mongoUserRepository.findByUsername(username)

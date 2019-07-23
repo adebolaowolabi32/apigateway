@@ -45,7 +45,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
             if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
                 JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name") : "";
+                String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
                 String client = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "client_id") : "";
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
