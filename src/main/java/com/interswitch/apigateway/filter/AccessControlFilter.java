@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
+import org.bson.BsonRegularExpression;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -24,6 +25,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     private MongoClientRepository repository;
 
+    private BsonRegularExpression expression;
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
 
     private FilterUtil filterUtil;
