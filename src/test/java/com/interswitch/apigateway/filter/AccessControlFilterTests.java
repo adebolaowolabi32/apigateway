@@ -21,7 +21,10 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -64,7 +67,7 @@ public class AccessControlFilterTests {
         String accessToken = "Bearer " + jws.serialize();
 
         MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/path")
+                .get("http://localhost:8080/path/help")
                 .header("Authorization",accessToken)
                 .build();
         exchange = MockServerWebExchange.from(request);
@@ -115,8 +118,17 @@ public class AccessControlFilterTests {
     }
 
     @Test
+    public void liveRequestsWithWrongPatternMatchingShouldFail() throws JOSEException {
+        this.setup("LIVE", "id", Collections.singletonList("GET/*?/path"));
+        client.setId(clientId);
+        client.setClientId(clientId);
+        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
+    }
+    @Test
     public void liveRequestsWithProperClientAndResourcePermissionsShouldPass() throws JOSEException {
-        this.setup("LIVE", "id", Collections.singletonList("GET/path"));
+        this.setup("LIVE", "id", Collections.singletonList("GET/pat?/*"));
         client.setId(clientId);
         client.setClientId(clientId);
         when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
