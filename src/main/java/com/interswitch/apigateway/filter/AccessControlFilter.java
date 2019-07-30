@@ -3,7 +3,6 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
-import io.micrometer.core.instrument.util.StringEscapeUtils;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.bson.BsonRegularExpression;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -42,54 +41,12 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         if (regex.contains("*") || regex.contains("?")) {
             String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
             regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
-            regex = StringEscapeUtils.escapeJson(regex);
         }
-        if (StringUtils.containsAny("()][$^{}|\\.].*") {
-            
+        if (StringUtils.containsAny(regex, "()&][$^{}|\\")) {
+            regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
         }
-//        Pattern pattern = Pattern.compile(".*[()][$^{}|\\.].*");
-//        Matcher matcher = pattern.matcher(wildcard);
-//        if (matcher.find()) {
-//        }
         return regex;
     }
-
-
-// s.append('^');
-//            for (int i = 0, is = wildcard.length(); i < is; i++) {
-//                char c = wildcard.charAt(i);
-//                switch (c) {
-//                    case '*':
-//                        s.append(".*");
-//                        break;
-//                    case '?':
-//                        s.append(".");
-//                        break;
-//                    // escape special regexp-characters
-//                    case '(':
-//                    case ')':
-//                    case '[':
-//                    case ']':
-//                    case '$':
-//                    case '^':
-//                    case '.':
-//                    case '{':
-//                    case '}':
-//                    case '|':
-//                    case '\\':
-//                        s.append("\\");
-//                        s.append(c);
-//                        break;
-//                    default:
-//                        s.append(c);
-//                        break;
-//                }
-//            }
-//            s.append('$');
-//        }
-//            return (s.toString());
-
-//    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

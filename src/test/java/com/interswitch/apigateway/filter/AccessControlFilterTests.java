@@ -119,7 +119,7 @@ public class AccessControlFilterTests {
 
     @Test
     public void liveRequestsWithWrongPatternMatchingShouldFail() throws JOSEException {
-        this.setup("LIVE", "id", Collections.singletonList("GET/*?/(path}"));
+        this.setup("LIVE", "id", Collections.singletonList("GET/*?/(path}[]&^$|"));
         client.setId(clientId);
         client.setClientId(clientId);
         when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
