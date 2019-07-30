@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .accessDeniedHandler((serverWebExchange, exception) -> Mono.fromRunnable(() -> {
                     serverWebExchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 })).and().authorizeExchange()
-                .pathMatchers("/passport/oauth/**", "/actuator/prometheus", "/actuator/health").permitAll()
+                .pathMatchers("/passport/oauth/**", "/actuator/prometheus", "/actuator/health", "**/login", "**/logout", "**/register", "**/signup", "**/index", "**/home").permitAll()
                 .pathMatchers(HttpMethod.OPTIONS).permitAll()
                 .anyExchange().authenticated()
                 .and().csrf().disable()

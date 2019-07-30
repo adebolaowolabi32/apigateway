@@ -3,6 +3,7 @@ package com.interswitch.apigateway.filter;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jwt.JWT;
+import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
@@ -33,6 +34,16 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         this.filterUtil = filterUtil;
     }
 
+    private static String wildcardToRegex(String wildcard) {
+        String regex = wildcard.trim();
+        String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
+        regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
+        if (StringUtils.containsAny(regex, "()&][$^{}|")) {
+            regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
+        }
+        return regex;
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
@@ -55,7 +66,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
                         int indexOfFirstSlash = r.indexOf('/');
                         String method = r.substring(0, indexOfFirstSlash);
                         String path = r.substring(indexOfFirstSlash);
-                        if (exchange.getRequest().getPath().toString().contains(path))
+                        if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
                             if (exchange.getRequest().getMethodValue().equals(method))
                                 return chain.filter(exchange);
                     }
