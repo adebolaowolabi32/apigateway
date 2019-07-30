@@ -40,7 +40,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
             String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
             regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
         }
-        if (StringUtils.containsAny(regex, "()&][$^{}|\\")) {
+        if (StringUtils.containsAny(regex, "()&][$^{}|")) {
             regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
         }
         return regex;
