@@ -31,8 +31,9 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         String message= "Incoming Request: "+exchange.getRequest().getId()+" TraceId: "+traceId+"To: "+originalUri+" Path: "+exchange.getRequest().getPath()+
                 " Method: "+exchange.getRequest().getMethodValue()+
                 " Headers: "+exchange.getRequest().getHeaders().values();
-        if (log.isDebugEnabled()) {
-        log.debug(message);}
+        if (log.isInfoEnabled()) {
+            log.info(message);
+        }
         return chain.filter(exchange);
     }
 }
