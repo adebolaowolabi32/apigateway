@@ -36,10 +36,8 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
 
     private static String wildcardToRegex(String wildcard) {
         String regex = wildcard.trim();
-        if (regex.contains("*") || regex.contains("?")) {
-            String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
-            regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
-        }
+        String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
+        regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
         if (StringUtils.containsAny(regex, "()&][$^{}|")) {
             regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
         }
