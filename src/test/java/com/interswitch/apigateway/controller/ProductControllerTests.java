@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -52,7 +53,7 @@ public class ProductControllerTests {
         resource = new Resource();
         resource.setId("test_resource_id");
         resource.setName("resourceName");
-        resource.setMethod("GET");
+        resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         product = new Product();
         product.setId("test_product_id");
@@ -141,7 +142,7 @@ public class ProductControllerTests {
         Resource r = new Resource();
         r.setId("testresourceId");
         r.setName("testresourceName");
-        r.setMethod("POST");
+        r.setMethod(HttpMethod.POST);
         r.setPath("/path");
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
