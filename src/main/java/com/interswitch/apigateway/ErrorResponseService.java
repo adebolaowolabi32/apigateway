@@ -2,7 +2,6 @@ package com.interswitch.apigateway;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.interswitch.apigateway.model.ErrorResponse;
-import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.codec.DecodingException;
@@ -13,22 +12,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.server.MethodNotAllowedException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
 
 import javax.net.ssl.SSLException;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
 
-@Slf4j
 @Component
 public class ErrorResponseService {
 
-    public ErrorResponse fromException(Throwable e, ServerWebExchange exchange) {
-        var message = "An Unexpected error has occurred. Please try again later.";
+    public ErrorResponse fromException(Throwable e, ServerWebExchange exchange, int httpStatus, String errorMessage) {
+        var message = errorMessage;
         var eMessage = e.getMessage();
         var response = new ErrorResponse();
-        var code = 500;
+        var code = httpStatus;
         var httpMethod = exchange.getRequest().getMethod();
         if (e instanceof DuplicateKeyException) {
             code = 409;
@@ -52,9 +54,7 @@ public class ErrorResponseService {
         }
         if (e instanceof DecodingException) {
             code = 400;
-            String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
-            String key = (keys != null) ? "'" + keys[0] : "";
-            message = "Failed to read Http Message: cannot deserialize Enum instance " + key;
+            message = "Failed to read Http Message";
         }
         if (e instanceof ServerWebInputException) {
             code = 400;
@@ -65,6 +65,19 @@ public class ErrorResponseService {
         if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException) {
             code = 503;
             message = "Either remote server cannot be reached or network connection was reset/broken";
+        }
+        if (e instanceof ResourceAccessException) {
+            message = e.getMessage();
+        }
+        if (e instanceof UnknownHostException) {
+            message = "Unknown Host. Host Ip could not be determined.";
+        }
+        if (e instanceof HttpServerErrorException.InternalServerError) {
+            code = 500;
+            message = "An Unexpected error has occurred. Please try again later.";
+        }
+        if (e instanceof MethodNotAllowedException) {
+            code = 415;
         }
         response.setStatus(code);
         response.setMessage(message);

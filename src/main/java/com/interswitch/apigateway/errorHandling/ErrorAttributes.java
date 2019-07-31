@@ -26,7 +26,9 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         errorAttributes.put("path", request.path());
         Throwable error = getError(request);
         if (Objects.nonNull(error)) {
-            var response = errorResponseService.fromException(error, request.exchange());
+            int status = Integer.parseInt(errorAttributes.get("status").toString());
+            var errorMessage = errorAttributes.get("error").toString();
+            var response = errorResponseService.fromException(error, request.exchange(), status, errorMessage);
             errorAttributes.put("status", response.getStatus());
             errorAttributes.put("error", response.getError());
             errorAttributes.put("message", response.getMessage());
