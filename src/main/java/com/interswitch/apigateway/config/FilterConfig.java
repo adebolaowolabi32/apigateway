@@ -4,7 +4,6 @@ import com.interswitch.apigateway.filter.*;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
-import com.interswitch.apigateway.util.FilterUtil;
 import com.interswitch.apigateway.util.RouteUtil;
 import org.springframework.boot.actuate.endpoint.web.reactive.ControllerEndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
@@ -18,26 +17,30 @@ public class FilterConfig {
     public CorsFilter corsFilter(){
         return new CorsFilter();
     }
+
     @Bean
-    public AccessControlFilter accessControlFilter(MongoClientRepository mongo, FilterUtil filterUtil){
-        return new AccessControlFilter(mongo,filterUtil);
+    public AccessControlFilter accessControlFilter(MongoClientRepository mongo) {
+        return new AccessControlFilter(mongo);
     }
+
     @Bean
-    public UserAccessFilter userAccessFilter(MongoUserRepository mongoUserRepository, FilterUtil filterUtil, RouteUtil routeUtil){
-        return new UserAccessFilter(mongoUserRepository, filterUtil, routeUtil);
+    public UserAccessFilter userAccessFilter(MongoUserRepository mongoUserRepository, RouteUtil routeUtil) {
+        return new UserAccessFilter(mongoUserRepository, routeUtil);
     }
+
     @Bean
     public RouteIdFilter routeIdFilter(){
         return  new RouteIdFilter();
     }
-    @Bean
-    public AudienceFilter audienceFilter(FilterUtil filterUtil) {return new AudienceFilter(filterUtil); }
-    @Bean
-    public LoggingFilter loggingFilter(){return new LoggingFilter();}
 
     @Bean
-    public FilterUtil filterUtil(){
-        return new FilterUtil();
+    public AudienceFilter audienceFilter() {
+        return new AudienceFilter();
+    }
+
+    @Bean
+    public LoggingFilter loggingFilter() {
+        return new LoggingFilter();
     }
 
     @Bean
@@ -46,10 +49,9 @@ public class FilterConfig {
     }
 
     @Bean
-    public AccessLogsFilter accessLogsFilter(MongoAccessLogsRepository mongoAccessLogsRepository, FilterUtil filterUtil, RouteUtil routeUtil){
-        return new AccessLogsFilter(mongoAccessLogsRepository, filterUtil, routeUtil);
+    public AccessLogsFilter accessLogsFilter(MongoAccessLogsRepository mongoAccessLogsRepository, RouteUtil routeUtil) {
+        return new AccessLogsFilter(mongoAccessLogsRepository, routeUtil);
     }
 
 }
-
 

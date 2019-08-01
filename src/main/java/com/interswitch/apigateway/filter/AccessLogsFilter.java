@@ -5,7 +5,6 @@ import com.interswitch.apigateway.model.AccessLogs.Action;
 import com.interswitch.apigateway.model.AccessLogs.ActuatorEndpoint;
 import com.interswitch.apigateway.model.AccessLogs.Entity;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
-import com.interswitch.apigateway.util.FilterUtil;
 import com.interswitch.apigateway.util.RouteUtil;
 import com.nimbusds.jwt.JWT;
 import org.slf4j.Logger;
@@ -21,6 +20,9 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
+import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
+
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
@@ -29,13 +31,10 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
     private MongoAccessLogsRepository mongoAccessLogsRepository;
 
-    private FilterUtil filterUtil;
-
     private RouteUtil routeUtil;
 
-    public AccessLogsFilter(MongoAccessLogsRepository mongoAccessLogsRepository, FilterUtil filterUtil, RouteUtil routeUtil) {
+    public AccessLogsFilter(MongoAccessLogsRepository mongoAccessLogsRepository, RouteUtil routeUtil) {
         this.mongoAccessLogsRepository = mongoAccessLogsRepository;
-        this.filterUtil = filterUtil;
         this.routeUtil = routeUtil;
     }
 
@@ -44,9 +43,9 @@ public class AccessLogsFilter implements WebFilter, Ordered {
         return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
             if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
-                JWT token = filterUtil.decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
-                String client = (token != null) ? filterUtil.getClaimAsStringFromBearerToken(token, "client_id") : "";
+                JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+                String username = (token != null) ? getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
+                String client = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "";
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
                 LocalDateTime timestamp = LocalDateTime.now();
@@ -88,25 +87,26 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 accessLogs.setApi(path);
                 accessLogs.setTimestamp(timestamp);
 
-                return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-                    HttpStatus status = exchange.getResponse().getStatusCode();
-                    if(status.isError())
-                        accessLogs.setStatus(AccessLogs.Status.FAILED);
-                    else
-                        accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
-                    LOG.info("Audit Log Event: timestamp: {}, username: {}, client: {}, api: {}, entity: {}, entityID: {}, action: {}, status: {}",
-                            accessLogs.getTimestamp(),
-                            accessLogs.getUsername(),
-                            accessLogs.getClient(),
-                            accessLogs.getApi(),
-                            accessLogs.getEntity(),
-                            accessLogs.getEntityId(),
-                            accessLogs.getAction(),
-                            accessLogs.getStatus());
+                return chain.filter(exchange)
+                        .doFinally((signalType) -> {
+                            HttpStatus status = exchange.getResponse().getStatusCode();
+                            if (status.isError())
+                                accessLogs.setStatus(AccessLogs.Status.FAILED);
+                            else
+                                accessLogs.setStatus(AccessLogs.Status.SUCCESSFUL);
+                            LOG.info("Audit Log Event: timestamp: {}, username: {}, client: {}, api: {}, entity: {}, entityID: {}, action: {}, status: {}",
+                                    accessLogs.getTimestamp(),
+                                    accessLogs.getUsername(),
+                                    accessLogs.getClient(),
+                                    accessLogs.getApi(),
+                                    accessLogs.getEntity(),
+                                    accessLogs.getEntityId(),
+                                    accessLogs.getAction(),
+                                    accessLogs.getStatus());
                             mongoAccessLogsRepository.save(accessLogs).subscribe();
-                }));
+                        });
             }
-        return chain.filter(exchange);
+            return chain.filter(exchange);
         });
     }
 
