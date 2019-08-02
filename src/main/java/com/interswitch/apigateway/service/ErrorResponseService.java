@@ -38,7 +38,7 @@ public class ErrorResponseService {
             code = 409;
             String[] keys = StringUtils.substringsBetween(eMessage, "\"", "\"");
             String key = (httpMethod != HttpMethod.PUT) ? "' already exists." : "' cannot be modified here.";
-            message = (keys != null) ? "'" + keys[0] + key : eMessage;
+            message = (keys != null) ? "'" + keys[0] + key : message;
         }
         if (e instanceof WebExchangeBindException) {
             code = 400;
