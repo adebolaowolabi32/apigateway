@@ -68,6 +68,6 @@ public class LoggingFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -23456778;
+        return -30;
     }
 }
