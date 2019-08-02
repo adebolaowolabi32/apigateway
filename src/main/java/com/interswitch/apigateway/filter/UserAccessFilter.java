@@ -64,6 +64,6 @@ public class UserAccessFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -33456778;
+        return 1;
     }
 }

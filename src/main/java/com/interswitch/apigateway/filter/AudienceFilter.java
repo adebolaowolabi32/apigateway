@@ -41,6 +41,6 @@ public class AudienceFilter implements WebFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -43456778;
+        return 1;
     }
 }

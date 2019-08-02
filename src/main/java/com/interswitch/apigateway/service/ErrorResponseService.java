@@ -5,10 +5,10 @@ import com.interswitch.apigateway.model.ErrorResponse;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.codec.DecodingException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
@@ -71,7 +71,7 @@ public class ErrorResponseService {
             code = 503;
             message = "Either remote server cannot be reached or network connection was reset/broken. Try again later";
         }
-        if (e instanceof ResourceAccessException || e instanceof DataAccessException) {
+        if (e instanceof ResourceAccessException) {
             message = "Something went wrong, please bear with us while we fix it.";
         }
         if (e instanceof UnknownHostException) {
@@ -84,7 +84,7 @@ public class ErrorResponseService {
         if (e instanceof MethodNotAllowedException) {
             code = 415;
         }
-        if (e instanceof AuthenticationException) {
+        if (e instanceof AuthenticationException || e instanceof BadCredentialsException) {
             code = 401;
             message = "Full authentication is required to access this resource";
         }
