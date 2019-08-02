@@ -8,8 +8,11 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.http.HttpMethod;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 @Document(collection = "resources")
 @Data
@@ -22,11 +25,12 @@ public class Resource {
     private String name;
 
     @EqualsAndHashCode.Exclude
-    @NotBlank(message = "Method is Required")
-    private String method;
+    @NotNull(message = "Method is Required")
+    private HttpMethod method;
 
     @EqualsAndHashCode.Exclude
     @NotBlank(message = "Path is Required")
+    @Pattern(regexp = "^\\/.+$", message = "Path must be a valid request path")
     private String path;
 
     @EqualsAndHashCode.Exclude

@@ -5,6 +5,7 @@ import com.interswitch.apigateway.model.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
@@ -21,7 +22,7 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         Resource resource = new Resource();
         resource.setId("testResourceId");
         resource.setName("testResourceName");
-        resource.setMethod("GET");
+        resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
@@ -46,13 +47,13 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         Resource r1 = new Resource();
         r1.setId("testResourceOne");
         r1.setName("testResourceOne");
-        r1.setMethod("GET");
+        r1.setMethod(HttpMethod.GET);
         r1.setPath("/path");
         r1.setProduct(product);
         Resource r2 = new Resource();
         r2.setId("testResourceTwo");
         r2.setName("testResourceTwo");
-        r2.setMethod("POST");
+        r2.setMethod(HttpMethod.POST);
         r2.setPath("/path");
         r2.setProduct(product);
         mongoResourceRepository.save(r1).block();
@@ -65,7 +66,7 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         Resource resource = new Resource();
         resource.setId("testResourceId");
         resource.setName("testResourceName");
-        resource.setMethod("GET");
+        resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Product product = new Product();
         product.setId("testProductId");
@@ -85,7 +86,7 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         Resource resource = new Resource();
         resource.setId("testResourceId");
         resource.setName("testResourceName");
-        resource.setMethod("GET");
+        resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Resource savedResource = mongoResourceRepository.save(resource).block();
         mongoResourceRepository.deleteById(savedResource.getId()).block();
