@@ -53,7 +53,7 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         Resource r2 = new Resource();
         r2.setId("testResourceTwo");
         r2.setName("testResourceTwo");
-        r2.setMethod(HttpMethod.GET);
+        r2.setMethod(HttpMethod.POST);
         r2.setPath("/path");
         r2.setProduct(product);
         mongoResourceRepository.save(r1).block();

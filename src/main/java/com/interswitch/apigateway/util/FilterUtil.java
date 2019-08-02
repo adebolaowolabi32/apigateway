@@ -9,9 +9,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FilterUtil {
+public final class FilterUtil {
 
-    public JWT decodeBearerToken(HttpHeaders headers) {
+    public static JWT decodeBearerToken(HttpHeaders headers) {
         JWT jwtToken = null;
         if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
             List<String> accesstokens = headers.get(HttpHeaders.AUTHORIZATION);
@@ -32,7 +32,7 @@ public class FilterUtil {
         return jwtToken;
     }
 
-    public String getClaimAsStringFromBearerToken(JWT jwtToken, String claim) {
+    public static String getClaimAsStringFromBearerToken(JWT jwtToken, String claim) {
         String claimAsString = "";
         try {
             Object claimObject = jwtToken.getJWTClaimsSet().getClaim(claim);
@@ -43,7 +43,7 @@ public class FilterUtil {
         return claimAsString;
     }
 
-    public List<String> getClaimAsListFromBearerToken(JWT jwtToken, String claim) {
+    public static List<String> getClaimAsListFromBearerToken(JWT jwtToken, String claim) {
         List<String> claimAsList = new ArrayList<>();
         try {
             Object claimObject = jwtToken.getJWTClaimsSet().getClaim(claim);

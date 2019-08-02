@@ -52,12 +52,12 @@ public class ProductControllerTests {
         client.setClientId("test_client_id");
         resource = new Resource();
         resource.setId("test_resource_id");
-        resource.setName("resourceName");
+        resource.setName("resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         product = new Product();
         product.setId("test_product_id");
-        product.setName("productName");
+        product.setName("product_name");
         product.setDocumentation("http://interswitch/docs");
         product.addResource(resource);
         product.addClient(client);
@@ -141,7 +141,7 @@ public class ProductControllerTests {
     public void testSaveResource(){
         Resource r = new Resource();
         r.setId("testresourceId");
-        r.setName("testresourceName");
+        r.setName("test_resource_name");
         r.setMethod(HttpMethod.POST);
         r.setPath("/path");
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
