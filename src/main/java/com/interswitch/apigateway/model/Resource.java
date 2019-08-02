@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,7 +17,6 @@ public class Resource {
     @Id
     private String id;
 
-    @Indexed(unique = true)
     @NotBlank(message = "Resource Name is Required")
     @Length(min = 5, max = 50, message = "Resource Name must be between 5 and 50 characters long")
     private String name;

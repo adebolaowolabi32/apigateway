@@ -41,16 +41,6 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         return regex;
     }
 
-    private static String wildcardToRegex(String wildcard) {
-        String regex = wildcard.trim();
-        String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
-        regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
-        if (StringUtils.containsAny(regex, "()&][$^{}|")) {
-            regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
-        }
-        return regex;
-    }
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
