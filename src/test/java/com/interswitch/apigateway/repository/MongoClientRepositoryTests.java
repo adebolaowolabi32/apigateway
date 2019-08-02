@@ -59,8 +59,8 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
         c2.setId("testClientTwo");
         c2.setClientId("testClientTwo");
         Product product = new Product();
-        product.setId("productId");
-        product.setName("productName");
+        product.setId("product_id");
+        product.setName("product_name");
         c2.addProduct(product);
         mongoClientRepository.save(c1).block();
         mongoClientRepository.save(c2).block();
@@ -84,8 +84,8 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
         client.setClientId("testClientOne");
         Client savedClient = mongoClientRepository.save(client).block();
         Product product = new Product();
-        product.setId("testProductOne");
-        product.setName("testProductOne");
+        product.setId("test_product_one");
+        product.setName("test_product_one");
         savedClient.addProduct(product);
         Client updatedClient = mongoClientRepository.save(savedClient).block();
         StepVerifier.create(mongoClientRepository.findById(client.getId())).assertNext(c -> {
@@ -100,8 +100,8 @@ public class MongoClientRepositoryTests extends AbstractMongoRepositoryTests {
         client.setClientId("testClientOne");
         Client savedClient = mongoClientRepository.save(client).block();
         Product product = new Product();
-        product.setId("testProductOne");
-        product.setName("testProductOne");
+        product.setId("test_product_one");
+        product.setName("test_product_one");
         savedClient.addProduct(product);
         Client updatedClient = mongoClientRepository.save(savedClient).block();
         updatedClient.removeProduct(product);

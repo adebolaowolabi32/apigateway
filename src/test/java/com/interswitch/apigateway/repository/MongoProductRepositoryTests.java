@@ -24,8 +24,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindById(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
@@ -37,12 +37,12 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindAll(){
         Product p1 = new Product();
-        p1.setId("testProductOne");
-        p1.setName("testProductOne");
+        p1.setId("test_product_one");
+        p1.setName("test_product_one");
         p1.setDocumentation("/docs");
         Product p2 = new Product();
-        p2.setId("testProductTwo");
-        p2.setName("testProductTwo");
+        p2.setId("test_product_two");
+        p2.setName("test_product_two");
         p2.setDocumentation("/docs");
         mongoProductRepository.save(p1).block();
         mongoProductRepository.save(p2).block();
@@ -51,17 +51,17 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testUpdate(){
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         product.addResource(resource);
         Product savedProduct = mongoProductRepository.save(product).block();
-        savedProduct.setName("testproduct");
+        savedProduct.setName("test_product");
         savedProduct.setDocumentation("/books");
         mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
@@ -72,8 +72,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testDelete(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         mongoProductRepository.deleteById(savedProduct.getId()).block();
@@ -83,13 +83,13 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testAddResource(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         resource.setProduct(product);
@@ -109,13 +109,13 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testRemoveResource(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         resource.setProduct(product);
@@ -135,8 +135,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testAddClient(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testProductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();
@@ -153,8 +153,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testRemoveClient(){
         Product product = new Product();
-        product.setId("productId");
-        product.setName("productName");
+        product.setId("product_id");
+        product.setName("product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Client client = new Client();

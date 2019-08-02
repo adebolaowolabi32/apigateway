@@ -20,18 +20,18 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindById(){
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testproductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
         StepVerifier.create(mongoResourceRepository.findById(savedResource.getId())).assertNext(r -> {
-            assertThat(r.getId()).isEqualTo("testResourceId");
-            assertThat(r.getName()).isEqualTo("testResourceName");
+            assertThat(r.getId()).isEqualTo("test_resource_id");
+            assertThat(r.getName()).isEqualTo("test_resource_name");
             assertThat(r.getMethod()).isEqualTo(HttpMethod.GET);
             assertThat(r.getPath()).isEqualTo("/path");
             assertThat(r.getProduct()).isNotNull();
@@ -42,17 +42,17 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testFindAll(){
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testproductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         Resource r1 = new Resource();
-        r1.setId("testResourceOne");
-        r1.setName("testResourceOne");
+        r1.setId("test_resource_one");
+        r1.setName("test_resource_one");
         r1.setMethod(HttpMethod.GET);
         r1.setPath("/path");
         r1.setProduct(product);
         Resource r2 = new Resource();
-        r2.setId("testResourceTwo");
-        r2.setName("testResourceTwo");
+        r2.setId("test_resource_two");
+        r2.setName("test_resource_two");
         r2.setMethod(HttpMethod.POST);
         r2.setPath("/path");
         r2.setProduct(product);
@@ -64,28 +64,28 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
     @Test
     public void testUpdate(){
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Product product = new Product();
-        product.setId("testProductId");
-        product.setName("testproductName");
+        product.setId("test_product_id");
+        product.setName("test_product_name");
         resource.setProduct(product);
         Resource savedResource = mongoResourceRepository.save(resource).block();
-        savedResource.setName("testResource");
+        savedResource.setName("test_resource");
         mongoResourceRepository.save(savedResource).block();
         StepVerifier.create(mongoResourceRepository.findById(resource.getId())).assertNext(r -> {
-            assertThat(r.getId()).isEqualTo("testResourceId");
-            assertThat(r.getName()).isEqualTo("testResource");
+            assertThat(r.getId()).isEqualTo("test_resource_id");
+            assertThat(r.getName()).isEqualTo("test_resource");
             assertThat(r.getProduct()).isNotNull();
         }).expectComplete().verify();
     }
     @Test
     public void testDelete(){
         Resource resource = new Resource();
-        resource.setId("testResourceId");
-        resource.setName("testResourceName");
+        resource.setId("test_resource_id");
+        resource.setName("test_resource_name");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
         Resource savedResource = mongoResourceRepository.save(resource).block();
