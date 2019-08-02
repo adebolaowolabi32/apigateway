@@ -5,14 +5,17 @@ import com.interswitch.apigateway.model.ErrorResponse;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.codec.DecodingException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.MethodNotAllowedException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
@@ -64,12 +67,12 @@ public class ErrorResponseService {
             String key = (keys != null) ? "'" + keys[0] : "";
             message = "Failed to read Http Message : " + key;
         }
-        if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException) {
+        if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException || e instanceof RestClientException) {
             code = 503;
-            message = "Either remote server cannot be reached or network connection was reset/broken";
+            message = "Either remote server cannot be reached or network connection was reset/broken. Try again later";
         }
-        if (e instanceof ResourceAccessException) {
-            message = e.getMessage();
+        if (e instanceof ResourceAccessException || e instanceof DataAccessException) {
+            message = "Something went wrong, please bear with us while we fix it.";
         }
         if (e instanceof UnknownHostException) {
             message = "Unknown Host. Host Ip could not be determined.";
@@ -80,6 +83,10 @@ public class ErrorResponseService {
         }
         if (e instanceof MethodNotAllowedException) {
             code = 415;
+        }
+        if (e instanceof AuthenticationException) {
+            code = 401;
+            message = "Full authentication is required to access this resource";
         }
         response.setStatus(code);
         response.setMessage(message);
