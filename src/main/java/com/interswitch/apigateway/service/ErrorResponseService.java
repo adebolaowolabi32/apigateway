@@ -62,8 +62,9 @@ public class ErrorResponseService {
         if (e instanceof ServerWebInputException) {
             code = 400;
             String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
-            String key = (keys != null) ? "'" + keys[0] : "";
-            message = "Failed to read Http Message : " + key;
+            String[] key = (keys[0] != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : null;
+            String field = (key != null) ? " for field '" + key[0] + "' " : "";
+            message = "Failed to read Http Message" + field;
         }
         if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException || e instanceof RestClientException) {
             code = 503;
