@@ -39,6 +39,16 @@ public class UserController {
                 .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")));
     }
 
+    @PutMapping(produces = "application/json", consumes = "application/json")
+    private Mono<User> updateRole(@Validated @RequestBody User user) {
+        return mongoUserRepository.findByUsername(user.getUsername().toLowerCase())
+                .switchIfEmpty(Mono.error(new NotFoundException("User does not exist")))
+                .flatMap(existing -> {
+                    existing.setRole(user.getRole());
+                    return mongoUserRepository.save(existing);
+                });
+    }
+
     @DeleteMapping("/{username}")
     private Mono<ResponseEntity<Void>> delete(@PathVariable String username) {
             return mongoUserRepository.findByUsername(username.toLowerCase())

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
@@ -54,6 +55,7 @@ public class UserAccessFilterTests {
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .notBeforeTime(new Date())
                 .claim("user_name", username)
+                .claim("email", "sample@interswitch.com")
                 .jwtID(UUID.randomUUID().toString())
                 .build();
 
@@ -64,9 +66,12 @@ public class UserAccessFilterTests {
         String accessToken = "Bearer " + jws.serialize();
 
         exchange = MockServerWebExchange.from(MockServerHttpRequest
-                .get("http://localhost:8080/path")
+                .post("http://localhost:8080/path")
                 .header("Authorization", accessToken)
                 .build());
+        user.setUsername(username);
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+
     }
 
     @Test
@@ -78,13 +83,22 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void requestsToNonRouteBasedEndpointsFromRegisteredUserShouldPass() {
+    public void requestsToNonRouteBasedEndpointsFromAdminUserShouldPass() {
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-        user.setUsername(username);
+        user.setRole(User.Role.ADMIN);
         when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
+    }
+
+    @Test
+    public void requestsToNonRouteBasedEndpointsFromNonAdminUserShouldFail() {
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
+        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
+
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
 
     @Test
@@ -115,32 +129,15 @@ public class UserAccessFilterTests {
     }
 
     @Test
-    public void allGetRequestsFromInterswitchDomainEmailShouldPass() throws JOSEException {
-        JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
-                .notBeforeTime(new Date())
-                .claim("email", "sample@interswitch.com")
-                .jwtID(UUID.randomUUID().toString())
-                .build();
-
-        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
-        Payload payload = new Payload(claims.toJSONObject());
-        JWSObject jws = new JWSObject(jwsHeader, payload);
-        jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
-        String accessToken = "Bearer " + jws.serialize();
-
-        exchange = MockServerWebExchange.from(MockServerHttpRequest
-                .get("http://localhost:8080/anypath")
-                .header("Authorization", accessToken)
-                .build());
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
+    public void allGetRequestsShouldPass() {
+        exchange = exchange.mutate().request(exchange.getRequest().mutate().method(HttpMethod.GET).build()).build();
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-
+        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
-    public void allGetRequestsFromNonInterswitchDomainEmailShouldFail() throws JOSEException {
+    public void requestsToNonRouteBasedEndpointsFromNonInterswitchDomainEmailShouldFail() throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
