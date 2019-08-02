@@ -32,7 +32,7 @@ public class MongoResourceRepositoryTests extends AbstractMongoRepositoryTests {
         StepVerifier.create(mongoResourceRepository.findById(savedResource.getId())).assertNext(r -> {
             assertThat(r.getId()).isEqualTo("testResourceId");
             assertThat(r.getName()).isEqualTo("testResourceName");
-            assertThat(r.getMethod()).isEqualTo("GET");
+            assertThat(r.getMethod()).isEqualTo(HttpMethod.GET);
             assertThat(r.getPath()).isEqualTo("/path");
             assertThat(r.getProduct()).isNotNull();
         }).expectComplete().verify();
