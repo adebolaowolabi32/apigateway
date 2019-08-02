@@ -3,6 +3,7 @@ package com.interswitch.apigateway.errorHandling;
 import com.interswitch.apigateway.model.ErrorResponse;
 import com.interswitch.apigateway.service.ErrorResponseService;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 
@@ -27,7 +28,7 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         ErrorResponse response = new ErrorResponse();
         if (Objects.nonNull(error)) {
             int status = Integer.parseInt(errorAttributes.get("status").toString());
-            var errorMessage = errorAttributes.get("message").toString();
+            var errorMessage = (errorAttributes.get("message") != null) ? errorAttributes.get("message").toString() : HttpStatus.valueOf(status).toString();
             response = errorResponseService.fromException(error, request.exchange(), status, errorMessage);
             errorAttributes.clear();
         }
