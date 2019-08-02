@@ -1,4 +1,4 @@
-package com.interswitch.apigateway;
+package com.interswitch.apigateway.service;
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.interswitch.apigateway.model.ErrorResponse;
@@ -8,7 +8,6 @@ import org.springframework.core.codec.DecodingException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -21,6 +20,7 @@ import org.springframework.web.server.ServerWebInputException;
 import javax.net.ssl.SSLException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -32,6 +32,7 @@ public class ErrorResponseService {
         var response = new ErrorResponse();
         var code = httpStatus;
         var httpMethod = exchange.getRequest().getMethod();
+        ArrayList<String> errors = new ArrayList<>();
         if (e instanceof DuplicateKeyException) {
             code = 409;
             String[] keys = StringUtils.substringsBetween(eMessage, "\"", "\"");
@@ -42,10 +43,11 @@ public class ErrorResponseService {
             code = 400;
             String field = "";
             List<FieldError> fieldErrors = ((WebExchangeBindException) e).getFieldErrors();
+            message = ((WebExchangeBindException) e).getReason();
             for (var fields : fieldErrors) {
-                field = fields.getField() + " ( " + fields.getDefaultMessage() + " )" + ", " + field;
+                field = fields.getField() + " ( " + fields.getDefaultMessage() + " )";
+                errors.add(message + " for field: " + field);
             }
-            message = ((WebExchangeBindException) e).getReason() + " for fields: " + field;
         }
         if (e instanceof NotFoundException) {
             code = 404;
@@ -60,7 +62,7 @@ public class ErrorResponseService {
             code = 400;
             String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
             String key = (keys != null) ? "'" + keys[0] : "";
-            message = "Failed to read Http Message: cannot deserialize Enum instance " + key;
+            message = "Failed to read Http Message on: " + key;
         }
         if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException) {
             code = 503;
@@ -81,8 +83,7 @@ public class ErrorResponseService {
         }
         response.setStatus(code);
         response.setMessage(message);
-        response.setPath(exchange.getRequest().getPath().toString());
-        response.setError(HttpStatus.valueOf(code));
+        response.setErrors(errors);
         return response;
     }
 }
