@@ -62,7 +62,7 @@ public class ErrorResponseService {
             code = 400;
             String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
             String key = (keys != null) ? "'" + keys[0] : "";
-            message = "Failed to read Http Message on: " + key;
+            message = "Failed to read Http Message : " + key;
         }
         if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException) {
             code = 503;
