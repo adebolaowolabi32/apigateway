@@ -68,7 +68,7 @@ public class ErrorResponseService {
         }
         if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException || e instanceof RestClientException) {
             code = 503;
-            message = "Either remote server cannot be reached or network connection was reset/broken. Try again later";
+            message = "Either remote server cannot be reached or network connection was reset/broken. Please try again later";
         }
         if (e instanceof ResourceAccessException) {
             message = "Something went wrong, please bear with us while we fix it.";
