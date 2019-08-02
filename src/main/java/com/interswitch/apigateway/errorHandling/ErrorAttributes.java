@@ -37,7 +37,6 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         if (!response.getErrors().isEmpty()) {
                 errorAttributes.put("errors", response.getErrors());
             }
-
         return errorAttributes;
     }
 

@@ -8,8 +8,6 @@ import org.springframework.core.codec.DecodingException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -83,10 +81,6 @@ public class ErrorResponseService {
         }
         if (e instanceof MethodNotAllowedException) {
             code = 415;
-        }
-        if (e instanceof AuthenticationException || e instanceof BadCredentialsException) {
-            code = 401;
-            message = "Full authentication is required to access this resource";
         }
         response.setStatus(code);
         response.setMessage(message);
