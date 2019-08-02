@@ -36,6 +36,7 @@ public class ProductController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Product> save(@Validated @RequestBody Product product) {
+        product.setName(product.getName().toLowerCase());
         product.setResources(new ArrayList<>());
         product.setClients(new ArrayList<>());
         return mongoProductRepository.save(product);
@@ -55,6 +56,7 @@ public class ProductController {
                     product.setId(existing.getId());
                     product.setClients(existing.getClients());
                     product.setResources(existing.getResources());
+                    product.setName(product.getName().toLowerCase());
                     return mongoProductRepository.save(product);
                 });
     }
@@ -86,14 +88,15 @@ public class ProductController {
     private Mono<Product> saveResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
+                    resource.setName(resource.getName().toLowerCase());
                     resource.setProduct(product);
                     return mongoResourceRepository.save(resource).flatMap(r -> {
                         if(!product.getResources().contains(r)){
                             product.addResource(r);
                         }
                         return mongoProductRepository.save(product);
+                    });
                     }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")));
-                });
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
@@ -116,6 +119,7 @@ public class ProductController {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
                         if (product.getResources().contains(existing)) {
                             resource.setId(existing.getId());
+                            resource.setName(resource.getName().toLowerCase());
                             resource.setProduct(product);
                             return mongoResourceRepository.save(resource).flatMap(r -> {
                                 product.removeResource(existing);

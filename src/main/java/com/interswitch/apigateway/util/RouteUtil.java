@@ -13,28 +13,28 @@ public class RouteUtil {
 
     private WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping;
 
-    public RouteUtil(RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping){
+    public RouteUtil(RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping) {
         this.requestMappingHandlerMapping = requestMappingHandlerMapping;
         this.controllerEndpointHandlerMapping = controllerEndpointHandlerMapping;
         this.webFluxEndpointHandlerMapping = webFluxEndpointHandlerMapping;
     }
 
-    public Mono<Boolean> isRouteBasedEndpoint(ServerWebExchange exchange){
+    public Mono<Boolean> isRouteBasedEndpoint(ServerWebExchange exchange) {
         return isInternalEndpoint(exchange).flatMap(isInternalEndpoint ->
                 this.isGatewayEndpoint(exchange).flatMap(isGatewayEndpoint ->
                         this.isActuatorEndpoint((exchange)).flatMap(isActuatorEndpoint ->
                             Mono.just(!(isInternalEndpoint || isGatewayEndpoint || isActuatorEndpoint)))));
     }
 
-    public Mono<Boolean> isActuatorEndpoint(ServerWebExchange exchange){
+    public Mono<Boolean> isActuatorEndpoint(ServerWebExchange exchange) {
         return webFluxEndpointHandlerMapping.getHandlerInternal(exchange).hasElement();
     }
 
-    public Mono<Boolean> isInternalEndpoint(ServerWebExchange exchange){
+    public Mono<Boolean> isInternalEndpoint(ServerWebExchange exchange) {
         return requestMappingHandlerMapping.getHandlerInternal(exchange).hasElement();
     }
 
-    public Mono<Boolean> isGatewayEndpoint(ServerWebExchange exchange){
+    public Mono<Boolean> isGatewayEndpoint(ServerWebExchange exchange) {
         return controllerEndpointHandlerMapping.getHandlerInternal(exchange).hasElement();
     }
 

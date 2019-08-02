@@ -46,6 +46,6 @@ public class RouteIdFilter implements WebFilter, Ordered {
     }
     @Override
     public int getOrder() {
-        return 1000;
+        return -50;
     }
 }
