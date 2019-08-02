@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ErrorResponse {
@@ -11,23 +12,11 @@ public class ErrorResponse {
     private LocalDateTime timestamp = LocalDateTime.now();
 
     @NotNull
-    private String path;
-
-    @NotNull
     private Integer status;
-
-    @NotNull
-    private String error;
 
     @NotNull
     private String message;
 
-
-    public ErrorResponse(@NotNull String path, @NotNull Integer status, @NotNull String error, @NotNull String message) {
-        this.path = path;
-        this.status = status;
-        this.error = error;
-        this.message = message;
-    }
+    private List<String> errors;
 }
 

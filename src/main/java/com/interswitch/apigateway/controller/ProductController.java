@@ -96,7 +96,7 @@ public class ProductController {
                         }
                         return mongoProductRepository.save(product);
                     });
-                    }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")));
+                }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")));
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
