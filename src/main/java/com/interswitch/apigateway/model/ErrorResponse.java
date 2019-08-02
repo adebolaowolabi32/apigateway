@@ -14,6 +14,7 @@ public class ErrorResponse {
     @NotNull
     private Integer status;
 
+    @NotNull
     private String message;
 
     private List<String> errors;
