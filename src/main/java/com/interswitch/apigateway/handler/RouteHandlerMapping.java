@@ -1,6 +1,6 @@
 package com.interswitch.apigateway.handler;
 
-import com.interswitch.apigateway.repository.MongoRouteConfigRepository;
+import com.interswitch.apigateway.repository.MongoConfigRepository;
 import com.nimbusds.jwt.JWT;
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
 import org.springframework.cloud.gateway.handler.FilteringWebHandler;
@@ -20,10 +20,10 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 
 @Component
 public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
-    private MongoRouteConfigRepository repository;
+    private MongoConfigRepository repository;
     private RouteLocator routeLocator;
 
-    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoRouteConfigRepository repository) {
+    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoConfigRepository repository) {
         super(webHandler, routeLocator, globalCorsProperties, environment);
         this.repository = repository;
         this.routeLocator = routeLocator;

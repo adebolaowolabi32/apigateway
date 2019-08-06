@@ -10,7 +10,7 @@ import java.net.URI;
 
 @Document(collection = "routeConfig")
 @Data
-public class RouteConfig {
+public class Config {
     @Id
     private String id;
 
