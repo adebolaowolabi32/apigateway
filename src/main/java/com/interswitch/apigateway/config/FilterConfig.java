@@ -53,5 +53,6 @@ public class FilterConfig {
         return new AccessLogsFilter(mongoAccessLogsRepository, routeUtil);
     }
 
+
 }
 
