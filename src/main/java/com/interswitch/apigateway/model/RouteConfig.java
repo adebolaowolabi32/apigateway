@@ -18,20 +18,20 @@ public class RouteConfig {
     @NotBlank(message = "Route id is required.")
     private String routeId;
 
-    private URI sandboxUri;
+    private URI sandbox;
 
-    private URI uatUri;
+    private URI uat;
 
     public String getRouteId() {
         return routeId;
     }
 
-    public URI getSandboxUri() {
-        return sandboxUri;
+    public URI getSandbox() {
+        return sandbox;
     }
 
-    public URI getUatUri() {
-        return uatUri;
+    public URI getUat() {
+        return uat;
     }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.cloud.gateway.handler.FilteringWebHandler;
 import org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -47,16 +48,16 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
                     return repository.findByRouteId(route.getId())
                             .flatMap(config -> {
                                 if (environment.equalsIgnoreCase("test") || environment.equalsIgnoreCase("sandbox"))
-                                    return Mono.just(Route.async().id(route.getId()).uri(config.getSandboxUri()).order(0).asyncPredicate(route.getPredicate())
+                                    return Mono.just(Route.async().id(route.getId()).uri(config.getSandbox()).order(0).asyncPredicate(route.getPredicate())
                                             .build());
                                 if (environment.equalsIgnoreCase("uat") || environment.equalsIgnoreCase("dev"))
-                                    return Mono.just(Route.async().id(route.getId()).uri(config.getUatUri()).order(0).asyncPredicate(route.getPredicate())
+                                    return Mono.just(Route.async().id(route.getId()).uri(config.getUat()).order(0).asyncPredicate(route.getPredicate())
                                             .build());
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("Route matched: " + route.getId());
                                 }
                                 return Mono.just(route);
-                            }).switchIfEmpty(Mono.just(route));
+                            }).switchIfEmpty(Mono.error(new NotFoundException("Route Configuration not found")));
                 });
 
     }

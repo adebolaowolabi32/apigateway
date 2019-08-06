@@ -42,8 +42,8 @@ public class RouteConfigController {
         return repository.findByRouteId(config.getRouteId())
                 .switchIfEmpty(Mono.error(new NotFoundException("Route Configuration does not exist")))
                 .flatMap(existing -> {
-                    existing.setSandboxUri(config.getSandboxUri());
-                    existing.setUatUri(config.getUatUri());
+                    existing.setSandbox(config.getSandbox());
+                    existing.setUat(config.getUat());
                     return repository.save(existing);
                 });
     }
