@@ -20,7 +20,7 @@ public class RouteConfig {
 
     private URI sandboxUri;
 
-    private URI tqUatUri;
+    private URI uatUri;
 
     public String getRouteId() {
         return routeId;
@@ -30,8 +30,8 @@ public class RouteConfig {
         return sandboxUri;
     }
 
-    public URI getTqUatUri() {
-        return tqUatUri;
+    public URI getUatUri() {
+        return uatUri;
     }
 
 }

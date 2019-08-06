@@ -46,11 +46,11 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
                 .flatMap(route -> {
                     return repository.findByRouteId(route.getId())
                             .flatMap(config -> {
-                                if (environment.equalsIgnoreCase("test"))
+                                if (environment.equalsIgnoreCase("test") || environment.equalsIgnoreCase("sandbox"))
                                     return Mono.just(Route.async().id(route.getId()).uri(config.getSandboxUri()).order(0).asyncPredicate(route.getPredicate())
                                             .build());
-                                if (environment.equalsIgnoreCase("uat"))
-                                    return Mono.just(Route.async().id(route.getId()).uri(config.getTqUatUri()).order(0).asyncPredicate(route.getPredicate())
+                                if (environment.equalsIgnoreCase("uat") || environment.equalsIgnoreCase("dev"))
+                                    return Mono.just(Route.async().id(route.getId()).uri(config.getUatUri()).order(0).asyncPredicate(route.getPredicate())
                                             .build());
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("Route matched: " + route.getId());
