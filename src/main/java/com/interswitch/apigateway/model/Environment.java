@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
-import java.net.URI;
+import javax.validation.constraints.Pattern;
 
 @Document(collection = "environments")
 @Data
@@ -20,9 +20,11 @@ public class Environment {
     private String routeId;
 
     @EqualsAndHashCode.Exclude
-    private URI sandbox;
+    @Pattern(regexp = "^https?:\\/\\/.+$", message = "Sandbox Url must be a valid url pattern")
+    private String sandbox;
 
     @EqualsAndHashCode.Exclude
-    private URI uat;
+    @Pattern(regexp = "^https?:\\/\\/.+$", message = "UAT Url must be a valid url pattern")
+    private String uat;
 
 }

@@ -7,8 +7,6 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
-import java.net.URI;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("dev")
@@ -23,8 +21,8 @@ public class MongoEnvironmentRepositoryTests extends AbstractMongoRepositoryTest
         Environment environment = new Environment();
         environment.setId("testConfig");
         environment.setRouteId("testRoute");
-        environment.setSandbox(URI.create("https://twitter.com"));
-        environment.setUat(URI.create("https://google.com"));
+        environment.setSandbox("https://twitter.com");
+        environment.setUat("https://google.com");
         repository.save(environment).block();
         StepVerifier.create(repository.findById(environment.getId())).assertNext(c -> {
             assertThat(c.getRouteId()).isEqualTo(environment.getRouteId());
@@ -36,8 +34,8 @@ public class MongoEnvironmentRepositoryTests extends AbstractMongoRepositoryTest
         Environment environment = new Environment();
         environment.setId("testConfig");
         environment.setRouteId("testRoute");
-        environment.setSandbox(URI.create("https://twitter.com"));
-        environment.setUat(URI.create("https://google.com"));
+        environment.setSandbox("https://twitter.com");
+        environment.setUat("https://google.com");
         Environment savedEnvironment = repository.save(environment).block();
         StepVerifier.create(repository.findById(environment.getId())).assertNext(c -> {
             assertThat(c.getRouteId()).isEqualTo(environment.getRouteId()).isEqualTo(savedEnvironment.getRouteId());
@@ -49,8 +47,8 @@ public class MongoEnvironmentRepositoryTests extends AbstractMongoRepositoryTest
         Environment environment = new Environment();
         environment.setId("testConfig");
         environment.setRouteId("testRoute");
-        environment.setSandbox(URI.create("https://twitter.com"));
-        environment.setUat(URI.create("https://google.com"));
+        environment.setSandbox("https://twitter.com");
+        environment.setUat("https://google.com");
         Environment savedEnvironment = repository.save(environment).block();
         StepVerifier.create(repository.findByRouteId(environment.getRouteId())).assertNext(c -> {
             assertThat(c.getId()).isEqualTo(environment.getId()).isEqualTo(savedEnvironment.getId());
@@ -62,13 +60,13 @@ public class MongoEnvironmentRepositoryTests extends AbstractMongoRepositoryTest
         Environment environment = new Environment();
         environment.setId("testConfig");
         environment.setRouteId("testRoute");
-        environment.setSandbox(URI.create("https://twitter.com"));
-        environment.setUat(URI.create("https://google.com"));
+        environment.setSandbox("https://twitter.com");
+        environment.setUat("https://google.com");
         Environment environment2 = new Environment();
         environment2.setId("testConfig2");
         environment2.setRouteId("testRoute2");
-        environment2.setSandbox(URI.create("https://twitter.com"));
-        environment2.setUat(URI.create("https://google.com"));
+        environment2.setSandbox("https://twitter.com");
+        environment2.setUat("https://google.com");
         repository.save(environment).block();
         repository.save(environment2).block();
         StepVerifier.create(repository.findAll()).expectNextCount(2);
@@ -79,8 +77,8 @@ public class MongoEnvironmentRepositoryTests extends AbstractMongoRepositoryTest
         Environment environment = new Environment();
         environment.setId("testConfig");
         environment.setRouteId("testRoute");
-        environment.setSandbox(URI.create("https://twitter.com"));
-        environment.setUat(URI.create("https://google.com"));
+        environment.setSandbox("https://twitter.com");
+        environment.setUat("https://google.com");
         Environment savedEnvironment = repository.save(environment).block();
         repository.deleteById(savedEnvironment.getId()).block();
         StepVerifier.create(repository.findById(savedEnvironment.getId())).expectComplete().verify();

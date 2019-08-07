@@ -17,7 +17,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.util.Collections;
 
 import static org.mockito.Mockito.when;
@@ -39,8 +38,8 @@ public class EnvironmentControllerTests {
         environment = new Environment();
         environment.setId("testRoute");
         environment.setRouteId("testRoute");
-        environment.setUat(URI.create("https://twitter.com"));
-        environment.setSandbox(URI.create("https://google.com"));
+        environment.setUat("https://twitter.com");
+        environment.setSandbox("https://google.com");
     }
 
     @Test
