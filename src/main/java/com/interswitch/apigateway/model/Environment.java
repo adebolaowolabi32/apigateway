@@ -9,9 +9,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import javax.validation.constraints.NotBlank;
 import java.net.URI;
 
-@Document(collection = "routeConfig")
+@Document(collection = "environments")
 @Data
-public class Config {
+public class Environment {
     @Id
     private String id;
 
