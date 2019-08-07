@@ -34,17 +34,16 @@ public class EnvironmentController {
     @GetMapping(value = "/{routeId}", produces = "application/json")
     private Mono<Environment> findByRouteId(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route configuration does not exist")));
+                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<Environment> updateConfiguration(@Validated @RequestBody Environment environment) {
         return repository.findByRouteId(environment.getRouteId())
-                .switchIfEmpty(Mono.error(new NotFoundException("Route Configuration does not exist")))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")))
                 .flatMap(existing -> {
-                    existing.setSandbox(environment.getSandbox());
-                    existing.setUat(environment.getUat());
-                    return repository.save(existing);
+                    environment.setId(existing.getId());
+                    return repository.save(environment);
                 });
     }
 
