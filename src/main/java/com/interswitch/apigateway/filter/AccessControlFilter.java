@@ -50,7 +50,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         JWT token = decodeBearerToken(headers);
         String environment = (token != null) ? getClaimAsStringFromBearerToken(token, "env") : "";
 
-        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") || environment.equalsIgnoreCase("UAT") || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
         String clientId = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "";
         List<String> resources = (token != null) ? getClaimAsListFromBearerToken(token, "api_resources") : Collections.emptyList();

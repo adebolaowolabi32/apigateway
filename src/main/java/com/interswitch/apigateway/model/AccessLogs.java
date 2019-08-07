@@ -43,8 +43,7 @@ public class AccessLogs {
         CLIENT("/clients"),
         PRODUCT("/products"),
         USER("/users"),
-        SYSTEM("/actuator"),
-        ROUTE_CONFIG("/config");
+        SYSTEM("/actuator");
 
         private String value;
 

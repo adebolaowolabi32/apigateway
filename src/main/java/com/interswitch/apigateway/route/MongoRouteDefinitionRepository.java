@@ -51,11 +51,6 @@ public class MongoRouteDefinitionRepository implements RouteDefinitionRepository
         return mongo.findAll();
     }
 
-//    public Mono<RouteDefinition> getRouteDefinition(String id){
-//        return mongo.findById(id);
-//    }
-
-
     @Override
     public Mono<Void> save(@Validated Mono<RouteDefinition> route) {
         return route.flatMap(r -> {
