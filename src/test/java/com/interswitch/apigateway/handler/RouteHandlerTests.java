@@ -33,7 +33,6 @@ public class RouteHandlerTests {
 
     Environment environment = new Environment();
     ServerWebExchange exchange;
-
     @MockBean
     private MongoEnvironmentRepository repository;
 
@@ -58,6 +57,7 @@ public class RouteHandlerTests {
                 .get("http://localhost:8080/")
                 .header("Authorization", "Bearer " + accessToken)
                 .build();
+        exchange = MockServerWebExchange.from(request);
         route = Route.async().id("testRoute").uri("https://twitter.com")
                 .predicate(swe -> true).build();
         RouteLocator routeLocator = () -> Flux.just(route)
