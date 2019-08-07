@@ -43,7 +43,9 @@ public class AccessLogs {
         CLIENT("/clients"),
         PRODUCT("/products"),
         USER("/users"),
-        SYSTEM("/actuator");
+        SYSTEM("/actuator"),
+        ENVIRONMENT("/environment");
+
 
         private String value;
 
