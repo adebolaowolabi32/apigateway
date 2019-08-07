@@ -7,24 +7,24 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.gateway.config.GlobalCorsProperties;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.http.HttpHeaders;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Date;
 import java.util.UUID;
 
-import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
-import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -33,12 +33,15 @@ public class RouteHandlerTests {
 
     Environment environment = new Environment();
     ServerWebExchange exchange;
+
     @MockBean
     private MongoEnvironmentRepository repository;
-    @Autowired
-    private RouteHandlerMapping handlerMapping;
+
+    private RouteHandlerMapping mapping;
+
     private HttpHeaders headers = new HttpHeaders();
     private String accessToken;
+    private Route route;
 
     @BeforeEach
     public void setup() throws JOSEException {
@@ -46,7 +49,6 @@ public class RouteHandlerTests {
         environment.setRouteId("testRoute");
         environment.setUat("https://twitter.com");
         environment.setSandbox("https://google.com");
-
     }
 
     @Test
@@ -54,16 +56,16 @@ public class RouteHandlerTests {
         accessToken = getAccessToken("uat");
         MockServerHttpRequest request = MockServerHttpRequest
                 .get("http://localhost:8080/")
-                .header("Authorization", accessToken)
+                .header("Authorization", "Bearer " + accessToken)
                 .build();
-        exchange = MockServerWebExchange.from(request);
+        route = Route.async().id("testRoute").uri("https://twitter.com")
+                .predicate(swe -> true).build();
+        RouteLocator routeLocator = () -> Flux.just(route)
+                .hide();
         when(repository.findByRouteId(environment.getRouteId())).thenReturn(Mono.just(environment));
         when(repository.save(environment)).thenReturn(Mono.just(environment));
-        when(decodeBearerToken(any())).thenCallRealMethod();
-        when(getClaimAsStringFromBearerToken(any(), any())).thenCallRealMethod();
-        StepVerifier.create(handlerMapping.lookupRoute(exchange)).expectComplete().verify();
-        assertThat(handlerMapping.lookupRoute(exchange).block().getUri()).isEqualTo(environment.getSandbox());
-
+        mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
+        StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }
 
     @Test
@@ -74,10 +76,14 @@ public class RouteHandlerTests {
                 .header("Authorization", "Bearer " + accessToken)
                 .build();
         exchange = MockServerWebExchange.from(request);
+        route = Route.async().id("testRoute").uri("https://google.com")
+                .predicate(swe -> true).build();
+        RouteLocator routeLocator = () -> Flux.just(route)
+                .hide();
         when(repository.findByRouteId(environment.getRouteId())).thenReturn(Mono.just(environment));
         when(repository.save(environment)).thenReturn(Mono.just(environment));
-        StepVerifier.create(handlerMapping.lookupRoute(exchange)).expectComplete().verify();
-        assertThat(handlerMapping.lookupRoute(exchange).block().getUri()).isEqualTo(environment.getSandbox());
+        mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
+        StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }
 
     public String getAccessToken(String env) throws JOSEException {
