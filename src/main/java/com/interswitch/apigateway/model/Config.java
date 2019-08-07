@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,20 +19,10 @@ public class Config {
     @NotBlank(message = "Route id is required.")
     private String routeId;
 
+    @EqualsAndHashCode.Exclude
     private URI sandbox;
 
+    @EqualsAndHashCode.Exclude
     private URI uat;
-
-    public String getRouteId() {
-        return routeId;
-    }
-
-    public URI getSandbox() {
-        return sandbox;
-    }
-
-    public URI getUat() {
-        return uat;
-    }
 
 }
