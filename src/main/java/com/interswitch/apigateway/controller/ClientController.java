@@ -62,8 +62,7 @@ public class ClientController {
     }
 
     @PostMapping(value= "/{clientId}/products/{productId}", produces = "application/json", consumes = "application/json")
-    @Validated
-    private Mono<Client> assignProduct(@PathVariable String clientId, @PathVariable String productId){
+    private Mono<Client> assignProduct(@Validated @PathVariable String clientId, @Validated @PathVariable String productId) {
         return mongoClientRepository.findByClientId(clientId).flatMap(client ->
                 mongoProductRepository.findById(productId).flatMap(product -> {
                     if(!product.getClients().contains(client)) {
@@ -81,8 +80,7 @@ public class ClientController {
     }
 
     @DeleteMapping(value= "/{clientId}/products/{productId}", produces = "application/json")
-    @Validated
-    private Mono<Client> unassignProduct(@PathVariable String clientId, @PathVariable String productId){
+    private Mono<Client> unassignProduct(@Validated @PathVariable String clientId, @Validated @PathVariable String productId) {
         return mongoClientRepository.findByClientId(clientId).flatMap(client ->
                 mongoProductRepository.findById(productId).flatMap(product -> {
                     if(product.getClients().contains(client)) {

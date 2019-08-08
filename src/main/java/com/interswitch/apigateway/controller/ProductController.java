@@ -85,7 +85,7 @@ public class ProductController {
 
     @PostMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
-    private Mono<Product> saveResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
+    private Mono<Product> saveResource(@Validated @PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     resource.setName(resource.getName().toLowerCase());
@@ -100,8 +100,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
-    @Validated
-    private Mono<Resource> findResourceById(@PathVariable String productId, @PathVariable String resourceId) {
+    private Mono<Resource> findResourceById(@Validated @PathVariable String productId, @Validated @PathVariable String resourceId) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     return mongoResourceRepository.findById(resourceId).flatMap(resource -> {
@@ -114,8 +113,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
-    @Validated
-    private Mono<Product> updateResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
+    private Mono<Product> updateResource(@Validated @PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
@@ -135,8 +133,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}/resources/{resourceId}")
-    @Validated
-    private Mono<ResponseEntity<Void>> deleteResource(@PathVariable String productId, @PathVariable String resourceId) {
+    private Mono<ResponseEntity<Void>> deleteResource(@Validated @PathVariable String productId, @Validated @PathVariable String resourceId) {
         return mongoProductRepository.findById(productId).flatMap(product -> {
             return mongoResourceRepository.findById(resourceId).flatMap(resource -> {
                 if (product.getResources().contains(resource)) {
