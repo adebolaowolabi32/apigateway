@@ -62,7 +62,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    private Mono<ResponseEntity<Void>> delete(@PathVariable String productId) {
+    private Mono<ResponseEntity<Void>> delete(@Validated @PathVariable String productId) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     return mongoProductRepository.deleteById(productId)
@@ -77,7 +77,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{productId}/resources", produces = "application/json")
-    private Mono<List<Resource>> getResources(@PathVariable String productId) {
+    private Mono<List<Resource>> getResources(@Validated @PathVariable String productId) {
         return mongoProductRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
                 .map(product -> product.getResources());
@@ -85,7 +85,8 @@ public class ProductController {
 
     @PostMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
-    private Mono<Product> saveResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
+    @Validated
+    private Mono<Product> saveResource(@PathVariable String productId, @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     resource.setName(resource.getName().toLowerCase());
@@ -100,6 +101,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{productId}/resources/{resourceId}", produces = "application/json")
+    @Validated
     private Mono<Resource> findResourceById(@PathVariable String productId, @PathVariable String resourceId) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
@@ -113,7 +115,8 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
-    private Mono<Product> updateResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
+    @Validated
+    private Mono<Product> updateResource(@PathVariable String productId, @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
@@ -133,6 +136,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}/resources/{resourceId}")
+    @Validated
     private Mono<ResponseEntity<Void>> deleteResource(@PathVariable String productId, @PathVariable String resourceId) {
         return mongoProductRepository.findById(productId).flatMap(product -> {
             return mongoResourceRepository.findById(resourceId).flatMap(resource -> {

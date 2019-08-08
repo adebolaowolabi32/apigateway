@@ -40,13 +40,13 @@ public class ClientController {
     }
 
     @GetMapping(value= "/{clientId}", produces = "application/json")
-    private Mono<Client> findByClientId(@PathVariable String clientId) {
+    private Mono<Client> findByClientId(@Validated @PathVariable String clientId) {
         return mongoClientRepository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")));
     }
 
     @DeleteMapping("/{clientId}")
-    private Mono<ResponseEntity<Void>> delete(@PathVariable String clientId){
+    private Mono<ResponseEntity<Void>> delete(@Validated @PathVariable String clientId) {
         return mongoClientRepository.findByClientId(clientId)
                 .flatMap(client -> {
                     return mongoClientRepository.deleteById(client.getId())
@@ -55,13 +55,14 @@ public class ClientController {
     }
 
     @GetMapping(value= "/{clientId}/products", produces = "application/json")
-    private Mono<List<Product>> GetAssignedProducts(@PathVariable String clientId){
+    private Mono<List<Product>> GetAssignedProducts(@Validated @PathVariable String clientId) {
         return mongoClientRepository.findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Client does not exist")))
                 .map(client -> client.getProducts());
     }
 
     @PostMapping(value= "/{clientId}/products/{productId}", produces = "application/json", consumes = "application/json")
+    @Validated
     private Mono<Client> assignProduct(@PathVariable String clientId, @PathVariable String productId){
         return mongoClientRepository.findByClientId(clientId).flatMap(client ->
                 mongoProductRepository.findById(productId).flatMap(product -> {
@@ -80,6 +81,7 @@ public class ClientController {
     }
 
     @DeleteMapping(value= "/{clientId}/products/{productId}", produces = "application/json")
+    @Validated
     private Mono<Client> unassignProduct(@PathVariable String clientId, @PathVariable String productId){
         return mongoClientRepository.findByClientId(clientId).flatMap(client ->
                 mongoProductRepository.findById(productId).flatMap(product -> {
