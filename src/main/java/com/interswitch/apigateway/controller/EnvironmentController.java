@@ -1,6 +1,6 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Environment;
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpStatus;
@@ -21,29 +21,29 @@ public class EnvironmentController {
     }
 
     @GetMapping(produces = "application/json")
-    private Flux<Environment> getAll() {
+    private Flux<Env> getAll() {
         return repository.findAll();
     }
 
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
-    private Mono<Environment> addConfiguration(@Validated @RequestBody Environment environment) {
-        return repository.save(environment);
+    private Mono<Env> addConfiguration(@Validated @RequestBody Env env) {
+        return repository.save(env);
     }
 
     @GetMapping(value = "/{routeId}", produces = "application/json")
-    private Mono<Environment> findByRouteId(@Validated @PathVariable String routeId) {
+    private Mono<Env> findByRouteId(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")));
+                .switchIfEmpty(Mono.error(new NotFoundException("Route Env configuration does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
-    private Mono<Environment> updateConfiguration(@Validated @RequestBody Environment environment) {
-        return repository.findByRouteId(environment.getRouteId())
-                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")))
+    private Mono<Env> updateConfiguration(@Validated @RequestBody Env env) {
+        return repository.findByRouteId(env.getRouteId())
+                .switchIfEmpty(Mono.error(new NotFoundException("Route Env configuration does not exist")))
                 .flatMap(existing -> {
-                    environment.setId(existing.getId());
-                    return repository.save(environment);
+                    env.setId(existing.getId());
+                    return repository.save(env);
                 });
     }
 

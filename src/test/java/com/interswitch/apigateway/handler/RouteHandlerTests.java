@@ -1,6 +1,6 @@
 package com.interswitch.apigateway.handler;
 
-import com.interswitch.apigateway.model.Environment;
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("dev")
 public class RouteHandlerTests {
 
-    Environment environment = new Environment();
+    Env env = new Env();
     ServerWebExchange exchange;
     @MockBean
     private MongoEnvironmentRepository repository;
@@ -44,10 +44,10 @@ public class RouteHandlerTests {
 
     @BeforeEach
     public void setup() throws JOSEException {
-        environment.setId("testRoute");
-        environment.setRouteId("testRoute");
-        environment.setUat("https://twitter.com");
-        environment.setSandbox("https://google.com");
+        env.setId("testRoute");
+        env.setRouteId("testRoute");
+        env.setUat("https://twitter.com");
+        env.setSandbox("https://google.com");
     }
 
     @Test
@@ -62,8 +62,8 @@ public class RouteHandlerTests {
                 .predicate(swe -> true).build();
         RouteLocator routeLocator = () -> Flux.just(route)
                 .hide();
-        when(repository.findByRouteId(environment.getRouteId())).thenReturn(Mono.just(environment));
-        when(repository.save(environment)).thenReturn(Mono.just(environment));
+        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
+        when(repository.save(env)).thenReturn(Mono.just(env));
         mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
         StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }
@@ -80,8 +80,8 @@ public class RouteHandlerTests {
                 .predicate(swe -> true).build();
         RouteLocator routeLocator = () -> Flux.just(route)
                 .hide();
-        when(repository.findByRouteId(environment.getRouteId())).thenReturn(Mono.just(environment));
-        when(repository.save(environment)).thenReturn(Mono.just(environment));
+        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
+        when(repository.save(env)).thenReturn(Mono.just(env));
         mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
         StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }

@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.nimbusds.jwt.JWT;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
@@ -27,7 +28,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private MongoClientRepository repository;
 
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
-    private static List<String> ALLOW_ALL = Arrays.asList("uat", "test", "dev", "sandbox");
+    private static List<String> ALLOW_ALL = Arrays.asList(Env.environment.DEV.toString(), Env.environment.TEST.toString(), Env.environment.UAT.toString(), Env.environment.SANDBOX.toString());
 
 
     public AccessControlFilter(MongoClientRepository repository) {
@@ -53,7 +54,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         JWT token = decodeBearerToken(headers);
         String environment = (token != null) ? getClaimAsStringFromBearerToken(token, "env") : "";
 
-        if (PERMIT_ALL.contains(routeId) || ALLOW_ALL.contains(environment.toLowerCase()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PERMIT_ALL.contains(routeId) || ALLOW_ALL.contains(environment.toUpperCase()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
         String clientId = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "";
         List<String> resources = (token != null) ? getClaimAsListFromBearerToken(token, "api_resources") : Collections.emptyList();

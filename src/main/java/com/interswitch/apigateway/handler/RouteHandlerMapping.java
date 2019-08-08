@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.handler;
 
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
 import com.nimbusds.jwt.JWT;
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
@@ -22,12 +23,10 @@ import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBea
 @Component
 public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
     private MongoEnvironmentRepository repository;
-    private RouteLocator routeLocator;
 
     public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoEnvironmentRepository repository) {
         super(webHandler, routeLocator, globalCorsProperties, environment);
         this.repository = repository;
-        this.routeLocator = routeLocator;
     }
 
     @Override
@@ -39,12 +38,12 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
         return lookupRoute.flatMap(route -> {
             return repository.findByRouteId(route.getId())
                     .flatMap(config -> {
-                        if (environment.equalsIgnoreCase("test") || environment.equalsIgnoreCase("sandbox")) {
+                        if (environment.equalsIgnoreCase(Env.environment.TEST.toString()) || environment.equalsIgnoreCase(Env.environment.SANDBOX.toString())) {
                             URI sandbox = (config.getSandbox() != null) ? URI.create(config.getSandbox()) : route.getUri();
                             return Mono.just(Route.async().id(route.getId()).uri(sandbox).order(0).asyncPredicate(route.getPredicate())
                                     .build());
                         }
-                        if (environment.equalsIgnoreCase("uat") || environment.equalsIgnoreCase("dev")) {
+                        if (environment.equalsIgnoreCase(Env.environment.UAT.toString()) || environment.equalsIgnoreCase(Env.environment.DEV.toString())) {
                             URI uat = (config.getUat() != null) ? URI.create(config.getUat()) : route.getUri();
                             return Mono.just(Route.async().id(route.getId()).uri(uat).order(0).asyncPredicate(route.getPredicate())
                                     .build());
@@ -53,7 +52,7 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
                             logger.debug("Route matched: " + route.getId());
                         }
                         return Mono.just(route);
-                    }).switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration not found")));
+                    }).switchIfEmpty(Mono.error(new NotFoundException("Route Env configuration not found")));
         });
 
     }

@@ -1,9 +1,9 @@
 package com.interswitch.apigateway.repository;
 
-import com.interswitch.apigateway.model.Environment;
+import com.interswitch.apigateway.model.Env;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import reactor.core.publisher.Mono;
 
-public interface MongoEnvironmentRepository extends ReactiveMongoRepository<Environment, String> {
-    Mono<Environment> findByRouteId(String routeId);
+public interface MongoEnvironmentRepository extends ReactiveMongoRepository<Env, String> {
+    Mono<Env> findByRouteId(String routeId);
 }
