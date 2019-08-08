@@ -1,1 +1,0 @@
-db.getCollection("users").insert({ _id: "systemAdmin", "username" : "adesegun.adeyemo","role" : "ADMIN","_class" : "com.interswitch.apigateway.model.User" })
