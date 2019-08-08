@@ -49,7 +49,7 @@ public class AccessLogsControllerTests {
     }
 
     @Test
-    public void testGetPagedDefaultValues(){
+    public void testGetPagedDefaultValues() {
         when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri("/audit")
@@ -61,7 +61,7 @@ public class AccessLogsControllerTests {
     }
 
     @Test
-    public void testGetPaged(){
+    public void testGetPaged() {
         when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -77,7 +77,7 @@ public class AccessLogsControllerTests {
     }
 
     @Test
-    public void testGetSearchValue(){
+    public void testGetSearchValue() {
         when(mongoAccessLogsRepository.query(any(String.class), any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder

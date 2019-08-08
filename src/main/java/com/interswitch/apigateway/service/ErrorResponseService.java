@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.interswitch.apigateway.model.ErrorResponse;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.support.NotFoundException;
-import org.springframework.core.codec.DecodingException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.http.HttpMethod;
@@ -19,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
 
 import javax.net.ssl.SSLException;
+import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -37,17 +37,30 @@ public class ErrorResponseService {
         if (e instanceof DuplicateKeyException) {
             code = 409;
             String[] keys = StringUtils.substringsBetween(eMessage, "\"", "\"");
-            String key = (httpMethod != HttpMethod.PUT) ? "' already exists." : "' cannot be modified here.";
-            message = (keys != null) ? "'" + keys[0] + key : message;
+            String key = (httpMethod != HttpMethod.PUT) ? " already exists." : " cannot be modified here.";
+            message = (keys != null) ? keys[0] + key : message;
         }
-        if (e instanceof WebExchangeBindException) {
+        if (e instanceof WebExchangeBindException || e instanceof ServerWebInputException) {
             code = 400;
-            String field = "";
-            List<FieldError> fieldErrors = ((WebExchangeBindException) e).getFieldErrors();
-            message = ((WebExchangeBindException) e).getReason();
-            for (var fields : fieldErrors) {
-                field = fields.getField() + " ( " + fields.getDefaultMessage() + " )";
-                errors.add(message + " for field: " + field);
+            if (e instanceof WebExchangeBindException) {
+                List<FieldError> fieldErrors = ((WebExchangeBindException) e).getFieldErrors();
+                String error = ((WebExchangeBindException) e).getReason();
+                String field = "";
+                String messageError = "";
+                for (var fields : fieldErrors) {
+                    messageError = fields.getDefaultMessage() + ", " + messageError;
+                    field = fields.getField() + " ( " + fields.getDefaultMessage() + " )";
+                    errors.add(error + " for field: " + field);
+                }
+                message = messageError;
+            } else {
+                eMessage = ((ServerWebInputException) e).getMessage();
+                String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
+                String[] key = (keys != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : StringUtils.substringsBetween(eMessage, "\"", "\"");
+                String field = "Bad Input.";
+                if (key != null)
+                    field = (key[0].contains("mismatch")) ? "Data Type mismatch for value " + key[1] : "Invalid value for field " + key[0];
+                message = "Validation failure: " + field;
             }
         }
         if (e instanceof NotFoundException) {
@@ -55,18 +68,8 @@ public class ErrorResponseService {
             String[] key = (eMessage != null) ? StringUtils.substringsBetween(eMessage, "\"", "\"") : null;
             message = (key[0] != null) ? key[0] : "Not Found";
         }
-        if (e instanceof DecodingException) {
-            code = 400;
-            message = "Failed to read Http Message";
-        }
-        if (e instanceof ServerWebInputException) {
-            code = 400;
-            String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
-            String[] key = (keys[0] != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : null;
-            String field = (key != null) ? " for field '" + key[0] + "' " : "";
-            message = "Failed to read Http Message" + field;
-        }
-        if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException || e instanceof RestClientException) {
+
+        if (e instanceof SocketException || e instanceof SSLException || e instanceof MismatchedInputException || e instanceof CannotGetMongoDbConnectionException || e instanceof RestClientException || e instanceof ConnectException) {
             code = 503;
             message = "Either remote server cannot be reached or network connection was reset/broken. Please try again later";
         }
@@ -82,6 +85,9 @@ public class ErrorResponseService {
         }
         if (e instanceof MethodNotAllowedException) {
             code = 415;
+        }
+        if (e instanceof IllegalArgumentException) {
+            code = 400;
         }
         response.setStatus(code);
         response.setMessage(message);

@@ -29,6 +29,7 @@ public class UserController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
         user.setUsername(user.getUsername().toLowerCase());
+        user.setRole(User.Role.USER);
         return mongoUserRepository.save(user);
 
     }
@@ -50,7 +51,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{username}")
-    private Mono<ResponseEntity<Void>> delete(@PathVariable String username) {
+    private Mono<ResponseEntity<Void>> delete(@Validated @PathVariable String username) {
             return mongoUserRepository.findByUsername(username.toLowerCase())
                     .flatMap(user -> mongoUserRepository.deleteById(user.getId())
                             .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK))))

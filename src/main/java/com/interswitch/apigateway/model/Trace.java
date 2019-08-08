@@ -2,8 +2,11 @@ package com.interswitch.apigateway.model;
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class Trace {
+    private String requestId = UUID.randomUUID().toString();
     private String httpUri;
     private String httpMethod;
     private String httpPath;
@@ -14,8 +17,9 @@ public class Trace {
     private int callerPort;
     private String callerName;
     private String hostIp;
-    private String hostPort;
     private String hostName;
     private String httpStatusCode;
-    private long duration;
+    private long requestDuration;
+    private long durationOutsideGateway;
+    private long durationWithinGateway;
 }

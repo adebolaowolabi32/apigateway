@@ -5,6 +5,7 @@ import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
 import com.interswitch.apigateway.util.RouteUtil;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.endpoint.web.reactive.ControllerEndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +40,8 @@ public class FilterConfig {
     }
 
     @Bean
-    public LoggingFilter loggingFilter() {
-        return new LoggingFilter();
+    public LoggingFilter loggingFilter(MeterRegistry meterRegistry) {
+        return new LoggingFilter(meterRegistry);
     }
 
     @Bean
@@ -53,5 +54,9 @@ public class FilterConfig {
         return new AccessLogsFilter(mongoAccessLogsRepository, routeUtil);
     }
 
+    @Bean
+    public DownstreamTimerFilter downstreamTimerFilter(MeterRegistry meterRegistry) {
+        return new DownstreamTimerFilter(meterRegistry);
+    }
 }
 
