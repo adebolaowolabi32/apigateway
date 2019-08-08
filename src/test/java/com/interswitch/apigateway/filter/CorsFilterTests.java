@@ -6,8 +6,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,8 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.List;
+import static com.interswitch.apigateway.filter.CorsFilter.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -25,13 +22,6 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("dev")
 @ContextConfiguration(classes = {CorsFilter.class})
 public class CorsFilterTests {
-
-    private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
-    private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
-    private static final long MAX_AGE = 3600;
-    private static final Boolean ALLOW_CREDENTIALS = true;
-    private static final String ALLOWED_ORIGIN = "*";
-    private static final List<String> VARY = Arrays.asList("Origin");
 
     @Autowired
     private CorsFilter filter;

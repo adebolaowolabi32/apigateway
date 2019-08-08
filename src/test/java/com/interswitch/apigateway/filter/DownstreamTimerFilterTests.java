@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import static com.interswitch.apigateway.filter.DownstreamTimerFilter.DOWNSTREAM_ROUTE_DURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -20,7 +21,6 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("dev")
 public class DownstreamTimerFilterTests {
 
-    private static final String DOWNSTREAM_ROUTE_DURATION = "downstream_route_duration";
     @Autowired
     DownstreamTimerFilter filter;
     private ArgumentCaptor<ServerWebExchange> captor = ArgumentCaptor.forClass(ServerWebExchange.class);
