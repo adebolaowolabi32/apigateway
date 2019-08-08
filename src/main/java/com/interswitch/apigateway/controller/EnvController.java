@@ -12,11 +12,11 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/env")
-public class EnvironmentController {
+public class EnvController {
 
     private MongoEnvRepository repository;
 
-    public EnvironmentController(MongoEnvRepository repository) {
+    public EnvController(MongoEnvRepository repository) {
         this.repository = repository;
     }
 
@@ -50,7 +50,7 @@ public class EnvironmentController {
     @DeleteMapping("/{routeId}")
     private Mono<ResponseEntity<Void>> delete(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
-                .flatMap(environment -> repository.deleteById(environment.getId())
+                .flatMap(env -> repository.deleteById(env.getId())
                         .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK))))
                 .switchIfEmpty(Mono.just(new ResponseEntity<>(HttpStatus.NOT_FOUND)));
     }

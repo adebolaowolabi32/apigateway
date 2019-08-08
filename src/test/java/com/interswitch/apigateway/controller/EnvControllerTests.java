@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
 @WebFluxTest(excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {EnvironmentController.class})
+@ContextConfiguration(classes = {EnvController.class})
 public class EnvControllerTests {
     @Autowired
     private WebTestClient webClient;
