@@ -38,20 +38,18 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
         return lookupRoute.flatMap(route -> {
             return repository.findByRouteId(route.getId())
                     .flatMap(config -> {
+                        URI uri = route.getUri();
                         if (environment.equalsIgnoreCase(Env.environment.TEST.toString()) || environment.equalsIgnoreCase(Env.environment.SANDBOX.toString())) {
-                            URI sandbox = (config.getSandbox() != null) ? URI.create(config.getSandbox()) : route.getUri();
-                            return Mono.just(Route.async().id(route.getId()).uri(sandbox).order(0).asyncPredicate(route.getPredicate())
-                                    .build());
+                            uri = (config.getSandbox() != null) ? URI.create(config.getSandbox()) : route.getUri();
                         }
                         if (environment.equalsIgnoreCase(Env.environment.UAT.toString()) || environment.equalsIgnoreCase(Env.environment.DEV.toString())) {
-                            URI uat = (config.getUat() != null) ? URI.create(config.getUat()) : route.getUri();
-                            return Mono.just(Route.async().id(route.getId()).uri(uat).order(0).asyncPredicate(route.getPredicate())
-                                    .build());
+                            uri = (config.getUat() != null) ? URI.create(config.getUat()) : route.getUri();
                         }
                         if (logger.isDebugEnabled()) {
                             logger.debug("Route matched: " + route.getId());
                         }
-                        return Mono.just(route);
+                        return Mono.just(Route.async().id(route.getId()).uri(uri).order(0).asyncPredicate(route.getPredicate()).filters(route.getFilters())
+                                .build());
                     }).switchIfEmpty(Mono.error(new NotFoundException("Route Env configuration not found")));
         });
 
