@@ -85,8 +85,7 @@ public class ProductController {
 
     @PostMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
-    @Validated
-    private Mono<Product> saveResource(@PathVariable String productId, @RequestBody Resource resource) {
+    private Mono<Product> saveResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     resource.setName(resource.getName().toLowerCase());
@@ -116,7 +115,7 @@ public class ProductController {
 
     @PutMapping(value = "/{productId}/resources", produces = "application/json", consumes = "application/json")
     @Validated
-    private Mono<Product> updateResource(@PathVariable String productId, @RequestBody Resource resource) {
+    private Mono<Product> updateResource(@PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
