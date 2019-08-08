@@ -36,8 +36,8 @@ public class ErrorAttributes extends DefaultErrorAttributes {
         errorAttributes.put("status", response.getStatus());
         errorAttributes.put("message", response.getMessage());
         if (!response.getErrors().isEmpty()) {
-                errorAttributes.put("errors", response.getErrors());
-            }
+            errorAttributes.put("errors", response.getErrors());
+        }
         return errorAttributes;
     }
 

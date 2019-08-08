@@ -29,6 +29,7 @@ public class UserController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
         user.setUsername(user.getUsername().toLowerCase());
+        user.setRole(User.Role.OPERATIONS);
         return mongoUserRepository.save(user);
 
     }

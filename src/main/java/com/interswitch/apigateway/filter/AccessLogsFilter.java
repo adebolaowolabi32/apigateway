@@ -64,10 +64,10 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                         accessLogs.setAction(action);
                 }
 
-                if(accessLogs.getEntity().equals(Entity.SYSTEM)){
-                    for(var actuatorEndpoint : ActuatorEndpoint.values()){
-                        if(path.contains(actuatorEndpoint.getValue())){
-                            if(actuatorEndpoint.equals(ActuatorEndpoint.ROUTE_REFRESH) || actuatorEndpoint.equals(ActuatorEndpoint.BUS_REFRESH)){
+                if (accessLogs.getEntity().equals(Entity.SYSTEM)) {
+                    for (var actuatorEndpoint : ActuatorEndpoint.values()) {
+                        if (path.contains(actuatorEndpoint.getValue())) {
+                            if (actuatorEndpoint.equals(ActuatorEndpoint.ROUTE_REFRESH) || actuatorEndpoint.equals(ActuatorEndpoint.BUS_REFRESH)) {
                                 accessLogs.setEntityId("");
                                 accessLogs.setAction(Action.REFRESH);
                             }
