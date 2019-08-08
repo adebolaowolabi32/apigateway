@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.interswitch.apigateway.util.FilterUtil.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -28,7 +29,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private MongoClientRepository repository;
 
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
-    private static List<String> ALLOW_ALL = Arrays.asList(Env.environment.DEV.toString(), Env.environment.TEST.toString(), Env.environment.UAT.toString(), Env.environment.SANDBOX.toString());
+    private static List<String> ALLOW_ALL = Arrays.stream(Env.environment.values()).map(Enum::name).collect(Collectors.toList());
 
 
     public AccessControlFilter(MongoClientRepository repository) {
