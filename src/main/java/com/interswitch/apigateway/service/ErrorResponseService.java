@@ -59,7 +59,7 @@ public class ErrorResponseService {
                 String[] key = (keys != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : StringUtils.substringsBetween(eMessage, "\"", "\"");
                 String field = "Bad Input.";
                 if (key != null)
-                    field = (key[0].contains("mismatch")) ? "Data Type mismatch for value " + key[1] : "Unable to validate field " + key[0];
+                    field = (key[0].contains("mismatch")) ? "Data Type mismatch for value " + key[1] : "Invalid value for field " + key[0];
                 message = "Validation failure: " + field;
             }
         }
@@ -85,6 +85,9 @@ public class ErrorResponseService {
         }
         if (e instanceof MethodNotAllowedException) {
             code = 415;
+        }
+        if (e instanceof IllegalArgumentException) {
+            code = 400;
         }
         response.setStatus(code);
         response.setMessage(message);
