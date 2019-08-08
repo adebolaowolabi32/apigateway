@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/environment")
+@RequestMapping("/env")
 public class EnvironmentController {
 
     private MongoEnvRepository repository;
