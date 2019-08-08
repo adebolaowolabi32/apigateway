@@ -48,45 +48,33 @@ public class RouteHandlerTests {
         env.setRouteId("testRoute");
         env.setUat("https://twitter.com");
         env.setSandbox("https://google.com");
+        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
+        when(repository.save(env)).thenReturn(Mono.just(env));
     }
 
     @Test
     public void testRouteToUat() throws JOSEException {
-        accessToken = getAccessToken("uat");
-        MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/")
-                .header("Authorization", "Bearer " + accessToken)
-                .build();
-        exchange = MockServerWebExchange.from(request);
+        exchange = getExchange("uat");
         route = Route.async().id("testRoute").uri("https://twitter.com")
                 .predicate(swe -> true).build();
         RouteLocator routeLocator = () -> Flux.just(route)
                 .hide();
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
-        when(repository.save(env)).thenReturn(Mono.just(env));
         mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
         StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }
 
     @Test
     public void testRouteToSandbox() throws JOSEException {
-        accessToken = getAccessToken("test");
-        MockServerHttpRequest request = MockServerHttpRequest
-                .get("http://localhost:8080/")
-                .header("Authorization", "Bearer " + accessToken)
-                .build();
-        exchange = MockServerWebExchange.from(request);
+        exchange = getExchange("test");
         route = Route.async().id("testRoute").uri("https://google.com")
                 .predicate(swe -> true).build();
         RouteLocator routeLocator = () -> Flux.just(route)
                 .hide();
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
-        when(repository.save(env)).thenReturn(Mono.just(env));
         mapping = new RouteHandlerMapping(null, routeLocator, new GlobalCorsProperties(), new MockEnvironment(), repository);
         StepVerifier.create(mapping.lookupRoute(exchange)).expectNext(route).expectComplete().verify();
     }
 
-    public String getAccessToken(String env) throws JOSEException {
+    public ServerWebExchange getExchange(String env) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
@@ -100,6 +88,11 @@ public class RouteHandlerTests {
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = jws.serialize();
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        return accessToken;
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("http://localhost:8080/")
+                .header("Authorization", "Bearer " + accessToken)
+                .build();
+        exchange = MockServerWebExchange.from(request);
+        return exchange;
     }
 }
