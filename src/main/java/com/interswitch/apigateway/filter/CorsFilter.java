@@ -17,12 +17,12 @@ import java.util.List;
 
 public class CorsFilter implements WebFilter, Ordered {
 
-    private static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
-    private static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
-    private static final List<String> VARY = Arrays.asList("Origin");
-    private static final long MAX_AGE = 3600;
-    private static final Boolean ALLOW_CREDENTIALS = true;
-    private static final String ALLOWED_ORIGIN = "*";
+    public static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
+    public static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
+    public static final List<String> VARY = Arrays.asList("Origin");
+    public static final long MAX_AGE = 3600;
+    public static final Boolean ALLOW_CREDENTIALS = true;
+    public static final String ALLOWED_ORIGIN = "*";
 
     public CorsFilter() {}
 

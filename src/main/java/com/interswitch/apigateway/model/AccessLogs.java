@@ -46,7 +46,6 @@ public class AccessLogs {
         SYSTEM("/actuator"),
         ENVIRONMENT("/environment");
 
-
         private String value;
 
         public String getValue(){
@@ -86,12 +85,12 @@ public class AccessLogs {
 
         private String value;
 
-        public String getValue(){
-            return value;
+        ActuatorEndpoint(String value) {
+            this.value = value;
         }
 
-        ActuatorEndpoint(String value){
-            this.value = value;
+        public String getValue() {
+            return value;
         }
     }
 }
