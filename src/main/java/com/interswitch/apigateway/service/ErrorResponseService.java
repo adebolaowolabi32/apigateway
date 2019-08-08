@@ -56,9 +56,11 @@ public class ErrorResponseService {
             } else {
                 eMessage = ((ServerWebInputException) e).getMessage();
                 String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
-                String[] key = (keys[0] != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : null;
-                String field = (key != null) ? " for field " + key[0] + " " : "";
-                message = "Validation failure" + field;
+                String[] key = (keys != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : StringUtils.substringsBetween(eMessage, "\"", "\"");
+                String field = "Bad Input.";
+                if (key != null)
+                    field = (key[0].contains("mismatch")) ? "Data Type mismatch for value " + key[1] : "Unable to validate field " + key[0];
+                message = "Validation failure: " + field;
             }
         }
         if (e instanceof NotFoundException) {
