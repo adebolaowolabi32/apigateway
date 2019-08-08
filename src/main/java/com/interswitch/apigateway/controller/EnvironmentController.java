@@ -48,7 +48,7 @@ public class EnvironmentController {
     }
 
     @DeleteMapping("/{routeId}")
-    private Mono<ResponseEntity<Void>> delete(@PathVariable String routeId) {
+    private Mono<ResponseEntity<Void>> delete(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
                 .flatMap(environment -> repository.deleteById(environment.getId())
                         .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK))))
