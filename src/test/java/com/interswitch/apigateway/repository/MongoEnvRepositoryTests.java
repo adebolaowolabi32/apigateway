@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MongoEnvRepositoryTests extends AbstractMongoRepositoryTests {
 
     @Autowired
-    MongoEnvironmentRepository repository;
+    MongoEnvRepository repository;
 
     @Test
     public void testSave() {

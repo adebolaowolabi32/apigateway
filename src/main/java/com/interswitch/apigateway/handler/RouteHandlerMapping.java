@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.handler;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
+import com.interswitch.apigateway.repository.MongoEnvRepository;
 import com.nimbusds.jwt.JWT;
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
 import org.springframework.cloud.gateway.handler.FilteringWebHandler;
@@ -22,9 +22,9 @@ import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBea
 
 @Component
 public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
-    private MongoEnvironmentRepository repository;
+    private MongoEnvRepository repository;
 
-    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoEnvironmentRepository repository) {
+    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoEnvRepository repository) {
         super(webHandler, routeLocator, globalCorsProperties, environment);
         this.repository = repository;
     }

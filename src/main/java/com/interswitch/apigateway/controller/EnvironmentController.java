@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
+import com.interswitch.apigateway.repository.MongoEnvRepository;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +14,9 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/environment")
 public class EnvironmentController {
 
-    private MongoEnvironmentRepository repository;
+    private MongoEnvRepository repository;
 
-    public EnvironmentController(MongoEnvironmentRepository repository) {
+    public EnvironmentController(MongoEnvRepository repository) {
         this.repository = repository;
     }
 

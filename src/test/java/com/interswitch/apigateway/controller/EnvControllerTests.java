@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
+import com.interswitch.apigateway.repository.MongoEnvRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class EnvControllerTests {
     private WebTestClient webClient;
 
     @MockBean
-    private MongoEnvironmentRepository repository;
+    private MongoEnvRepository repository;
 
     private Env env;
 

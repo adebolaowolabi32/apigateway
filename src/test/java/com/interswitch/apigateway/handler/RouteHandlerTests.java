@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.handler;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvironmentRepository;
+import com.interswitch.apigateway.repository.MongoEnvRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -34,7 +34,7 @@ public class RouteHandlerTests {
     Env env = new Env();
     ServerWebExchange exchange;
     @MockBean
-    private MongoEnvironmentRepository repository;
+    private MongoEnvRepository repository;
 
     private RouteHandlerMapping mapping;
 
