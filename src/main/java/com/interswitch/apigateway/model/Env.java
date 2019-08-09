@@ -11,7 +11,7 @@ import javax.validation.constraints.Pattern;
 
 @Document(collection = "environments")
 @Data
-public class Environment {
+public class Env {
     @Id
     private String id;
 
@@ -27,4 +27,7 @@ public class Environment {
     @Pattern(regexp = "^https?:\\/\\/.+$", message = "UAT Url must be a valid url pattern")
     private String uat;
 
+    public enum environment {
+        UAT, TEST, SANDBOX, DEV
+    }
 }
