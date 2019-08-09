@@ -48,7 +48,7 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Route matched: " + route.getId());
                         }
-                        return Mono.just(Route.async().id(route.getId()).uri(uri).order(0).asyncPredicate(route.getPredicate()).filters(route.getFilters())
+                        return Mono.just(Route.async().id(route.getId()).uri(uri).order(route.getOrder()).asyncPredicate(route.getPredicate()).filters(route.getFilters())
                                 .build());
                     }).switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration not found")));
         });
