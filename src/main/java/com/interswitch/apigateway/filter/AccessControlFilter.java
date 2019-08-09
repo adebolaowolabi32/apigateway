@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.nimbusds.jwt.JWT;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
@@ -16,6 +17,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.interswitch.apigateway.util.FilterUtil.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -26,6 +29,8 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
     private MongoClientRepository repository;
 
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
+    private static List<String> ALLOW_ALL = Stream.of(Env.environment.values()).map(Enum::name).collect(Collectors.toList());
+
 
     public AccessControlFilter(MongoClientRepository repository) {
         this.repository = repository;
@@ -50,7 +55,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         JWT token = decodeBearerToken(headers);
         String environment = (token != null) ? getClaimAsStringFromBearerToken(token, "env") : "";
 
-        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase("TEST") || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PERMIT_ALL.contains(routeId) || ALLOW_ALL.contains(environment.toUpperCase()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
         String clientId = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "";
         List<String> resources = (token != null) ? getClaimAsListFromBearerToken(token, "api_resources") : Collections.emptyList();

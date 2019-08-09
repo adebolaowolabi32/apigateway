@@ -2,7 +2,6 @@ package com.interswitch.apigateway.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -16,7 +15,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-@Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
