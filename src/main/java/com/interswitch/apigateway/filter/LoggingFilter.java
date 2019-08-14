@@ -40,7 +40,7 @@ public class LoggingFilter implements WebFilter, Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-        String client_id = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "No_Client_ID";
+        String client_id = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "No Client ID";
         Trace trace = new Trace();
         if (request.getRemoteAddress() != null) {
             trace.setCallerIp(request.getRemoteAddress().getAddress().getHostAddress());
@@ -65,7 +65,7 @@ public class LoggingFilter implements WebFilter, Ordered {
                     long totalRequestDuration = sample.stop(this.meterRegistry.timer("gateway.request.duration"));
 
                     HttpStatus statusCode = exchange.getResponse().getStatusCode();
-                    var status = (statusCode != null) ? valueOf(statusCode) : "No_Status_Code";
+                    var status = (statusCode != null) ? valueOf(statusCode) : "No Status Code";
                     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
                     String routeId = (route != null) ? route.getId() : "API Gateway";
                     String api = (route != null) ? route.getUri().toString() : "API Gateway";
