@@ -27,7 +27,7 @@ db.routeDefinition.update(
 )
 db.users.update(
    { _id: "systemAdmin" },
-   { _id: "systemAdmin", "username" : "adesegun.adeyemo","role" : "ADMIN","_class" : "com.interswitch.apigateway.model.User" },
+   { _id: "systemAdmin", "username" : "adebola.owolabi","role" : "ADMIN","_class" : "com.interswitch.apigateway.model.User" },
    { upsert: true }
 )
 db.environments.update(
