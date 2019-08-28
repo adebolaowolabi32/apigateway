@@ -24,6 +24,7 @@
         <junit-jupiter.version>5.3.2</junit-jupiter.version>
         <mongo-java-server.version>1.11.1</mongo-java-server.version>
         <fortify-plugin.version>1.0-SNAPSHOT</fortify-plugin.version>
+        <sonar-maven-plugin.version>3.2</sonar-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -163,6 +164,12 @@
                 <artifactId>fortify-plugin</artifactId>
                 <version>${fortify-plugin.version}</version>
             </plugin>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar-maven-plugin.version}</version>
+            </plugin>
+
         </plugins>
     </build>
 
