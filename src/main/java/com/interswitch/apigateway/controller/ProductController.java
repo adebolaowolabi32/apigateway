@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/products")
@@ -37,8 +37,8 @@ public class ProductController {
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Product> save(@Validated @RequestBody Product product) {
         product.setName(product.getName().toLowerCase());
-        product.setResources(new ArrayList<>());
-        product.setClients(new ArrayList<>());
+        product.setResources(new LinkedHashSet<>());
+        product.setClients(new LinkedHashSet<>());
         return mongoProductRepository.save(product);
     }
 
@@ -77,7 +77,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/{productId}/resources", produces = "application/json")
-    private Mono<List<Resource>> getResources(@Validated @PathVariable String productId) {
+    private Mono<Set<Resource>> getResources(@Validated @PathVariable String productId) {
         return mongoProductRepository.findById(productId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
                 .map(product -> product.getResources());
