@@ -13,8 +13,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Document(collection = "products")
 @Data
@@ -45,13 +45,17 @@ public class Product {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
-    private List<Resource> resources = new ArrayList<>();
+    private Set<Resource> resources = new LinkedHashSet<>();
+
+    @EqualsAndHashCode.Exclude
+    private Set<String> audiences = new LinkedHashSet<>();
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     @DBRef(lazy = true)
     @JsonBackReference
-    private List<Client> clients = new ArrayList<>();
+    private Set<Client> clients = new LinkedHashSet<>();
+
 
     public void addResource(Resource resource){
         resources.add(resource);
