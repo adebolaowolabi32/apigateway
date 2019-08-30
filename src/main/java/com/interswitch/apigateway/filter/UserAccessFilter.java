@@ -41,7 +41,7 @@ public class UserAccessFilter implements WebFilter, Ordered {
         HttpMethod method = exchange.getRequest().getMethod();
         String path = exchange.getRequest().getPath().toString();
         return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-            if (!isRouteBasedEndpoint && !openSystemEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(method) && !path.matches(openUserEndpoint)) {
+            if (!isRouteBasedEndpoint && !openSystemEndpoints.contains(path) && !HttpMethod.OPTIONS.equals(method) && !path.matches(openUserEndpoint)) {
                 JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
                 String username = (token != null) ? getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
                 String email = (token != null) ? getClaimAsStringFromBearerToken(token, "email").toLowerCase() : "";
