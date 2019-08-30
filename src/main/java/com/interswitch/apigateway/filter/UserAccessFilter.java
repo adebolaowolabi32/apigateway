@@ -21,7 +21,11 @@ import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBea
 
 public class UserAccessFilter implements WebFilter, Ordered {
 
-    private static List<String> excludedEndpoints = Arrays.asList("/actuator/health", "/actuator/prometheus");
+    private static List<String> openSystemEndpoints = Arrays.asList("/actuator/health", "/actuator/prometheus");
+
+    private static String openUserEndpoint = "/projects.*";
+
+    private static List<String> adminEndpoints = Arrays.asList("/users.*", "/golive/approve.*");
 
     private MongoUserRepository mongoUserRepository;
 
@@ -35,29 +39,33 @@ public class UserAccessFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         HttpMethod method = exchange.getRequest().getMethod();
+        String path = exchange.getRequest().getPath().toString();
         return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-            if (!isRouteBasedEndpoint && !excludedEndpoints.contains(exchange.getRequest().getPath().toString()) && !HttpMethod.OPTIONS.equals(method)) {
+            if (!isRouteBasedEndpoint && !openSystemEndpoints.contains(path) && !HttpMethod.OPTIONS.equals(method) && !path.matches(openUserEndpoint)) {
                 JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
                 String username = (token != null) ? getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
                 String email = (token != null) ? getClaimAsStringFromBearerToken(token, "email").toLowerCase() : "";
-                if (shouldAllowRequest(email)) {
-                    if (HttpMethod.GET.equals(method))
-                        return chain.filter(exchange);
-                    return mongoUserRepository.findByUsername(username)
-                            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrator rights to access this resource")))
-                            .flatMap(user -> {
-                                if (user.getRole().equals(User.Role.ADMIN))
-                                    return chain.filter(exchange);
-                                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrator rights to access this resource"));
-                            });
+                if (isInterswitchEmail(email)) {
+                    for (var adminEndpoint : adminEndpoints) {
+                        if (path.matches(adminEndpoint)) {
+                            return mongoUserRepository.findByUsername(username)
+                                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
+                                    .flatMap(user -> {
+                                        if (user.getRole().equals(User.Role.ADMIN))
+                                            return chain.filter(exchange);
+                                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource"));
+                                    });
+                        }
+                    }
+                    return chain.filter(exchange);
                 }
-                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need to exist as an interswitch domain user before you can access this resource"));
+                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need to exist as an Interswitch domain user before you can access this resource"));
             }
             return chain.filter(exchange);
         });
     }
 
-    private boolean shouldAllowRequest(String email) {
+    private boolean isInterswitchEmail(String email) {
         return email.endsWith("@interswitchgroup.com") ||
                 email.endsWith("@interswitch.com") ||
                 email.endsWith("@interswitchng.com");
