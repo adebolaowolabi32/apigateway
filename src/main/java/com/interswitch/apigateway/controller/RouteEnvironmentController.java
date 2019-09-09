@@ -1,49 +1,57 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvRepository;
+import com.interswitch.apigateway.model.RouteEnvironment;
+import com.interswitch.apigateway.repository.MongoRouteEnvironmentRepository;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/env")
-public class EnvController {
+public class RouteEnvironmentController {
 
-    private MongoEnvRepository repository;
+    private MongoRouteEnvironmentRepository repository;
 
-    public EnvController(MongoEnvRepository repository) {
+    public RouteEnvironmentController(MongoRouteEnvironmentRepository repository) {
         this.repository = repository;
     }
 
     @GetMapping(produces = "application/json")
-    private Flux<Env> getAll() {
+    private Flux<RouteEnvironment> getAll() {
         return repository.findAll();
     }
 
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
-    private Mono<Env> addConfiguration(@Validated @RequestBody Env env) {
-        return repository.save(env);
+    private Mono<RouteEnvironment> addConfiguration(@Validated @RequestBody RouteEnvironment routeEnvironment) {
+        String routeId = routeEnvironment.getRouteId().trim();
+        return repository.existsByRouteId(routeId)
+                .flatMap(exists -> {
+                    if (exists)
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Route Environment configuration already exists");
+                    routeEnvironment.setRouteId(routeId);
+                    return repository.save(routeEnvironment);
+                });
     }
 
     @GetMapping(value = "/{routeId}", produces = "application/json")
-    private Mono<Env> findByRouteId(@Validated @PathVariable String routeId) {
+    private Mono<RouteEnvironment> findByRouteId(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
-    private Mono<Env> updateConfiguration(@Validated @RequestBody Env env) {
-        return repository.findByRouteId(env.getRouteId())
+    private Mono<RouteEnvironment> updateConfiguration(@Validated @RequestBody RouteEnvironment routeEnvironment) {
+        return repository.findByRouteId(routeEnvironment.getRouteId())
                 .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")))
                 .flatMap(existing -> {
-                    env.setId(existing.getId());
-                    return repository.save(env);
+                    routeEnvironment.setId(existing.getId());
+                    return repository.save(routeEnvironment);
                 });
     }
 

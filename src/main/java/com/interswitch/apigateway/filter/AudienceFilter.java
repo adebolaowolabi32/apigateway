@@ -11,7 +11,6 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class AudienceFilter implements WebFilter, Ordered {
         Iterator<String> iterator = excludedEndpoints.iterator();
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
         String exchangePath = exchange.getRequest().getPath().toString();
-        List<String> audience = (token != null) ? getClaimAsListFromBearerToken(token, "aud") : Collections.emptyList();
+        List<String> audience = getClaimAsListFromBearerToken(token, "aud");
         while (iterator.hasNext()) {
             if (exchangePath.contains(iterator.next())) isExcluded = true;
         }

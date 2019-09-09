@@ -2,7 +2,6 @@ package com.interswitch.apigateway.config;
 
 import com.interswitch.apigateway.filter.*;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
-import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
 import com.interswitch.apigateway.util.RouteUtil;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -20,8 +19,8 @@ public class FilterConfig {
     }
 
     @Bean
-    public AccessControlFilter accessControlFilter(MongoClientRepository mongo) {
-        return new AccessControlFilter(mongo);
+    public AccessControlFilter accessControlFilter() {
+        return new AccessControlFilter();
     }
 
     @Bean

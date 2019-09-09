@@ -30,8 +30,8 @@ db.users.update(
    { _id: "systemAdmin", "username" : "adebola.owolabi","role" : "ADMIN","_class" : "com.interswitch.apigateway.model.User" },
    { upsert: true }
 )
-db.environments.update(
+db.routeEnvironments.update(
    { _id: "passport" },
-   { _id : "passport", "routeId" : "passport", "sandbox" : "http://passport-v2-prod.k2.isw.la", "uat" : "http://passport-v2-prod.k2.isw.la", "_class" : "com.interswitch.apigateway.model.Env"},
+   { _id : "passport", "routeId" : "passport", "testURL" : "http://passport-v2-uat.k8.isw.la", "_class" : "com.interswitch.apigateway.model.RouteEnvironment"},
    { upsert: true }
 )

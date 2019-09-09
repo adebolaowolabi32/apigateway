@@ -40,11 +40,13 @@ public class AccessLogs {
     public enum Entity {
         ROUTE("/routes"),
         RESOURCE("/resources"),
-        CLIENT("/clients"),
+        PROJECT("/projects"),
         PRODUCT("/products"),
         USER("/users"),
         SYSTEM("/actuator"),
-        ENVIRONMENT("/env");
+        ROUTE_ENVIRONMENT("/env"),
+        GOLIVE_REQUEST("/golive/request"),
+        GOLIVE_APPROVAL("/golive/approve");
 
         private String value;
 

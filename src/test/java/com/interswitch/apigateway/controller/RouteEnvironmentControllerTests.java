@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvRepository;
+import com.interswitch.apigateway.model.RouteEnvironment;
+import com.interswitch.apigateway.repository.MongoRouteEnvironmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,81 +23,80 @@ import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
 @WebFluxTest(excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = {EnvController.class})
-public class EnvControllerTests {
+@ContextConfiguration(classes = {RouteEnvironmentController.class})
+public class RouteEnvironmentControllerTests {
     @Autowired
     private WebTestClient webClient;
 
     @MockBean
-    private MongoEnvRepository repository;
+    private MongoRouteEnvironmentRepository repository;
 
-    private Env env;
+    private RouteEnvironment routeEnvironment;
 
     @BeforeEach
     public void setup() {
-        env = new Env();
-        env.setId("testRoute");
-        env.setRouteId("testRoute");
-        env.setUat("https://twitter.com");
-        env.setSandbox("https://google.com");
+        routeEnvironment = new RouteEnvironment();
+        routeEnvironment.setId("testRoute");
+        routeEnvironment.setRouteId("testRoute");
+        routeEnvironment.setTestURL("https://twitter.com");
     }
 
     @Test
     public void testFindAll() {
-        when(repository.findAll()).thenReturn(Flux.fromIterable(Collections.singletonList(env)));
+        when(repository.findAll()).thenReturn(Flux.fromIterable(Collections.singletonList(routeEnvironment)));
         this.webClient.get()
                 .uri("/env")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(Env.class);
+                .expectBodyList(RouteEnvironment.class);
     }
 
     @Test
     public void testSave() {
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.empty());
-        when(repository.save(env)).thenReturn(Mono.just(env));
+        when(repository.existsByRouteId(routeEnvironment.getRouteId())).thenReturn(Mono.just(false));
+        when(repository.save(routeEnvironment)).thenReturn(Mono.just(routeEnvironment));
         this.webClient.post()
                 .uri("/env")
-                .body(BodyInserters.fromObject(env))
+                .body(BodyInserters.fromObject(routeEnvironment))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Env.class);
+                .expectBody(RouteEnvironment.class);
     }
 
     @Test
     public void testFindByRouteId() {
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
+        when(repository.findByRouteId(routeEnvironment.getRouteId())).thenReturn(Mono.just(routeEnvironment));
         this.webClient.get()
-                .uri("/env/{routeId}", env.getRouteId())
+                .uri("/env/{routeId}", routeEnvironment.getRouteId())
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Env.class);
+                .expectBody(RouteEnvironment.class);
     }
 
     @Test
     public void testUpdate() {
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
-        when(repository.save(env)).thenReturn(Mono.just(env));
+        when(repository.findByRouteId(routeEnvironment.getRouteId())).thenReturn(Mono.just(routeEnvironment));
+        when(repository.save(routeEnvironment)).thenReturn(Mono.just(routeEnvironment));
         this.webClient.put()
                 .uri("/env")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
-                .body(BodyInserters.fromObject(env))
+                .body(BodyInserters.fromObject(routeEnvironment))
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(Env.class);
+                .expectBodyList(RouteEnvironment.class);
     }
 
     @Test
     public void testDelete() {
-        when(repository.deleteById(env.getId())).thenReturn(Mono.empty());
-        when(repository.findByRouteId(env.getRouteId())).thenReturn(Mono.just(env));
+        when(repository.deleteById(routeEnvironment.getId())).thenReturn(Mono.empty());
+        when(repository.findByRouteId(routeEnvironment.getRouteId())).thenReturn(Mono.just(routeEnvironment));
         this.webClient.delete()
-                .uri("/env/{routeId}", env.getRouteId())
+                .uri("/env/{routeId}", routeEnvironment.getRouteId())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk();

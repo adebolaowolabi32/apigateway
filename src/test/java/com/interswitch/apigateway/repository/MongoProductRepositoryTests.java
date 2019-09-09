@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.repository;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
+import com.interswitch.apigateway.model.Project;
 import com.interswitch.apigateway.model.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -133,40 +135,46 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
     }
 
     @Test
-    public void testAddClient(){
+    public void testAddProject() {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
-        Client client = new Client();
-        client.setId("testClientOne");
-        client.setClientId("testClientOne");
-        savedProduct.addClient(client);
+        Project project = new Project();
+        project.setId("testProjectOne");
+        project.setName("testProjectName");
+        project.setAuthorizedGrantTypes(Collections.emptySet());
+        project.setType(Project.Type.web);
+        project.setDescription("testProjectDescription");
+        savedProduct.addProject(project);
         mongoProductRepository.save(savedProduct).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
-            assertThat(p.getClients()).hasSize(1);
+            assertThat(p.getProjects()).hasSize(1);
         }).expectComplete().verify();
 
     }
     @Test
-    public void testRemoveClient(){
+    public void testRemoveProject() {
         Product product = new Product();
         product.setId("product_id");
         product.setName("product_name");
         product.setDocumentation("/docs");
         Product savedProduct = mongoProductRepository.save(product).block();
-        Client client = new Client();
-        client.setId("testClientOne");
-        client.setClientId("testClientOne");
-        savedProduct.addClient(client);
+        Project project = new Project();
+        project.setId("testProjectOne");
+        project.setName("testProjectName");
+        project.setAuthorizedGrantTypes(Collections.emptySet());
+        project.setType(Project.Type.web);
+        project.setDescription("testProjectDescription");
+        savedProduct.addProject(project);
         Product updatedProduct = mongoProductRepository.save(savedProduct).block();
-        updatedProduct.removeClient(client);
+        updatedProduct.removeProject(project);
         mongoProductRepository.save(updatedProduct).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
-            assertThat(p.getClients()).isEmpty();
+            assertThat(p.getProjects()).isEmpty();
         }).expectComplete().verify();
     }
 }

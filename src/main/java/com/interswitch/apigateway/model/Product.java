@@ -54,8 +54,7 @@ public class Product {
     @ToString.Exclude
     @DBRef(lazy = true)
     @JsonBackReference
-    private Set<Client> clients = new LinkedHashSet<>();
-
+    private Set<Project> projects = new LinkedHashSet<>();
 
     public void addResource(Resource resource){
         resources.add(resource);
@@ -65,12 +64,12 @@ public class Product {
         resources.remove(resource);
     }
 
-    public void addClient(Client client){
-        clients.add(client);
+    public void addProject(Project project) {
+        projects.add(project);
     }
 
-    public void removeClient(Client client){
-        clients.remove(client);
+    public void removeProject(Project project) {
+        projects.remove(project);
     }
 
     private enum Category {

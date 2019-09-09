@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,10 +37,15 @@ public class ProductController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<Product> save(@Validated @RequestBody Product product) {
-        product.setName(product.getName().toLowerCase());
-        product.setResources(new LinkedHashSet<>());
-        product.setClients(new LinkedHashSet<>());
-        return mongoProductRepository.save(product);
+        String name = product.getName().trim().toLowerCase();
+        return mongoProductRepository.existsByName(name)
+                .flatMap(exists -> {
+                    if (exists) throw new ResponseStatusException(HttpStatus.CONFLICT, "Product already exists");
+                    product.setName(name);
+                    product.setResources(new LinkedHashSet<>());
+                    product.setProjects(new LinkedHashSet<>());
+                    return mongoProductRepository.save(product);
+                });
     }
 
     @GetMapping(value = "/{productId}", produces = "application/json")
@@ -54,9 +60,9 @@ public class ProductController {
                 .switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
                 .flatMap(existing -> {
                     product.setId(existing.getId());
-                    product.setClients(existing.getClients());
+                    product.setProjects(existing.getProjects());
                     product.setResources(existing.getResources());
-                    product.setName(product.getName().toLowerCase());
+                    product.setName(product.getName().trim().toLowerCase());
                     return mongoProductRepository.save(product);
                 });
     }
@@ -88,7 +94,7 @@ public class ProductController {
     private Mono<Product> saveResource(@Validated @PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
-                    resource.setName(resource.getName().toLowerCase());
+                    resource.setName(resource.getName().trim().toLowerCase());
                     resource.setProduct(product);
                     return mongoResourceRepository.save(resource).flatMap(r -> {
                         if(!product.getResources().contains(r)){
@@ -119,7 +125,7 @@ public class ProductController {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
                         if (product.getResources().contains(existing)) {
                             resource.setId(existing.getId());
-                            resource.setName(resource.getName().toLowerCase());
+                            resource.setName(resource.getName().trim().toLowerCase());
                             resource.setProduct(product);
                             return mongoResourceRepository.save(resource).flatMap(r -> {
                                 product.removeResource(existing);

@@ -28,7 +28,7 @@ public class UserController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
-        user.setUsername(user.getUsername().toLowerCase());
+        user.setUsername(user.getUsername().trim().toLowerCase());
         user.setRole(User.Role.USER);
         return mongoUserRepository.save(user);
 

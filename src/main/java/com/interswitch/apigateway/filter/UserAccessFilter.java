@@ -43,8 +43,8 @@ public class UserAccessFilter implements WebFilter, Ordered {
         return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
             if (!isRouteBasedEndpoint && !openSystemEndpoints.contains(path) && !HttpMethod.OPTIONS.equals(method) && !path.matches(openUserEndpoint)) {
                 JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = (token != null) ? getClaimAsStringFromBearerToken(token, "user_name").toLowerCase() : "";
-                String email = (token != null) ? getClaimAsStringFromBearerToken(token, "email").toLowerCase() : "";
+                String username = getClaimAsStringFromBearerToken(token, "user_name");
+                String email = getClaimAsStringFromBearerToken(token, "email");
                 if (isInterswitchEmail(email)) {
                     for (var adminEndpoint : adminEndpoints) {
                         if (path.matches(adminEndpoint)) {
