@@ -38,7 +38,6 @@ public class Project {
     @EqualsAndHashCode.Exclude
     private Map<Env, String> clients = new LinkedHashMap<>();
 
-    @NotBlank(message = "Project owner is required")
     private String owner = "";
 
     @EqualsAndHashCode.Exclude
