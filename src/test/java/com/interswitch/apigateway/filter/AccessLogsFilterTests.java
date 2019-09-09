@@ -106,12 +106,12 @@ public class AccessLogsFilterTests {
     @Test
     public void allInternalPostRequestsShouldBeAudited() {
         request = MockServerHttpRequest
-                .post("/clients")
+                .post("/projects")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/clients", Action.CREATE, Entity.CLIENT, "");
+        filterExchangeThenAssertAuditLogs("/projects", Action.CREATE, Entity.PROJECT, "");
     }
 
     @Test

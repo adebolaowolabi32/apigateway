@@ -1,7 +1,5 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Client;
-import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.interswitch.apigateway.util.FilterUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -32,11 +30,8 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 @DataRedisTest
 @ActiveProfiles("dev")
 @EnableAutoConfiguration
-@ContextConfiguration(classes = {MongoClientRepository.class, Client.class, AccessControlFilter.class, FilterUtil.class})
+@ContextConfiguration(classes = {AccessControlFilter.class, FilterUtil.class})
 public class AccessControlFilterTests {
-
-    @MockBean
-    private MongoClientRepository mongoClientRepository;
 
     @Autowired
     private AccessControlFilter filter;
@@ -46,17 +41,12 @@ public class AccessControlFilterTests {
 
     private ServerWebExchange exchange;
 
-    private Client client = new Client();
-
-    private String clientId = "clientId";
-
     public void setup(String env, String routeId, List<String> resources) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .notBeforeTime(new Date())
                 .audience("isw-core")
                 .claim("env", env)
-                .claim("client_id", clientId)
                 .claim("api_resources", resources)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -100,19 +90,8 @@ public class AccessControlFilterTests {
     }
 
     @Test
-    public void liveRequestsWithNonExistentClientShouldFail() throws JOSEException {
-        this.setup("LIVE","id", Collections.emptyList());
-        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.empty());
-        when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
-    }
-
-    @Test
     public void liveRequestsWithoutResourcePermissionsShouldFail() throws JOSEException {
         this.setup("LIVE","id", Collections.emptyList());
-        client.setId(clientId);
-        client.setClientId(clientId);
-        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
@@ -120,18 +99,12 @@ public class AccessControlFilterTests {
     @Test
     public void liveRequestsWithWrongPatternMatchingShouldFail() throws JOSEException {
         this.setup("LIVE", "id", Collections.singletonList("GET/*?/(path}[]&^$|"));
-        client.setId(clientId);
-        client.setClientId(clientId);
-        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
     @Test
-    public void liveRequestsWithProperClientAndResourcePermissionsShouldPass() throws JOSEException {
+    public void liveRequestsWithProperResourcePermissionsShouldPass() throws JOSEException {
         this.setup("LIVE", "id", Collections.singletonList("GET/pat?/*"));
-        client.setId(clientId);
-        client.setClientId(clientId);
-        when(mongoClientRepository.findByClientId(clientId)).thenReturn(Mono.just(client));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }

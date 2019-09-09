@@ -40,7 +40,7 @@ public class LoggingFilter implements WebFilter, Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-        String client_id = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "No Client ID";
+        String client_id = getClaimAsStringFromBearerToken(token, "client_id");
         Trace trace = new Trace();
         if (request.getRemoteAddress() != null) {
             trace.setCallerIp(request.getRemoteAddress().getAddress().getHostAddress());

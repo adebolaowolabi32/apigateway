@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Product;
+import com.interswitch.apigateway.model.Project;
 import com.interswitch.apigateway.model.Resource;
 import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoResourceRepository;
@@ -41,15 +41,18 @@ public class ProductControllerTests {
 
     private Product product = new Product();
 
-    private Client client;
+    private Project project;
 
     private Resource resource;
 
     @BeforeEach
     public void setup() {
-        client = new Client();
-        client.setId("test_client_id");
-        client.setClientId("test_client_id");
+        project = new Project();
+        project.setId("testProjectOne");
+        project.setName("testProjectName");
+        project.setAuthorizedGrantTypes(Collections.emptySet());
+        project.setType(Project.Type.web);
+        project.setDescription("testProjectDescription");
         resource = new Resource();
         resource.setId("test_resource_id");
         resource.setName("resource_name");
@@ -60,7 +63,7 @@ public class ProductControllerTests {
         product.setName("product_name");
         product.setDocumentation("http://interswitch/docs");
         product.addResource(resource);
-        product.addClient(client);
+        product.addProject(project);
     }
 
     @Test
@@ -77,6 +80,7 @@ public class ProductControllerTests {
 
     @Test
     public void testSave(){
+        when(this.mongoProductRepository.existsByName(product.getName())).thenReturn(Mono.just(false));
         when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
         this.webClient.post()
                 .uri("/products")

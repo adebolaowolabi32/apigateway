@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoClientRepository;
 import com.nimbusds.jwt.JWT;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -17,8 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.interswitch.apigateway.util.FilterUtil.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
@@ -26,14 +23,9 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 
 public class AccessControlFilter implements GlobalFilter, Ordered  {
 
-    private MongoClientRepository repository;
-
     private static List<String> PERMIT_ALL = Collections.singletonList("passport");
-    private static List<String> ALLOW_ALL = Stream.of(Env.environment.values()).map(Enum::name).collect(Collectors.toList());
 
-
-    public AccessControlFilter(MongoClientRepository repository) {
-        this.repository = repository;
+    public AccessControlFilter() {
     }
 
     private static String wildcardToRegex(String wildcard) {
@@ -53,27 +45,22 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String routeId = (route != null) ? route.getId() : "";
         JWT token = decodeBearerToken(headers);
-        String environment = (token != null) ? getClaimAsStringFromBearerToken(token, "env") : "";
+        String environment = getClaimAsStringFromBearerToken(token, "env");
 
-        if (PERMIT_ALL.contains(routeId) || ALLOW_ALL.contains(environment.toUpperCase()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
-        String clientId = (token != null) ? getClaimAsStringFromBearerToken(token, "client_id") : "";
-        List<String> resources = (token != null) ? getClaimAsListFromBearerToken(token, "api_resources") : Collections.emptyList();
+        List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
 
-        return repository.findByClientId(clientId)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Client not found")))
-                .flatMap(clients -> {
-                    for(var r : resources) {
-                        r = r.replaceAll(" ", "");
-                        int indexOfFirstSlash = r.indexOf('/');
-                        String method = r.substring(0, indexOfFirstSlash);
-                        String path = r.substring(indexOfFirstSlash);
-                        if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
-                            if (exchange.getRequest().getMethodValue().equals(method))
-                                return chain.filter(exchange);
-                    }
-                    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
-                });
+        for (var r : resources) {
+            r = r.replaceAll(" ", "");
+            int indexOfFirstSlash = r.indexOf('/');
+            String method = r.substring(0, indexOfFirstSlash);
+            String path = r.substring(indexOfFirstSlash);
+            if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
+                if (exchange.getRequest().getMethodValue().equals(method))
+                    return chain.filter(exchange);
+        }
+        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
     }
 
     @Override

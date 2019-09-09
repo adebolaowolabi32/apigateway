@@ -1,7 +1,7 @@
 package com.interswitch.apigateway.handler;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.repository.MongoEnvRepository;
+import com.interswitch.apigateway.repository.MongoRouteEnvironmentRepository;
 import com.nimbusds.jwt.JWT;
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
 import org.springframework.cloud.gateway.handler.FilteringWebHandler;
@@ -10,7 +10,6 @@ import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -22,33 +21,33 @@ import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBea
 
 @Component
 public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
-    private MongoEnvRepository repository;
+    private MongoRouteEnvironmentRepository repository;
 
-    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoEnvRepository repository) {
+    public RouteHandlerMapping(FilteringWebHandler webHandler, RouteLocator routeLocator, GlobalCorsProperties globalCorsProperties, Environment environment, MongoRouteEnvironmentRepository repository) {
         super(webHandler, routeLocator, globalCorsProperties, environment);
         this.repository = repository;
     }
 
     @Override
     public Mono<Route> lookupRoute(ServerWebExchange exchange) {
-        HttpHeaders headers = exchange.getRequest().getHeaders();
-        JWT token = decodeBearerToken(headers);
-        String environment = (token != null) ? getClaimAsStringFromBearerToken(token, "env") : "";
         Mono<Route> lookupRoute = super.lookupRoute(exchange);
         return lookupRoute.flatMap(route -> {
             return repository.findByRouteId(route.getId())
                     .flatMap(config -> {
-                        URI uri = route.getUri();
-                        if (environment.equalsIgnoreCase(Env.environment.TEST.toString()) || environment.equalsIgnoreCase(Env.environment.SANDBOX.toString())) {
-                            uri = (config.getSandbox() != null) ? URI.create(config.getSandbox()) : route.getUri();
+                        String environment = "";
+                        if (route.getId().equals("passport") && exchange.getRequest().getQueryParams().getFirst("env") != null) {
+                            environment = exchange.getRequest().getQueryParams().getFirst("env");
+                        } else {
+                            JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+                            environment = getClaimAsStringFromBearerToken(token, "env");
                         }
-                        if (environment.equalsIgnoreCase(Env.environment.UAT.toString()) || environment.equalsIgnoreCase(Env.environment.DEV.toString())) {
-                            uri = (config.getUat() != null) ? URI.create(config.getUat()) : route.getUri();
+                        URI uri = route.getUri();
+                        if (environment.equalsIgnoreCase(Env.TEST.toString())) {
+                            uri = (config.getTestURL() != null) ? URI.create(config.getTestURL()) : route.getUri();
                         }
                         return Mono.just(Route.async().id(route.getId()).uri(uri).order(route.getOrder()).asyncPredicate(route.getPredicate()).filters(route.getFilters())
                                 .build());
                     }).switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration not found")));
         });
-
     }
 }

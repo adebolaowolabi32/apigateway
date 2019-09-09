@@ -33,7 +33,7 @@ public class RouteUtilTests {
 
     @Test
     public void testIsInternalEndpoint(){
-        assertThat(routeUtil.isInternalEndpoint(this.setup("/clients")).block()).isEqualTo(true);
+        assertThat(routeUtil.isInternalEndpoint(this.setup("/projects")).block()).isEqualTo(true);
         assertThat(routeUtil.isInternalEndpoint(this.setup("/actuator/gateway/routes")).block()).isEqualTo(false);
     }
 

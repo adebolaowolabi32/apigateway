@@ -37,8 +37,9 @@ public class FilterUtilTests {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
-                .claim("anyStringClaim", anyStringClaim)
-                .claim("anyListClaim", anyListClaim)
+                .claim("any_string_claim", anyStringClaim)
+                .claim("client_id", anyStringClaim)
+                .claim("any_list_claim", anyListClaim)
                 .audience(audience)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -49,27 +50,32 @@ public class FilterUtilTests {
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = jws.serialize();
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        token = filterUtil.decodeBearerToken(headers);
+        token = FilterUtil.decodeBearerToken(headers);
     }
 
     @Test
     public void testDecodeBearerToken() {
-        assertThat(filterUtil.decodeBearerToken(headers).serialize()).isEqualTo(accessToken);
+        assertThat(FilterUtil.decodeBearerToken(headers).serialize()).isEqualTo(accessToken);
     }
 
     @Test
     public void testGetAudienceFromBearerToken() {
-        assertThat(filterUtil.getClaimAsListFromBearerToken(token, "aud")).isEqualTo(audience);
+        assertThat(FilterUtil.getClaimAsListFromBearerToken(token, "aud")).isEqualTo(audience);
+    }
+
+    @Test
+    public void getClientIdClaimAsStringFromBearerToken() {
+        assertThat(FilterUtil.getClaimAsStringFromBearerToken(token, "client_id")).isEqualTo(anyStringClaim);
     }
 
     @Test
     public void getClaimAsStringFromBearerToken() {
-        assertThat(filterUtil.getClaimAsStringFromBearerToken(token, "anyStringClaim")).isEqualTo(anyStringClaim);
+        assertThat(FilterUtil.getClaimAsStringFromBearerToken(token, "any_string_claim")).isEqualTo(anyStringClaim.toLowerCase());
 
     }
 
     @Test
     public void getClaimAsListFromBearerToken() {
-        assertThat(filterUtil.getClaimAsListFromBearerToken(token, "anyListClaim")).isEqualTo(anyListClaim);
+        assertThat(FilterUtil.getClaimAsListFromBearerToken(token, "any_list_claim")).isEqualTo(anyListClaim);
     }
 }
