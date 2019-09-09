@@ -74,6 +74,10 @@ public class PassportService {
                 .uri(clientEndpoint + clientId + addEnvQueryParam(env))
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .retrieve()
+                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
                 .onStatus(HttpStatus::isError, clientResponse ->
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
                 .bodyToMono(PassportClient.class);
@@ -86,6 +90,10 @@ public class PassportService {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .body(BodyInserters.fromObject(client))
                 .retrieve()
+                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
+                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
                 .onStatus(HttpStatus::isError, clientResponse ->
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
                 .bodyToMono(PassportClient.class);
@@ -98,6 +106,10 @@ public class PassportService {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .body(BodyInserters.fromObject(client))
                 .retrieve()
+                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
+                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
                 .onStatus(HttpStatus::isError, clientResponse ->
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
                 .bodyToMono(Void.class);
@@ -112,6 +124,10 @@ public class PassportService {
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
+                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve access token from Passport service")))
+                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve access token from Passport service")))
                 .onStatus(HttpStatus::isError, clientResponse ->
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve access token from Passport service")))
                 .bodyToMono(Object.class);

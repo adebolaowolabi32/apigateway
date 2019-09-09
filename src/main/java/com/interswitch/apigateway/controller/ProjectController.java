@@ -72,8 +72,8 @@ public class ProjectController {
                     return passportService.createPassportClient(passportClient, accessToken, Env.TEST)
                             .flatMap(createdClient -> {
                                 project.setClientId(createdClient.getClientId(), Env.TEST);
-                                return Mono.empty();
-                            }).then(mongoProjectRepository.save(project));
+                                return mongoProjectRepository.save(project);
+                            });
                 });
     }
 
