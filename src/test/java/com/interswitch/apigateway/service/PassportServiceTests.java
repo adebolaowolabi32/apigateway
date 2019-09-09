@@ -61,12 +61,10 @@ public class PassportServiceTests {
         project.setLogoUrl("https://logourl");
 
 
-        //for(Env env: Env.values()){
         passportClient = buildPassportClientForEnvironment(project, Env.TEST);
         getAccessToken(Env.TEST);
         runTestToCreatePassportClient(Env.TEST);
         runTestToUpdatePassportClient(Env.TEST);
-        //}
 
     }
 
