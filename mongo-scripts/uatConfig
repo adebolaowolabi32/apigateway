@@ -18,7 +18,7 @@ db.routeDefinition.update(
         "port" : -1,
         "path" : "",
         "hash" : 0,
-        "string" : http://passport-v2-uat.k8.isw.la"
+        "string" : "http://passport-v2-uat.k8.isw.la"
     },
     "order" : 0,
     "_class" : "org.springframework.cloud.gateway.route.RouteDefinition"
