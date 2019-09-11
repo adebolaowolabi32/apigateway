@@ -7,7 +7,6 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
@@ -47,16 +46,7 @@ public class Project {
 
     @EqualsAndHashCode.Exclude
     @JsonIgnore
-    @DBRef(lazy = true)
-    private Set<Product> products = new LinkedHashSet<>();
-
-    public void addProduct(Product product) {
-        this.products.add(product);
-    }
-
-    public void removeProduct(Product product) {
-        this.products.remove(product);
-    }
+    private Set<String> resources = new LinkedHashSet<>();
 
     public String getClientId(Env env) {
         String clientId = this.clients.get(env);

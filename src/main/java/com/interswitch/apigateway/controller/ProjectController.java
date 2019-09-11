@@ -17,8 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.Map;
 
 import static com.interswitch.apigateway.service.PassportService.buildPassportClientForEnvironment;
 import static com.interswitch.apigateway.util.FilterUtil.*;
@@ -66,7 +65,6 @@ public class ProjectController {
                     String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
                     project.setName(name);
                     project.setOwner(username);
-                    project.setProducts(new LinkedHashSet<>());
                     project.setClients(new LinkedHashMap<>());
                     PassportClient passportClient = buildPassportClientForEnvironment(project, Env.TEST);
                     return passportService.createPassportClient(passportClient, accessToken, Env.TEST)
@@ -89,7 +87,6 @@ public class ProjectController {
                         project.setId(existing.getId());
                         project.setName(project.getName().trim().toLowerCase());
                         project.setOwner(existing.getOwner());
-                        project.setProducts(existing.getProducts());
                         project.setClients(existing.getClients());
                         String testClientId = project.getClientId(Env.TEST);
                         String liveClientId = project.getClientId(Env.LIVE);
@@ -142,21 +139,21 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/{projectId}/products", produces = "application/json")
-    private Mono<Set<Object>> GetRequestedProducts(@Validated @PathVariable String projectId) {
+    private Mono<Map<String, Object>> GetRequestedProducts(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getProducts());
     }
 
     @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
-    private Mono<Set<Object>> GetApprovedProducts(@Validated @PathVariable String projectId) {
+    private Mono<Map<String, Object>> GetApprovedProducts(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getProducts());
     }
 
     @GetMapping(value = "/{projectId}/products/available", produces = "application/json")
-    private Mono<Set<Object>> GetAvailableProducts(@Validated @PathVariable String projectId) {
+    private Mono<Map<String, Object>> GetAvailableProducts(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getProducts());
