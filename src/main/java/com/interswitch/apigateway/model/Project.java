@@ -1,10 +1,13 @@
 package com.interswitch.apigateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
@@ -14,6 +17,7 @@ import java.util.*;
 
 @Data
 @Document(collection = "projects")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Project {
     @Id
     private String id;
@@ -36,12 +40,15 @@ public class Project {
     private String logoUrl = "";
 
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private Map<Env, String> clients = new LinkedHashMap<>();
 
     private String owner = "";
 
     @EqualsAndHashCode.Exclude
-    private Set<Object> products = new LinkedHashSet<>();
+    @JsonIgnore
+    @DBRef(lazy = true)
+    private Set<Product> products = new LinkedHashSet<>();
 
     public void addProduct(Product product) {
         this.products.add(product);
