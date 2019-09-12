@@ -1,11 +1,9 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Client;
-import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.model.PassportClient;
-import com.interswitch.apigateway.model.Project;
+import com.interswitch.apigateway.model.*;
 import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoProjectRepository;
+import com.interswitch.apigateway.repository.MongoResourceRepository;
 import com.interswitch.apigateway.service.PassportService;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.http.HttpHeaders;
@@ -16,8 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.interswitch.apigateway.service.PassportService.buildPassportClientForEnvironment;
 import static com.interswitch.apigateway.util.FilterUtil.*;
@@ -27,12 +24,15 @@ import static com.interswitch.apigateway.util.FilterUtil.*;
 public class ProjectController {
     private MongoProjectRepository mongoProjectRepository;
     private MongoProductRepository mongoProductRepository;
+    private MongoResourceRepository mongoResourceRepository;
+
 
     private PassportService passportService;
 
-    public ProjectController(MongoProjectRepository mongoProjectRepository, MongoProductRepository mongoProductRepository, PassportService passportService) {
+    public ProjectController(MongoProjectRepository mongoProjectRepository, MongoProductRepository mongoProductRepository, MongoResourceRepository mongoResourceRepository, PassportService passportService) {
         this.mongoProjectRepository = mongoProjectRepository;
         this.mongoProductRepository = mongoProductRepository;
+        this.mongoResourceRepository = mongoResourceRepository;
         this.passportService = passportService;
     }
 
@@ -138,44 +138,58 @@ public class ProjectController {
                 });
     }
 
-    @GetMapping(value = "/{projectId}/products", produces = "application/json")
-    private Mono<Map<String, Object>> GetRequestedProducts(@Validated @PathVariable String projectId) {
+    @GetMapping(value = "/{projectId}/requested", produces = "application/json")
+    private Mono<List<Map<String, Object>>> GetRequestedResources(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .map(project -> project.getProducts());
+                .map(project -> {
+                    List<Map<String, Object>> requested = new ArrayList<>();
+                    Map<String, Object> requestedProduct = new LinkedHashMap<>();
+                    Map<String, String> requestedResource = new LinkedHashMap<>();
+                    Set<String> resources = project.getResources();
+                    for (var r : resources) {
+                        mongoResourceRepository.findById(r).flatMap(resource -> {
+                            Product product = resource.getProduct();
+                            requestedResource.put("id", resource.getId());
+                            requestedResource.put("name", resource.getName());
+                            requestedProduct.put("name", product.getName());
+                            requestedProduct.put("description", product.getDescription());
+                            requestedProduct.put("resources", requestedResource);
+                            requested.add(requestedProduct);
+                            return
+                        });
+                        requested.put();
+                    }
+                });
     }
 
-    @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
-    private Mono<Map<String, Object>> GetApprovedProducts(@Validated @PathVariable String projectId) {
-        return mongoProjectRepository.findById(projectId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .map(project -> project.getProducts());
-    }
-
-    @GetMapping(value = "/{projectId}/products/available", produces = "application/json")
-    private Mono<Map<String, Object>> GetAvailableProducts(@Validated @PathVariable String projectId) {
-        return mongoProjectRepository.findById(projectId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .map(project -> project.getProducts());
-    }
-
-   /* @PostMapping(value = "/{projectId}/products", produces = "application/json", consumes = "application/json")
-    private Mono<Project> SaveRequestedProducts(@Validated @PathVariable String projectId) {
+    @PostMapping(value = "/{projectId}/requested", produces = "application/json", consumes = "application/json")
+    private Mono<Project> SaveRequestedResources(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId).flatMap(project ->
                 mongoProductRepository.findAll().flatMap(product -> {
                     if (!product.getProjects().contains(project)) {
                         product.addProject(project);
                     }
                     return mongoProductRepository.save(product).flatMap(p -> {
-                        if (!project.getProducts().contains(product)) {
-                            project.addProduct(product);
-                            return mongoProjectRepository.save(project);
-                        }
-                        return Mono.error(new DuplicateKeyException("Product is already assigned to project"));
+                        return mongoProjectRepository.save(project);
                     });
                 }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
         ).switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")));
-    }*/
+    }
+
+    @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
+    private Mono<Map<String, Object>> GetApprovedResources(@Validated @PathVariable String projectId) {
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .map(project -> project.getResources());
+    }
+
+    @GetMapping(value = "/{projectId}/products/available", produces = "application/json")
+    private Mono<Map<String, Object>> GetAvailableResources(@Validated @PathVariable String projectId) {
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .map(project -> project.getResources());
+    }
 
    /*@DeleteMapping("/{projectId}")
     private Mono<ResponseEntity<Void>> delete(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
