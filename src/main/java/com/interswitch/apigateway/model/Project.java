@@ -1,12 +1,12 @@
 package com.interswitch.apigateway.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
@@ -39,14 +39,19 @@ public class Project {
     private String logoUrl = "";
 
     @EqualsAndHashCode.Exclude
-    @JsonIgnore
+    //@JsonIgnore
     private Map<Env, String> clients = new LinkedHashMap<>();
 
     private String owner = "";
 
     @EqualsAndHashCode.Exclude
-    @JsonIgnore
-    private Set<String> resources = new LinkedHashSet<>();
+    @DBRef(lazy = true)
+    //@JsonIgnore
+    private Set<Resource> resources = new LinkedHashSet<>();
+
+    public void addResource(Resource resource) {
+        this.resources.add(resource);
+    }
 
     public String getClientId(Env env) {
         String clientId = this.clients.get(env);

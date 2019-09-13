@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.interswitch.apigateway.service.PassportService.buildPassportClientForEnvironment;
 import static com.interswitch.apigateway.util.FilterUtil.*;
@@ -140,44 +141,67 @@ public class ProjectController {
 
     @GetMapping(value = "/{projectId}/requested", produces = "application/json")
     private Mono<List<Map<String, Object>>> GetRequestedResources(@Validated @PathVariable String projectId) {
+        List<Map<String, Object>> requested = new ArrayList<>();
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .map(project -> {
-                    List<Map<String, Object>> requested = new ArrayList<>();
-                    Map<String, Object> requestedProduct = new LinkedHashMap<>();
-                    Map<String, String> requestedResource = new LinkedHashMap<>();
-                    Set<String> resources = project.getResources();
-                    for (var r : resources) {
-                        mongoResourceRepository.findById(r).flatMap(resource -> {
+                .flatMap(project -> {
+                    Set<Resource> resources = project.getResources();
+                    return Flux.fromIterable(resources).flatMap(resource -> {
+                        Map<String, Object> requestedProduct = new LinkedHashMap<>();
+                        Map<String, String> requestedResource = new LinkedHashMap<>();
                             Product product = resource.getProduct();
                             requestedResource.put("id", resource.getId());
                             requestedResource.put("name", resource.getName());
-                            requestedProduct.put("name", product.getName());
-                            requestedProduct.put("description", product.getDescription());
-                            requestedProduct.put("resources", requestedResource);
+                        requestedProduct.put("productName", product.getName());
+                        requestedProduct.put("productDescription", product.getDescription());
+                        AtomicBoolean exists = new AtomicBoolean(false);
+                        for (var request : requested) {
+                            if (request.get("productName").toString().equalsIgnoreCase(product.getName())) {
+                                Set<Map<String, String>> list = (LinkedHashSet) request.get("resources");
+                                list.add(requestedResource);
+                                request.replace("resources", list);
+                                exists.set(true);
+                                break;
+                            }
+                        }
+
+                        if (!exists.get()) {
+                            Set<Map<String, String>> list = new LinkedHashSet<>();
+                            list.add(requestedResource);
+                            requestedProduct.put("resources", list);
                             requested.add(requestedProduct);
-                            return
-                        });
-                        requested.put();
-                    }
-                });
+                        }
+
+                        return Mono.empty();
+                    }).then();
+                }).then(Mono.just(requested));
     }
 
     @PostMapping(value = "/{projectId}/requested", produces = "application/json", consumes = "application/json")
-    private Mono<Project> SaveRequestedResources(@Validated @PathVariable String projectId) {
-        return mongoProjectRepository.findById(projectId).flatMap(project ->
-                mongoProductRepository.findAll().flatMap(product -> {
-                    if (!product.getProjects().contains(project)) {
-                        product.addProject(project);
+    private Mono<Project> SaveRequestedResources(@Validated @PathVariable String projectId, @Validated @RequestBody Map<String, Object> requestedResources) {
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .flatMap(project -> {
+                    try {
+                        Set<String> resources = new LinkedHashSet<String>((ArrayList) (requestedResources.get("resources")));
+                        if (!resources.isEmpty()) {
+                            project.setResources(new LinkedHashSet<>());
+                            return Flux.fromIterable(resources).flatMap(r -> {
+                                return mongoResourceRepository.findById(r).flatMap(resource -> {
+                                    project.addResource(resource);
+                                    return Mono.empty();
+                                });
+                            }).then(mongoProjectRepository.save(project));
+                        }
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty");
+                    } catch (Exception e) {
+                        Mono.error(e).log();
                     }
-                    return mongoProductRepository.save(product).flatMap(p -> {
-                        return mongoProjectRepository.save(project);
-                    });
-                }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")))
-        ).switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")));
+                    return Mono.empty();
+                });
     }
 
-    @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
+   /* @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
     private Mono<Map<String, Object>> GetApprovedResources(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
@@ -190,7 +214,7 @@ public class ProjectController {
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getResources());
     }
-
+*/
    /*@DeleteMapping("/{projectId}")
     private Mono<ResponseEntity<Void>> delete(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
         String accessToken = getBearerToken(headers);
