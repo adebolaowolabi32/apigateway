@@ -34,9 +34,9 @@ public class PassportServiceTests {
 
     private void getAccessToken(Env env) {
         MultiValueMap formData = new LinkedMultiValueMap();
-        String client_id = "IKIAD9AFCEE45EBADD5EAA0D7FA2AA129B13B3F38DD1";
+        String client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
         String clientSecret = "secret";
-        formData.setAll(Map.of("username", "api.gateway@interswitch.com", "password", "password", "grant_type", "password", "scope", "profile"));
+        formData.setAll(Map.of("username", "api.gateway@interswitch.com", "password", "password", "grant_type", "password", "scope", "profile+clients"));
         Client client = new Client();
         client.setClientId(client_id);
         client.setClientSecret(clientSecret);
