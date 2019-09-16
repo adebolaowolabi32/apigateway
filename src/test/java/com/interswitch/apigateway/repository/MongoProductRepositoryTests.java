@@ -28,7 +28,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(product.getName()).isEqualTo(savedProduct.getName());
@@ -41,11 +41,11 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product p1 = new Product();
         p1.setId("test_product_one");
         p1.setName("test_product_one");
-        p1.setDocumentation("/docs");
+        p1.setDocumentation("http://docs");
         Product p2 = new Product();
         p2.setId("test_product_two");
         p2.setName("test_product_two");
-        p2.setDocumentation("/docs");
+        p2.setDocumentation("http://docs");
         mongoProductRepository.save(p1).block();
         mongoProductRepository.save(p2).block();
         StepVerifier.create(mongoProductRepository.findAll()).expectNextCount(2);
@@ -60,7 +60,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         product.addResource(resource);
         Product savedProduct = mongoProductRepository.save(product).block();
         savedProduct.setName("test_product");
@@ -76,7 +76,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         mongoProductRepository.deleteById(savedProduct.getId()).block();
         StepVerifier.create(mongoProductRepository.findById(savedProduct.getId())).expectComplete().verify();
@@ -87,7 +87,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
         resource.setId("test_resource_id");
@@ -113,7 +113,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Resource resource = new Resource();
         resource.setId("test_resource_id");
@@ -139,7 +139,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("test_product_id");
         product.setName("test_product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Project project = new Project();
         project.setId("testProjectOne");
@@ -160,7 +160,7 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Product product = new Product();
         product.setId("product_id");
         product.setName("product_name");
-        product.setDocumentation("/docs");
+        product.setDocumentation("http://docs");
         Product savedProduct = mongoProductRepository.save(product).block();
         Project project = new Project();
         project.setId("testProjectOne");

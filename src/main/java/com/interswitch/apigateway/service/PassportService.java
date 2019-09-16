@@ -36,7 +36,9 @@ public class PassportService {
 
     public static PassportClient buildPassportClientForEnvironment(Project project, Env env) {
         PassportClient passportClient = buildPassportClient(project);
-        passportClient.setResourceIds(Set.of("api-gateway", "passport"));
+        Set<String> audiences = project.getAudiences();
+        audiences.addAll(Set.of("api-gateway", "passport"));
+        passportClient.setResourceIds(audiences);
         passportClient.setAdditionalInformation(Map.of("env", env));
         return passportClient;
     }

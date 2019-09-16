@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.*;
-import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoProjectRepository;
 import com.interswitch.apigateway.repository.MongoResourceRepository;
 import com.interswitch.apigateway.service.PassportService;
@@ -24,15 +23,13 @@ import static com.interswitch.apigateway.util.FilterUtil.*;
 @RequestMapping("/projects")
 public class ProjectController {
     private MongoProjectRepository mongoProjectRepository;
-    private MongoProductRepository mongoProductRepository;
     private MongoResourceRepository mongoResourceRepository;
 
 
     private PassportService passportService;
 
-    public ProjectController(MongoProjectRepository mongoProjectRepository, MongoProductRepository mongoProductRepository, MongoResourceRepository mongoResourceRepository, PassportService passportService) {
+    public ProjectController(MongoProjectRepository mongoProjectRepository, MongoResourceRepository mongoResourceRepository, PassportService passportService) {
         this.mongoProjectRepository = mongoProjectRepository;
-        this.mongoProductRepository = mongoProductRepository;
         this.mongoResourceRepository = mongoResourceRepository;
         this.passportService = passportService;
     }
@@ -50,7 +47,7 @@ public class ProjectController {
                 .flatMap(project -> {
                     if (username.equals(project.getOwner()))
                         return Mono.just(project);
-                    throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view this project because you are not its owner");
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view this project because you are not its owner"));
                 })
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")));
     }
@@ -61,7 +58,8 @@ public class ProjectController {
         String name = project.getName().trim().toLowerCase();
         return mongoProjectRepository.existsByName(name)
                 .flatMap(exists -> {
-                    if (exists) throw new ResponseStatusException(HttpStatus.CONFLICT, "Project already exists");
+                    if (exists)
+                        return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Project already exists"));
                     String accessToken = getBearerToken(headers);
                     String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
                     project.setName(name);
@@ -108,7 +106,7 @@ public class ProjectController {
                         }
                         return Mono.empty();
                     } else {
-                        throw new ResponseStatusException(HttpStatus.NOT_MODIFIED, "You can not modify this project because you are not its owner");
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_MODIFIED, "You can not modify this project because you are not its owner"));
                     }
                 });
     }
@@ -135,87 +133,167 @@ public class ProjectController {
                         }
                         return Mono.just(client);
                     }
-                    throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view credentials for this project because you are not its owner");
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view credentials for this project because you are not its owner"));
                 });
     }
 
     @GetMapping(value = "/{projectId}/requested", produces = "application/json")
-    private Mono<List<Map<String, Object>>> GetRequestedResources(@Validated @PathVariable String projectId) {
-        List<Map<String, Object>> requested = new ArrayList<>();
+    private Mono<List<Project.Product>> GetRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
+        String accessToken = getBearerToken(headers);
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        List<Project.Product> requested = new ArrayList<>();
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMap(project -> {
-                    Set<Resource> resources = project.getResources();
-                    return Flux.fromIterable(resources).flatMap(resource -> {
-                        Map<String, Object> requestedProduct = new LinkedHashMap<>();
-                        Map<String, String> requestedResource = new LinkedHashMap<>();
+                    if (username.equals(project.getOwner())) {
+                        Set<Resource> resources = project.getResources();
+                        return Flux.fromIterable(resources).flatMap(resource -> {
                             Product product = resource.getProduct();
-                            requestedResource.put("id", resource.getId());
-                            requestedResource.put("name", resource.getName());
-                        requestedProduct.put("productName", product.getName());
-                        requestedProduct.put("productDescription", product.getDescription());
-                        AtomicBoolean exists = new AtomicBoolean(false);
-                        for (var request : requested) {
-                            if (request.get("productName").toString().equalsIgnoreCase(product.getName())) {
-                                Set<Map<String, String>> list = (LinkedHashSet) request.get("resources");
-                                list.add(requestedResource);
-                                request.replace("resources", list);
-                                exists.set(true);
-                                break;
+                            Project.Product requestedProduct = new Project.Product();
+                            Project.Resource requestedResource = new Project.Resource();
+                            requestedResource.setId(resource.getId());
+                            requestedResource.setName(resource.getName());
+                            requestedProduct.setName(product.getName());
+                            requestedProduct.setDescription(product.getDescription());
+                            AtomicBoolean exists = new AtomicBoolean(false);
+                            for (var request : requested) {
+                                if (request.getName().equalsIgnoreCase(product.getName())) {
+                                    Set<Project.Resource> listOfRequestedResources = request.getResources();
+                                    listOfRequestedResources.add(requestedResource);
+                                    request.setResources(listOfRequestedResources);
+                                    exists.set(true);
+                                    break;
+                                }
                             }
-                        }
 
-                        if (!exists.get()) {
-                            Set<Map<String, String>> list = new LinkedHashSet<>();
-                            list.add(requestedResource);
-                            requestedProduct.put("resources", list);
-                            requested.add(requestedProduct);
-                        }
-
-                        return Mono.empty();
-                    }).then();
+                            if (!exists.get()) {
+                                Set<Project.Resource> listOfRequestedResources = new LinkedHashSet<>();
+                                listOfRequestedResources.add(requestedResource);
+                                requestedProduct.setResources(listOfRequestedResources);
+                                requested.add(requestedProduct);
+                            }
+                            return Mono.empty();
+                        }).then();
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view these resources because you are not the owner of this project"));
                 }).then(Mono.just(requested));
     }
 
     @PostMapping(value = "/{projectId}/requested", produces = "application/json", consumes = "application/json")
-    private Mono<Project> SaveRequestedResources(@Validated @PathVariable String projectId, @Validated @RequestBody Map<String, Object> requestedResources) {
+    @ResponseStatus(value = HttpStatus.ACCEPTED)
+    private Mono<Project> SaveRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId, @Validated @RequestBody Map<String, Object> request) {
+        String accessToken = getBearerToken(headers);
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMap(project -> {
-                    try {
-                        Set<String> resources = new LinkedHashSet<String>((ArrayList) (requestedResources.get("resources")));
+                    if (username.equals(project.getOwner())) {
+                        Set<String> resources = new LinkedHashSet<>();
+                        var resourcesObj = request.get("resources");
+                        if (resourcesObj instanceof ArrayList)
+                            resources = new LinkedHashSet<>((ArrayList) resourcesObj);
                         if (!resources.isEmpty()) {
                             project.setResources(new LinkedHashSet<>());
+                            Set<String> audiences = new LinkedHashSet<>();
                             return Flux.fromIterable(resources).flatMap(r -> {
-                                return mongoResourceRepository.findById(r).flatMap(resource -> {
-                                    project.addResource(resource);
-                                    return Mono.empty();
-                                });
-                            }).then(mongoProjectRepository.save(project));
+                                return mongoResourceRepository.findById(r)
+                                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of the requested resources do not exist")))
+                                        .flatMap(resource -> {
+                                            project.addResource(resource);
+                                            audiences.addAll(resource.getProduct().getAudiences());
+                                            return Mono.empty();
+                                        });
+                            }).then(Mono.defer(() -> {
+                                project.setAudiences(audiences);
+                                String clientId = project.getClientId(Env.TEST);
+                                if (!clientId.isEmpty()) {
+                                    PassportClient passportClient = buildPassportClientForEnvironment(project, Env.TEST);
+                                    passportClient.setClientId(clientId);
+                                    return passportService.updatePassportClient(passportClient, accessToken, Env.TEST)
+                                            .then(mongoProjectRepository.save(project));
+                                }
+                                return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You cannot request for these resources because you do not have a Test Client on Passport"));
+                            }));
                         }
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty");
-                    } catch (Exception e) {
-                        Mono.error(e).log();
+                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be null or empty"));
                     }
-                    return Mono.empty();
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not request for these resources because you are not the owner of this project"));
                 });
     }
 
-   /* @GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
+    @GetMapping(value = "/{projectId}/approved", produces = "application/json")
+    private Mono<List<Project.Product>> GetApprovedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
+        String accessToken = getBearerToken(headers);
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        List<Project.Product> listofApproved = new ArrayList<>();
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .flatMap(project -> {
+                    if (username.equals(project.getOwner())) {
+                        String clientId = project.getClientId(Env.LIVE);
+                        if (!clientId.isEmpty()) {
+                            return passportService.getPassportClient(clientId, accessToken, Env.LIVE).flatMap(passportClient -> {
+                                Map<String, Object> additionalInformation = passportClient.getAdditionalInformation();
+                                Set<String> api_resources = new LinkedHashSet<>();
+                                var api_resourcesObj = additionalInformation.get("api_resources");
+                                if (api_resourcesObj instanceof ArrayList)
+                                    api_resources = new LinkedHashSet<>((ArrayList) api_resourcesObj);
+                                return Flux.fromIterable(api_resources).flatMap(api_resource -> {
+                                    String resourceId = api_resource.substring(0, api_resource.indexOf("-"));
+                                    if (!resourceId.isEmpty()) {
+                                        return mongoResourceRepository.findById(resourceId).flatMap(resource -> {
+                                            Product product = resource.getProduct();
+                                            Project.Product approvedProduct = new Project.Product();
+                                            Project.Resource approvedResource = new Project.Resource();
+                                            approvedResource.setId(resource.getId());
+                                            approvedResource.setName(resource.getName());
+                                            approvedProduct.setName(product.getName());
+                                            approvedProduct.setDescription(product.getDescription());
+                                            AtomicBoolean exists = new AtomicBoolean(false);
+                                            for (var approved : listofApproved) {
+                                                if (approved.getName().equalsIgnoreCase(product.getName())) {
+                                                    Set<Project.Resource> listOfApprovedResources = approved.getResources();
+                                                    listOfApprovedResources.add(approvedResource);
+                                                    approved.setResources(listOfApprovedResources);
+                                                    exists.set(true);
+                                                    break;
+                                                }
+                                            }
+
+                                            if (!exists.get()) {
+                                                Set<Project.Resource> listOfApprovedResources = new LinkedHashSet<>();
+                                                listOfApprovedResources.add(approvedResource);
+                                                approvedProduct.setResources(listOfApprovedResources);
+                                                listofApproved.add(approvedProduct);
+                                            }
+                                            return Mono.empty();
+                                        });
+                                    }
+                                    return Mono.empty();
+                                }).then();
+                            });
+                        }
+                        return Mono.empty();
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view these resources because you are not the owner of this project"));
+                }).then(Mono.just(listofApproved));
+    }
+    /*@GetMapping(value = "/{projectId}/products/approved", produces = "application/json")
     private Mono<Map<String, Object>> GetApprovedResources(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getResources());
-    }
+    }*/
 
-    @GetMapping(value = "/{projectId}/products/available", produces = "application/json")
+
+   /*@GetMapping(value = "/{projectId}/products/available", produces = "application/json")
     private Mono<Map<String, Object>> GetAvailableResources(@Validated @PathVariable String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .map(project -> project.getResources());
     }
-*/
-   /*@DeleteMapping("/{projectId}")
+
+   @DeleteMapping("/{projectId}")
     private Mono<ResponseEntity<Void>> delete(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
         String accessToken = getBearerToken(headers);
         JWT token = decodeBearerToken(accessToken);

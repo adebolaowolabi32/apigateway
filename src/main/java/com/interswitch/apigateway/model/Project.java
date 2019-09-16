@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,6 +39,9 @@ public class Project {
 
     private String logoUrl = "";
 
+    @JsonIgnore
+    private Set<String> audiences = new LinkedHashSet<>();
+
     @EqualsAndHashCode.Exclude
     //@JsonIgnore
     private Map<Env, String> clients = new LinkedHashMap<>();
@@ -47,10 +51,19 @@ public class Project {
     @EqualsAndHashCode.Exclude
     @DBRef(lazy = true)
     //@JsonIgnore
-    private Set<Resource> resources = new LinkedHashSet<>();
+    private Set<com.interswitch.apigateway.model.Resource> resources = new LinkedHashSet<>();
 
-    public void addResource(Resource resource) {
+
+    public Optional<com.interswitch.apigateway.model.Resource> getResource(String resourceId) {
+        return this.resources.stream().filter(resource -> resource.getId().equals(resourceId)).findFirst();
+    }
+
+    public void addResource(com.interswitch.apigateway.model.Resource resource) {
         this.resources.add(resource);
+    }
+
+    public void removeResource(com.interswitch.apigateway.model.Resource resource) {
+        this.resources.remove(resource);
     }
 
     public String getClientId(Env env) {
@@ -59,12 +72,23 @@ public class Project {
     }
 
     public void setClientId(String clientId, Env env) {
-        Map<Env, String> clients = new LinkedHashMap<>();
-        clients.put(env, clientId);
-        this.clients = clients;
+        this.clients.put(env, clientId);
     }
 
     public enum Type {
         web, mobile, other
+    }
+
+    @Data
+    public static class Product {
+        private String name;
+        private String description;
+        private Set<Resource> resources;
+    }
+
+    @Data
+    public static class Resource {
+        private String id;
+        private String name;
     }
 }

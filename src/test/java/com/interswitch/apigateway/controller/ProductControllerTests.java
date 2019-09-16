@@ -92,7 +92,7 @@ public class ProductControllerTests {
     }
 
     @Test
-    public void findById(){
+    public void testFindById() {
         when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
         this.webClient.get()
                 .uri("/products/{productId}", Collections.singletonMap("productId",product.getId()))
