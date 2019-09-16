@@ -1,6 +1,8 @@
 package com.interswitch.apigateway.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -18,13 +20,14 @@ import java.util.Set;
 
 @Document(collection = "products")
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Product {
     @Id
     private String id;
 
     @Indexed(unique = true)
     @NotBlank(message = "Name is Required")
-    @Length(min = 5, max = 50, message = "Name must be between 5 and 50 characters long")
+    @Length(min = 5, max = 50, message = "Name mus vct be between 5 and 50 characters long")
     private String name;
 
     @EqualsAndHashCode.Exclude
@@ -52,6 +55,7 @@ public class Product {
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonIgnore
     @DBRef(lazy = true)
     @JsonBackReference
     private Set<Project> projects = new LinkedHashSet<>();
