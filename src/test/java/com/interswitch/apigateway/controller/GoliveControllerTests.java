@@ -81,7 +81,7 @@ public class GoliveControllerTests {
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isAccepted()
                 .expectBody(Project.class);
     }
 

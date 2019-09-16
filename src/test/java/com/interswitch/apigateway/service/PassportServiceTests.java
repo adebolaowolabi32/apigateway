@@ -63,13 +63,13 @@ public class PassportServiceTests {
 
         passportClient = buildPassportClientForEnvironment(project, Env.TEST);
         getAccessToken(Env.TEST);
-        runTestToCreatePassportClient(Env.TEST);
-        runTestToUpdatePassportClient(Env.TEST);
+        testCreatePassportClient(Env.TEST);
+        testUpdatePassportClient(Env.TEST);
 
     }
 
     @Test
-    private void runTestToCreatePassportClient(Env env) {
+    private void testCreatePassportClient(Env env) {
         passportService.createPassportClient(passportClient, accessToken, env)
                 .doOnSuccess(createdClient -> {
                     project.setClientId(createdClient.getClientId(), env);
@@ -100,7 +100,7 @@ public class PassportServiceTests {
     }
 
     @Test
-    private void runTestToUpdatePassportClient(Env env) {
+    private void testUpdatePassportClient(Env env) {
         passportClient.setClientId(clientId);
         passportClient.setDescription("newDescription");
         passportClient.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code, GrantType.refresh_token, GrantType.client_credentials));
