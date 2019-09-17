@@ -17,7 +17,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.interswitch.apigateway.service.PassportService.buildPassportClientForEnvironment;
-import static com.interswitch.apigateway.util.FilterUtil.*;
+import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
+import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
 
 @RestController
 @RequestMapping("/projects")
@@ -60,13 +61,12 @@ public class ProjectController {
                 .flatMap(exists -> {
                     if (exists)
                         return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Project already exists"));
-                    String accessToken = getBearerToken(headers);
-                    String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+                    String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
                     project.setName(name);
                     project.setOwner(username);
                     project.setClients(new LinkedHashMap<>());
                     PassportClient passportClient = buildPassportClientForEnvironment(project, Env.TEST);
-                    return passportService.createPassportClient(passportClient, accessToken, Env.TEST)
+                    return passportService.createPassportClient(passportClient, Env.TEST)
                             .flatMap(createdClient -> {
                                 project.setClientId(createdClient.getClientId(), Env.TEST);
                                 return mongoProjectRepository.save(project);
@@ -77,8 +77,7 @@ public class ProjectController {
     @PutMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     private Mono<Project> update(@RequestHeader HttpHeaders headers, @Validated @RequestBody Project project) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         return mongoProjectRepository.findById(project.getId())
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMap(existing -> {
@@ -93,12 +92,12 @@ public class ProjectController {
                         if (!testClientId.isEmpty()) {
                             PassportClient testPassportClient = buildPassportClientForEnvironment(project, Env.TEST);
                             testPassportClient.setClientId(testClientId);
-                            return passportService.updatePassportClient(testPassportClient, accessToken, Env.TEST)
+                            return passportService.updatePassportClient(testPassportClient, Env.TEST)
                                     .then(Mono.defer(() -> {
                                         if (!liveClientId.isEmpty()) {
                                             PassportClient livePassportClient = buildPassportClientForEnvironment(project, Env.LIVE);
                                             livePassportClient.setClientId(liveClientId);
-                                            return passportService.updatePassportClient(livePassportClient, accessToken, Env.LIVE)
+                                            return passportService.updatePassportClient(livePassportClient, Env.LIVE)
                                                     .then(mongoProjectRepository.save(project));
                                         }
                                         return mongoProjectRepository.save(project);
@@ -113,8 +112,7 @@ public class ProjectController {
 
     @GetMapping(value = "/{projectId}/credentials/{env}", produces = "application/json")
     private Mono<Client> getClientCredentials(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId, @Validated @PathVariable Env env) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMap(project -> {
@@ -124,7 +122,7 @@ public class ProjectController {
                         client.setClientSecret("");
                         String clientId = project.getClientId(env);
                         if (!clientId.isEmpty()) {
-                            return passportService.getPassportClient(clientId, accessToken, env)
+                            return passportService.getPassportClient(clientId, env)
                                     .flatMap(passportClient -> {
                                         client.setClientId(passportClient.getClientId());
                                         client.setClientSecret(passportClient.getClientSecret());
@@ -139,8 +137,7 @@ public class ProjectController {
 
     @GetMapping(value = "/{projectId}/requested", produces = "application/json")
     private Mono<List<Project.Product>> GetRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         List<Project.Product> requested = new ArrayList<>();
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
@@ -182,8 +179,7 @@ public class ProjectController {
     @PostMapping(value = "/{projectId}/requested", produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     private Mono<Project> SaveRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId, @Validated @RequestBody Map<String, Object> request) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMap(project -> {
@@ -209,7 +205,7 @@ public class ProjectController {
                                 if (!clientId.isEmpty()) {
                                     PassportClient passportClient = buildPassportClientForEnvironment(project, Env.TEST);
                                     passportClient.setClientId(clientId);
-                                    return passportService.updatePassportClient(passportClient, accessToken, Env.TEST)
+                                    return passportService.updatePassportClient(passportClient, Env.TEST)
                                             .then(mongoProjectRepository.save(project));
                                 }
                                 return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You cannot request for these resources because you do not have a Test Client on Passport"));
@@ -223,8 +219,7 @@ public class ProjectController {
 
     @GetMapping(value = "/{projectId}/approved", produces = "application/json")
     private Mono<List<Project.Product>> GetApprovedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         List<Project.Product> listofApproved = new ArrayList<>();
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
@@ -232,7 +227,7 @@ public class ProjectController {
                     if (username.equals(project.getOwner())) {
                         String clientId = project.getClientId(Env.LIVE);
                         if (!clientId.isEmpty()) {
-                            return passportService.getPassportClient(clientId, accessToken, Env.LIVE).flatMap(passportClient -> {
+                            return passportService.getPassportClient(clientId, Env.LIVE).flatMap(passportClient -> {
                                 Map<String, Object> additionalInformation = passportClient.getAdditionalInformation();
                                 Set<String> api_resources = new LinkedHashSet<>();
                                 var api_resourcesObj = additionalInformation.get("api_resources");

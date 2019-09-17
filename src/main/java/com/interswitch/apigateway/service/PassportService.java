@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -70,54 +71,67 @@ public class PassportService {
         this.webClient = this.webClientBuilder.baseUrl(this.localIp + ":" + port).build();
     }
 
-    public Mono<PassportClient> getPassportClient(String clientId, String accessToken, Env env) {
-        return webClient
-                .get()
-                .uri(clientEndpoint + clientId + addEnvQueryParam(env))
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .retrieve()
-                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
-                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
-                .onStatus(HttpStatus::isError, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
-                .bodyToMono(PassportClient.class);
+    public Mono<PassportClient> getPassportClient(String clientId, Env env) {
+        return getAccessToken(env).flatMap(accessToken -> {
+            return webClient
+                    .get()
+                    .uri(clientEndpoint + clientId + addEnvQueryParam(env))
+                    .header(HttpHeaders.AUTHORIZATION, accessToken)
+                    .retrieve()
+                    .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .onStatus(HttpStatus::isError, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .bodyToMono(PassportClient.class);
+        });
     }
 
-    public Mono<PassportClient> createPassportClient(PassportClient client, String accessToken, Env env) {
-        return webClient
-                .post()
-                .uri(clientEndpoint + addEnvQueryParam(env))
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .body(BodyInserters.fromObject(client))
-                .retrieve()
-                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
-                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
-                .onStatus(HttpStatus::isError, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
-                .bodyToMono(PassportClient.class);
+    public Mono<PassportClient> createPassportClient(PassportClient client, Env env) {
+        return getAccessToken(env).flatMap(accessToken -> {
+            return webClient
+                    .post()
+                    .uri(clientEndpoint + addEnvQueryParam(env))
+                    .header(HttpHeaders.AUTHORIZATION, accessToken)
+                    .body(BodyInserters.fromObject(client))
+                    .retrieve()
+                    .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
+                    .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
+                    .onStatus(HttpStatus::isError, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to create client on Passport service")))
+                    .bodyToMono(PassportClient.class);
+        });
     }
 
-    public Mono<Void> updatePassportClient(PassportClient client, String accessToken, Env env) {
-        return webClient
-                .put()
-                .uri(clientEndpoint + addEnvQueryParam(env))
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .body(BodyInserters.fromObject(client))
-                .retrieve()
-                .onStatus(HttpStatus::is1xxInformational, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
-                .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
-                .onStatus(HttpStatus::isError, clientResponse ->
-                        Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
-                .bodyToMono(Void.class);
+    public Mono<Void> updatePassportClient(PassportClient client, Env env) {
+        return getAccessToken(env).flatMap(accessToken -> {
+            return webClient
+                    .put()
+                    .uri(clientEndpoint + addEnvQueryParam(env))
+                    .header(HttpHeaders.AUTHORIZATION, accessToken)
+                    .body(BodyInserters.fromObject(client))
+                    .retrieve()
+                    .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
+                    .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
+                    .onStatus(HttpStatus::isError, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to update client on Passport service")))
+                    .bodyToMono(Void.class);
+        });
     }
 
-    public Mono<Object> getAccessToken(MultiValueMap formData, Client client, Env env) {
+    public Mono<String> getAccessToken(Env env) {
+        MultiValueMap formData = new LinkedMultiValueMap();
+        String client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
+        String clientSecret = "secret";
+        formData.setAll(Map.of("username", "api.gateway@interswitch.com", "password", "password", "grant_type", "password", "scope", "profile+clients"));
+        Client client = new Client();
+        client.setClientId(client_id);
+        client.setClientSecret(clientSecret);
         return webClient
                 .post()
                 .uri(tokenEndpoint + addEnvQueryParam(env))
@@ -132,7 +146,10 @@ public class PassportService {
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve access token from Passport service")))
                 .onStatus(HttpStatus::isError, clientResponse ->
                         Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve access token from Passport service")))
-                .bodyToMono(Object.class);
+                .bodyToMono(Object.class).flatMap(result -> {
+                    Map<String, Object> json = (Map<String, Object>) result;
+                    return Mono.just("Bearer " + json.get("access_token").toString());
+                });
     }
 
     private String addEnvQueryParam(Env env) {

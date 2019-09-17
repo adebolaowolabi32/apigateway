@@ -11,7 +11,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
@@ -26,6 +25,7 @@ import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
@@ -46,9 +46,6 @@ public class GoliveControllerTests {
 
     private String accessToken;
     private Project project;
-    private ArgumentCaptor<PassportClient> captor = ArgumentCaptor.forClass(PassportClient.class);
-    private ArgumentCaptor<String> captor1 = ArgumentCaptor.forClass(String.class);
-    private ArgumentCaptor<Env> captor2 = ArgumentCaptor.forClass(Env.class);
 
     @BeforeEach
     public void setup() throws JOSEException {
@@ -75,7 +72,7 @@ public class GoliveControllerTests {
     public void testGoliveRequest() {
         when(this.mongoProjectRepository.findById("projectId")).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(captor.capture(), captor1.capture(), captor2.capture())).thenReturn(Mono.just(new PassportClient()));
+        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
         this.webClient.post()
                 .uri("/golive/request/{projectId}", project.getId())
                 .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +86,7 @@ public class GoliveControllerTests {
     public void testGoliveApproval() {
         when(this.mongoProjectRepository.findById("projectId")).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(captor.capture(), captor1.capture(), captor2.capture())).thenReturn(Mono.empty());
+        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
         this.webClient.post()
                 .uri("/golive/approve/{projectId}", project.getId())
                 .accept(MediaType.APPLICATION_JSON)

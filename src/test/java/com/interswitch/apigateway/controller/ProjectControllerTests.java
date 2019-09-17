@@ -9,7 +9,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
@@ -44,11 +43,6 @@ public class ProjectControllerTests {
 
     @MockBean
     private MongoResourceRepository mongoResourceRepository;
-
-    private ArgumentCaptor<PassportClient> captor = ArgumentCaptor.forClass(PassportClient.class);
-    private ArgumentCaptor<String> captor1 = ArgumentCaptor.forClass(String.class);
-    private ArgumentCaptor<Env> captor2 = ArgumentCaptor.forClass(Env.class);
-
 
     private String accessToken;
 
@@ -118,7 +112,7 @@ public class ProjectControllerTests {
     public void testCreate() {
         when(this.mongoProjectRepository.existsByName(project.getName())).thenReturn(Mono.just(false));
         when(mongoProjectRepository.save(any(Project.class))).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(any(PassportClient.class), any(String.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
+        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
         this.webClient.post()
                 .uri("/projects")
                 .body(BodyInserters.fromObject(project))
@@ -134,7 +128,7 @@ public class ProjectControllerTests {
     public void testUpdate() {
         when(this.mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(any(Project.class))).thenReturn(Mono.just(project));
-        when(passportService.updatePassportClient(any(PassportClient.class), any(String.class), any(Env.class))).thenReturn(Mono.empty());
+        when(passportService.updatePassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
         this.webClient.put()
                 .uri("/projects")
                 .body(BodyInserters.fromObject(project))
@@ -149,7 +143,7 @@ public class ProjectControllerTests {
     @Test
     public void testGetCredentials() {
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(passportService.getPassportClient(any(String.class), any(String.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
+        when(passportService.getPassportClient(any(String.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
         this.webClient.get()
                 .uri("/projects/{projectId}/credentials/{env}", project.getId(), Env.TEST)
                 .accept(MediaType.APPLICATION_JSON)
@@ -178,7 +172,7 @@ public class ProjectControllerTests {
         when(this.mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoResourceRepository.findById(any(String.class))).thenReturn(Mono.just(resource));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.updatePassportClient(captor.capture(), captor1.capture(), captor2.capture())).thenReturn(Mono.empty());
+        when(passportService.updatePassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
         this.webClient.post()
                 .uri("/projects/{projectId}/requested", project.getId())
                 .body(BodyInserters.fromObject(resources))

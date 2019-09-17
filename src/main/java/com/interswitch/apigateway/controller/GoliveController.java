@@ -15,7 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import static com.interswitch.apigateway.service.PassportService.buildPassportClientForEnvironment;
-import static com.interswitch.apigateway.util.FilterUtil.*;
+import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
+import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
 
 
 @RestController
@@ -41,12 +42,11 @@ public class GoliveController {
     @PostMapping(value = "/request/{projectId}", produces = "application/json")
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     private Mono<Project> requestToGoLive(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String accessToken = getBearerToken(headers);
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(accessToken), "user_name");
+        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
         return mongoProjectRepository.findById(projectId).flatMap(project -> {
                     if (username.equals(project.getOwner())) {
                         PassportClient passportClient = buildPassportClientForEnvironment(project, Env.LIVE);
-                        return passportService.createPassportClient(passportClient, accessToken, Env.LIVE)
+                        return passportService.createPassportClient(passportClient, Env.LIVE)
                                 .flatMap(createdClient -> {
                                     project.setClientId(createdClient.getClientId(), Env.LIVE);
                                     return Mono.empty();
