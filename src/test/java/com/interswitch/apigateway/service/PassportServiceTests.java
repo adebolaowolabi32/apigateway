@@ -1,16 +1,15 @@
 package com.interswitch.apigateway.service;
 
-import com.interswitch.apigateway.model.*;
+import com.interswitch.apigateway.model.Env;
+import com.interswitch.apigateway.model.GrantType;
+import com.interswitch.apigateway.model.PassportClient;
+import com.interswitch.apigateway.model.Project;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,25 +28,6 @@ public class PassportServiceTests {
 
     private String clientId;
 
-    private String accessToken;// = "Bearer eyJhbGciOiJSUzI1NiJ9.eyJhdWQiOlsicGFzc3BvcnQiLCJwcm9qZWN0LXgtbWVyY2hhbnQiXSwic2NvcGUiOlsicHJvZmlsZSJdLCJqdGkiOiIwNTE3MDE2YS03YzhhLTQ3MjctOTBjZS00ZTY5ZTA0OGMyMDUiLCJjbGllbnRfaWQiOiJJS0lBQzQ0MjBEMTNBQkU1N0Q3NzhGQjcyNjNBMTdEMTNCNjBBOEFFNDEzNSJ9.RmhKED9bAuTyP7FCFbkgIDL--1ZDsQnqr_bPg7WWPZpYR6Wh-fnf6p1yRSP6PqItw78-08beo8XzPaFM96ZyLpfxwiEf3UPGOcLe1a_PHHQz7ajUfHznyTyNN6CJgVbGnZza-g7q-b1nmpLul-Ko_L5FV5gW0GPhN6HSWRF-pCr0RNbS6_lVFClp5t1iFlE66I4DB7k2ljCsSyuuW0o99Nj67wt3CzLXjTM0lX9FyAXYvUWwfJ1EExKCdsbJJPsQRcQtBIr0Z_V2Vr51d6wBp-0ytRXeua4qo7trZ2U2e_LThyxKgAQDEugKefrf1MdaJOJU3Np9DEXAFx7xU2yQ-g";
-
-
-    private void getAccessToken(Env env) {
-        MultiValueMap formData = new LinkedMultiValueMap();
-        String client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
-        String clientSecret = "secret";
-        formData.setAll(Map.of("username", "api.gateway@interswitch.com", "password", "password", "grant_type", "password", "scope", "profile+clients"));
-        Client client = new Client();
-        client.setClientId(client_id);
-        client.setClientSecret(clientSecret);
-        passportService.getAccessToken(formData, client, env).flatMap(result -> {
-            Map<String, Object> json = (Map<String, Object>) result;
-            this.accessToken = "Bearer " + json.get("access_token").toString();
-            return Mono.empty();
-        }).block();
-
-    }
-
     @Test
     public void test() {
         project = new Project();
@@ -62,7 +42,6 @@ public class PassportServiceTests {
 
 
         passportClient = buildPassportClientForEnvironment(project, Env.TEST);
-        getAccessToken(Env.TEST);
         testCreatePassportClient(Env.TEST);
         testUpdatePassportClient(Env.TEST);
 
@@ -70,13 +49,13 @@ public class PassportServiceTests {
 
     @Test
     private void testCreatePassportClient(Env env) {
-        passportService.createPassportClient(passportClient, accessToken, env)
+        passportService.createPassportClient(passportClient, env)
                 .doOnSuccess(createdClient -> {
                     project.setClientId(createdClient.getClientId(), env);
                 }).block();
         clientId = project.getClientId(env);
 
-        StepVerifier.create(passportService.getPassportClient(clientId, accessToken, env)).assertNext(passportClient1 -> {
+        StepVerifier.create(passportService.getPassportClient(clientId, env)).assertNext(passportClient1 -> {
             assertThat(passportClient1.getClientId()).isEqualTo(clientId);
             assertThat(passportClient1.getClientName()).isEqualTo(project.getName());
             assertThat(passportClient1.getClientOwner()).isEqualTo(project.getOwner());
@@ -104,9 +83,9 @@ public class PassportServiceTests {
         passportClient.setClientId(clientId);
         passportClient.setDescription("newDescription");
         passportClient.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code, GrantType.refresh_token, GrantType.client_credentials));
-        passportService.updatePassportClient(passportClient, accessToken, env).block();
+        passportService.updatePassportClient(passportClient, env).block();
 
-        StepVerifier.create(passportService.getPassportClient(clientId, accessToken, env)).assertNext(updatedClient -> {
+        StepVerifier.create(passportService.getPassportClient(clientId, env)).assertNext(updatedClient -> {
             assertThat(updatedClient.getDescription()).isEqualTo(passportClient.getDescription());
             assertThat(updatedClient.getAuthorizedGrantTypes()).isEqualTo(passportClient.getAuthorizedGrantTypes());
         }).expectComplete().verify();
