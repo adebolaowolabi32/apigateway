@@ -2,6 +2,7 @@ package com.interswitch.apigateway.route;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,8 +23,10 @@ public class PassportRoutesTests {
     @Autowired
     private WebTestClient webClient;
 
-    private String clientId = "IKIAC4420D13ABE57D778FB7263A17D13B60A8AE4135";
-    private String clientSecret = "secret";
+    @Value("${client.id.test}")
+    private String clientId;
+    @Value("${client.secret.test}")
+    private String clientSecret;
 
     @Test
     public void testTokenEndpoint() {

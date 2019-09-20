@@ -1,11 +1,6 @@
 package com.interswitch.apigateway.controller;
 
-import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.model.PassportClient;
-import com.interswitch.apigateway.model.Project;
-import com.interswitch.apigateway.repository.MongoProductRepository;
-import com.interswitch.apigateway.repository.MongoProjectRepository;
-import com.interswitch.apigateway.service.PassportService;
+import com.interswitch.apigateway.service.ProjectService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -20,12 +15,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
@@ -36,63 +30,67 @@ public class GoliveControllerTests {
     private WebTestClient webClient;
 
     @MockBean
-    private PassportService passportService;
-
-    @MockBean
-    private MongoProjectRepository mongoProjectRepository;
-
-    @MockBean
-    private MongoProductRepository mongoProductRepository;
+    private ProjectService projectService;
 
     private String accessToken;
-    private Project project;
+
+    private String projectOwner = "project.owner";
+
+    private String projectId = "projectId";
 
     @BeforeEach
     public void setup() throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
-                .claim("user_name", "project.owner")
+                .claim("user_name", projectOwner)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
         Payload payload = new Payload(claims.toJSONObject());
         JWSObject jws = new JWSObject(jwsHeader, payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
-        accessToken = jws.serialize();
 
-        project = new Project();
-        project.setId("projectId");
-        project.setName("projectName");
-        project.setOwner("project.owner");
-        project.setType(Project.Type.mobile);
+        accessToken = jws.serialize();
     }
 
     @Test
     public void testGoliveRequest() {
-        when(this.mongoProjectRepository.findById("projectId")).thenReturn(Mono.just(project));
-        when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
+        when(projectService.requestProjectGoLive(projectOwner, projectId)).thenReturn(Mono.empty());
         this.webClient.post()
-                .uri("/golive/request/{projectId}", project.getId())
+                .uri("/golive/request/{projectId}", projectId)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isAccepted()
-                .expectBody(Project.class);
+                .expectBody(Void.class);
     }
 
     @Test
     public void testGoliveApproval() {
-        when(this.mongoProjectRepository.findById("projectId")).thenReturn(Mono.just(project));
-        when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
+        Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
+        when(projectService.saveApprovedResources(projectId, resources)).thenReturn(Mono.empty());
         this.webClient.post()
-                .uri("/golive/approve/{projectId}", project.getId())
+                .uri("/golive/approve/{projectId}", projectId)
+                .body(BodyInserters.fromObject(resources))
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(Project.class);
+                .expectStatus().isAccepted()
+                .expectBody(Void.class);
+    }
+
+    @Test
+    public void testGoliveDecline() {
+        Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
+        when(projectService.declineRequestedResources(projectId, resources)).thenReturn(Mono.empty());
+        this.webClient.post()
+                .uri("/golive/decline/{projectId}", projectId)
+                .body(BodyInserters.fromObject(resources))
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken)
+                .exchange()
+                .expectStatus().isAccepted()
+                .expectBody(Void.class);
     }
 }

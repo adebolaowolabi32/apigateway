@@ -30,7 +30,7 @@ public class Resource {
 
     @EqualsAndHashCode.Exclude
     @NotBlank(message = "Path is Required")
-    @Pattern(regexp = "^\\/.+$", message = "Path must be a valid request path")
+    @Pattern(regexp = "^/.+$", message = "Path must be a valid request path")
     private String path;
 
     @EqualsAndHashCode.Exclude

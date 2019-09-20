@@ -13,12 +13,12 @@ db.routeDefinition.update(
     "filters" : [],
     "uri" : {
         "scheme" : "http",
-        "authority" : "passport-v2-uat.k8.isw.la",
-        "host" : "passport-v2-uat.k8.isw.la",
+        "authority" : "passport-uat.k8.isw.la",
+        "host" : "passport-uat.k8.isw.la",
         "port" : -1,
         "path" : "",
         "hash" : 0,
-        "string" : "http://passport-v2-uat.k8.isw.la"
+        "string" : "http://passport-uat.k8.isw.la"
     },
     "order" : 0,
     "_class" : "org.springframework.cloud.gateway.route.RouteDefinition"

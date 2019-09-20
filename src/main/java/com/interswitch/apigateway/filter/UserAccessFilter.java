@@ -25,7 +25,7 @@ public class UserAccessFilter implements WebFilter, Ordered {
 
     private static String openUserEndpoint = "/projects.*";
 
-    private static List<String> adminEndpoints = Arrays.asList("/users.*", "/golive/approve.*");
+    private static List<String> adminEndpoints = Arrays.asList("/users.*", "/golive/approve.*", "/golive/decline.*");
 
     private MongoUserRepository mongoUserRepository;
 

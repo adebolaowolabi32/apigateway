@@ -50,9 +50,8 @@ public class ProductControllerTests {
         project = new Project();
         project.setId("testProjectOne");
         project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Collections.emptySet());
         project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
+        project.setOwner("project.owner");
         resource = new Resource();
         resource.setId("test_resource_id");
         resource.setName("resource_name");

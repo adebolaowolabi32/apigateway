@@ -45,8 +45,7 @@ public class AccessLogs {
         USER("/users"),
         SYSTEM("/actuator"),
         ROUTE_ENVIRONMENT("/env"),
-        GOLIVE_REQUEST("/golive/request"),
-        GOLIVE_APPROVAL("/golive/approve");
+        GOLIVE("/golive");
 
         private String value;
 
