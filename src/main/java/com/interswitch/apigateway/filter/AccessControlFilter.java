@@ -54,7 +54,7 @@ public class AccessControlFilter implements GlobalFilter, Ordered  {
         for (var r : resources) {
             r = r.replaceAll(" ", "");
             int indexOfFirstSlash = r.indexOf('/');
-            String method = r.substring(0, indexOfFirstSlash);
+            String method = r.substring(r.indexOf("-") + 1, indexOfFirstSlash);
             String path = r.substring(indexOfFirstSlash);
             if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
                 if (exchange.getRequest().getMethodValue().equals(method))

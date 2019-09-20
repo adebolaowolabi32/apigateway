@@ -2,7 +2,6 @@ package com.interswitch.apigateway.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -20,7 +19,6 @@ import java.util.Set;
 
 @Document(collection = "products")
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Product {
     @Id
     private String id;

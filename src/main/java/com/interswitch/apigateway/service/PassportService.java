@@ -3,7 +3,6 @@ package com.interswitch.apigateway.service;
 import com.interswitch.apigateway.model.Client;
 import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.model.PassportClient;
-import com.interswitch.apigateway.model.Project;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -14,12 +13,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 public class PassportService {
@@ -35,41 +33,27 @@ public class PassportService {
         this.webClientBuilder = webClientBuilder;
     }
 
-    public static PassportClient buildPassportClientForEnvironment(Project project, Env env) {
-        PassportClient passportClient = buildPassportClient(project);
-        Set<String> audiences = project.getAudiences();
-        audiences.addAll(Set.of("api-gateway", "passport"));
-        passportClient.setResourceIds(audiences);
-        passportClient.setAdditionalInformation(Map.of("env", env));
-        return passportClient;
-    }
-
-    private static PassportClient buildPassportClient(Project project) {
-        PassportClient passportClient = new PassportClient();
-        passportClient.setClientName(project.getName());
-        passportClient.setDescription(project.getDescription());
-        passportClient.setClientOwner(project.getOwner());
-        passportClient.setScope(Collections.singleton("profile"));
-        passportClient.setAuthorizedGrantTypes(project.getAuthorizedGrantTypes());
-        passportClient.setRegisteredRedirectUri(project.getRegisteredRedirectUris());
-        passportClient.setLogoUrl(project.getLogoUrl());
-        int accessTokenValiditySeconds;
-        int refreshTokenValiditySeconds;
-        if (project.getType().equals(Project.Type.web)) {
-            accessTokenValiditySeconds = 1800;
-            refreshTokenValiditySeconds = 3600;
-        } else {
-            accessTokenValiditySeconds = 3600;
-            refreshTokenValiditySeconds = 7200;
-        }
-        passportClient.setAccessTokenValiditySeconds(accessTokenValiditySeconds);
-        passportClient.setRefreshTokenValiditySeconds(refreshTokenValiditySeconds);
-        return passportClient;
-    }
-
     public void buildWebClient(int port) {
         this.webClient = this.webClientBuilder.baseUrl(this.localIp + ":" + port).build();
     }
+
+    public Flux<PassportClient> getPassportClients(String clientOwner, Env env) {
+        return getAccessToken(env).flatMapMany(accesstoken -> {
+            return webClient
+                    .get()
+                    .uri(clientEndpoint + addEnvQueryParam(env) + "&clientOwner=" + clientOwner)
+                    .header(HttpHeaders.AUTHORIZATION, accesstoken)
+                    .retrieve()
+                    .onStatus(HttpStatus::is1xxInformational, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .onStatus(HttpStatus::is3xxRedirection, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .onStatus(HttpStatus::isError, clientResponse ->
+                            Mono.error(new ResponseStatusException(clientResponse.statusCode(), "Failed to retrieve client from Passport service")))
+                    .bodyToFlux(PassportClient.class);
+        });
+    }
+
 
     public Mono<PassportClient> getPassportClient(String clientId, Env env) {
         return getAccessToken(env).flatMap(accessToken -> {
@@ -126,9 +110,18 @@ public class PassportService {
 
     public Mono<String> getAccessToken(Env env) {
         MultiValueMap formData = new LinkedMultiValueMap();
-        String client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
-        String clientSecret = "secret";
-        formData.setAll(Map.of("username", "api.gateway@interswitch.com", "password", "password", "grant_type", "password", "scope", "profile+clients"));
+        String client_id = "";
+        String clientSecret = "";
+
+        if (env.equals(Env.TEST)) {
+            client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
+            clientSecret = "secret";
+        } else if (env.equals(Env.LIVE)) {
+            client_id = "IKIAA64E6C383C1E585F90DE0EDEDB96F7E9BF1993D7";
+            clientSecret = "secret";
+        }
+
+        formData.setAll(Map.of("grant_type", "client_credentials", "scope", "profile+clients"));
         Client client = new Client();
         client.setClientId(client_id);
         client.setClientSecret(clientSecret);

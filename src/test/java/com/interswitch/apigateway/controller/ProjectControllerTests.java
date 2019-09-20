@@ -1,9 +1,7 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.*;
-import com.interswitch.apigateway.repository.MongoProjectRepository;
-import com.interswitch.apigateway.repository.MongoResourceRepository;
-import com.interswitch.apigateway.service.PassportService;
+import com.interswitch.apigateway.service.ProjectService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -14,7 +12,6 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.*;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("dev")
@@ -36,26 +32,20 @@ public class ProjectControllerTests {
     private WebTestClient webClient;
 
     @MockBean
-    private PassportService passportService;
-
-    @MockBean
-    private MongoProjectRepository mongoProjectRepository;
-
-    @MockBean
-    private MongoResourceRepository mongoResourceRepository;
+    private ProjectService projectService;
 
     private String accessToken;
 
-    private Project project;
+    private ProjectData projectData;
 
-    private Resource resource;
+    private String projectOwner = "project.owner";
 
     @BeforeEach
     public void setup() throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
-                .claim("user_name", "project.owner")
+                .claim("user_name", projectOwner)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
@@ -63,29 +53,21 @@ public class ProjectControllerTests {
         JWSObject jws = new JWSObject(jwsHeader, payload);
         jws.sign(new MACSigner("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"));
         accessToken = jws.serialize();
-        project = new Project();
-        project.setId("testprojectone");
-        project.setName("testprojectname");
-        project.setType(Project.Type.web);
-        project.setDescription("test project description");
-        project.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
-        project.setRegisteredRedirectUris(Collections.emptySet());
-        project.setLogoUrl("");
-        project.setOwner("project.owner");
-        project.setClientId("testClientId", Env.TEST);
-        project.setClientId("liveClientId", Env.LIVE);
-
-        resource = new Resource();
-        resource.setId("testresourceone");
-        resource.setName("testresourcename");
-        resource.setMethod(HttpMethod.GET);
-        resource.setPath("/path");
-        resource.setProduct(new Product());
+        projectData = new ProjectData();
+        projectData.setId("testprojectone");
+        projectData.setName("testprojectname");
+        projectData.setType(Project.Type.web);
+        projectData.setDescription("test project description");
+        projectData.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
+        projectData.setRegisteredRedirectUris(Collections.emptySet());
+        projectData.setLogoUrl("");
+        projectData.setOwner(projectOwner);
+        projectData.setClients(Map.of(Env.TEST, "testClientId", Env.LIVE, "liveClientId"));
     }
 
     @Test
     public void testGetAll() {
-        when(mongoProjectRepository.findByOwner(project.getOwner())).thenReturn(Flux.fromIterable(Collections.singletonList(project)));
+        when(projectService.getAllProjects(projectOwner)).thenReturn(Flux.fromIterable(Collections.singleton(projectData)));
         this.webClient.get()
                 .uri("/projects")
                 .accept(MediaType.APPLICATION_JSON)
@@ -93,59 +75,52 @@ public class ProjectControllerTests {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(Project.class);
+                .expectBodyList(ProjectData.class);
     }
 
     @Test
     public void testFindById() {
-        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
+        when(projectService.getProject(projectOwner, projectData.getId())).thenReturn(Mono.just(projectData));
         this.webClient.get()
-                .uri("/projects/{projectId}", project.getId())
+                .uri("/projects/{projectId}", projectData.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Project.class);
+                .expectBody(ProjectData.class);
     }
 
     @Test
     public void testCreate() {
-        when(this.mongoProjectRepository.existsByName(project.getName())).thenReturn(Mono.just(false));
-        when(mongoProjectRepository.save(any(Project.class))).thenReturn(Mono.just(project));
-        when(passportService.createPassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
+        when(projectService.createProject(projectOwner, projectData)).thenReturn(Mono.just(projectData));
         this.webClient.post()
                 .uri("/projects")
-                .body(BodyInserters.fromObject(project))
+                .body(BodyInserters.fromObject(projectData))
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Project.class);
-
+                .expectBody(ProjectData.class);
     }
 
     @Test
     public void testUpdate() {
-        when(this.mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(mongoProjectRepository.save(any(Project.class))).thenReturn(Mono.just(project));
-        when(passportService.updatePassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
+        when(projectService.updateProject(projectOwner, projectData)).thenReturn(Mono.just(projectData));
         this.webClient.put()
                 .uri("/projects")
-                .body(BodyInserters.fromObject(project))
+                .body(BodyInserters.fromObject(projectData))
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
-                .expectStatus().isNoContent()
-                .expectBody(Project.class);
-
+                .expectStatus().isOk()
+                .expectBody(ProjectData.class);
     }
 
     @Test
     public void testGetCredentials() {
-        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(passportService.getPassportClient(any(String.class), any(Env.class))).thenReturn(Mono.just(new PassportClient()));
+        when(projectService.getClientCredentials(projectOwner, projectData.getId(), Env.TEST)).thenReturn(Mono.just(new Client()));
         this.webClient.get()
-                .uri("/projects/{projectId}/credentials/{env}", project.getId(), Env.TEST)
+                .uri("/projects/{projectId}/credentials/{env}", projectData.getId(), Env.TEST)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
@@ -155,33 +130,40 @@ public class ProjectControllerTests {
 
     @Test
     public void testGetRequestedResources() {
-        when(this.mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
+        when(projectService.getRequestedResources(projectOwner, projectData.getId())).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
         this.webClient.get()
-                .uri("/projects/{projectId}/requested", project.getId())
+                .uri("/projects/{projectId}/requested", projectData.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(Map.class);
-
+                .expectBodyList(ProductRequest.class);
     }
 
     @Test
     public void testSaveRequestedResources() {
-        Map<String, Object> resources = Map.of("resources", Arrays.asList("resourceone", "resourcetwo"));
-        when(this.mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(mongoResourceRepository.findById(any(String.class))).thenReturn(Mono.just(resource));
-        when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(passportService.updatePassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
+        Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
+        when(projectService.saveRequestedResources(projectOwner, projectData.getId(), resources)).thenReturn(Mono.empty());
         this.webClient.post()
-                .uri("/projects/{projectId}/requested", project.getId())
+                .uri("/projects/{projectId}/requested", projectData.getId())
                 .body(BodyInserters.fromObject(resources))
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isAccepted()
-                .expectBody(Project.class);
+                .expectBody(Void.class);
+    }
 
+    @Test
+    public void testGetApprovedResources() {
+        when(projectService.getApprovedResources(projectOwner, projectData.getId())).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
+        this.webClient.get()
+                .uri("/projects/{projectId}/approved", projectData.getId())
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ProductRequest.class);
     }
 
     /*@Test

@@ -10,8 +10,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
-import java.util.Collections;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("dev")
@@ -144,9 +142,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Project project = new Project();
         project.setId("testProjectOne");
         project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Collections.emptySet());
         project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
+        project.setOwner("project.owner");
         savedProduct.addProject(project);
         mongoProductRepository.save(savedProduct).block();
         StepVerifier.create(mongoProductRepository.findById(product.getId())).assertNext(p -> {
@@ -165,9 +162,8 @@ public class MongoProductRepositoryTests extends AbstractMongoRepositoryTests {
         Project project = new Project();
         project.setId("testProjectOne");
         project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Collections.emptySet());
         project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
+        project.setOwner("project.owner");
         savedProduct.addProject(project);
         Product updatedProduct = mongoProductRepository.save(savedProduct).block();
         updatedProduct.removeProject(project);

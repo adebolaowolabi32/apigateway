@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.Env;
-import com.interswitch.apigateway.model.GrantType;
 import com.interswitch.apigateway.model.Project;
 import com.interswitch.apigateway.model.Resource;
 import org.junit.jupiter.api.Test;
@@ -9,9 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
-
-import java.util.Map;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,46 +19,37 @@ public class MongoProjectRepositoryTests extends AbstractMongoRepositoryTests {
     MongoProjectRepository mongoProjectRepository;
 
     @Test
-    public void testCreate() {
-        Project project = new Project();
-        project.setId("testProjectOne");
-        project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
-        project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
-        project.setLogoUrl("");
-        project.setClients(Map.of(Env.TEST, "testClient", Env.LIVE, "liveClient"));
-        mongoProjectRepository.save(project).block();
-        StepVerifier.create(mongoProjectRepository.findById(project.getId())).assertNext(p -> {
-            assertThat(p.getName()).isEqualTo(project.getName());
-            assertThat(p.getDescription()).isEqualTo(project.getDescription());
-            assertThat(p.getType()).isEqualTo(project.getType());
-            assertThat(p.getAuthorizedGrantTypes()).isEqualTo(project.getAuthorizedGrantTypes());
-            assertThat(p.getLogoUrl()).isEqualTo(project.getLogoUrl());
-            assertThat(p.getClients()).isEqualTo(project.getClients());
-            assertThat(p.getRegisteredRedirectUris()).isEqualTo(project.getRegisteredRedirectUris());
-        }).expectComplete().verify();
-    }
-
-    @Test
     public void testFindById() {
         Project project = new Project();
         project.setId("testProjectOne");
         project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
         project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
-        project.setLogoUrl("");
-        project.setClients(Map.of(Env.TEST, "testClient", Env.LIVE, "liveClient"));
+        project.setOwner("project.owner");
+        project.setClientId("testClient", Env.TEST);
+        project.setClientId("liveClient", Env.LIVE);
+        mongoProjectRepository.save(project).block();
+        StepVerifier.create(mongoProjectRepository.findById(project.getId())).assertNext(p -> {
+            assertThat(p.getName()).isEqualTo(project.getName());
+            assertThat(p.getType()).isEqualTo(project.getType());
+            assertThat(p.getClients()).isEqualTo(project.getClients());
+        }).expectComplete().verify();
+    }
+
+    @Test
+    public void testCreate() {
+        Project project = new Project();
+        project.setId("testProjectOne");
+        project.setName("testProjectName");
+        project.setType(Project.Type.web);
+        project.setOwner("project.owner");
+        project.setClientId("testClient", Env.TEST);
+        project.setClientId("liveClient", Env.LIVE);
         Project savedProject = mongoProjectRepository.save(project).block();
         StepVerifier.create(mongoProjectRepository.findById(project.getId())).assertNext(p -> {
             assertThat(p.getName()).isEqualTo(project.getName()).isEqualTo(savedProject.getName());
-            assertThat(p.getDescription()).isEqualTo(project.getDescription()).isEqualTo(savedProject.getDescription());
             assertThat(p.getType()).isEqualTo(project.getType()).isEqualTo(savedProject.getType());
-            assertThat(p.getAuthorizedGrantTypes()).isEqualTo(project.getAuthorizedGrantTypes()).isEqualTo(savedProject.getAuthorizedGrantTypes());
-            assertThat(p.getLogoUrl()).isEqualTo(project.getLogoUrl()).isEqualTo(savedProject.getLogoUrl());
+            assertThat(p.getOwner()).isEqualTo(project.getOwner()).isEqualTo(savedProject.getOwner());
             assertThat(p.getClients()).isEqualTo(project.getClients()).isEqualTo(savedProject.getClients());
-            assertThat(p.getRegisteredRedirectUris()).isEqualTo(project.getRegisteredRedirectUris()).isEqualTo(savedProject.getRegisteredRedirectUris());
         }).expectComplete().verify();
     }
 
@@ -71,19 +58,13 @@ public class MongoProjectRepositoryTests extends AbstractMongoRepositoryTests {
         Project p1 = new Project();
         p1.setId("testProjectOne");
         p1.setName("testProjectName");
-        p1.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
         p1.setType(Project.Type.web);
-        p1.setDescription("testProjectDescription");
-        p1.setLogoUrl("");
-        p1.setClients(Map.of(Env.TEST, "testClient", Env.LIVE, "liveClient"));
+        p1.setOwner("project.owner");
         Project p2 = new Project();
         p2.setId("testProjectOne");
         p2.setName("testProjectName");
-        p2.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
         p2.setType(Project.Type.web);
-        p2.setDescription("testProjectDescription");
-        p2.setLogoUrl("");
-        p2.setClients(Map.of(Env.TEST, "testClient", Env.LIVE, "liveClient"));
+        p2.setOwner("project.owner");
         mongoProjectRepository.save(p1).block();
         mongoProjectRepository.save(p2).block();
         StepVerifier.create(mongoProjectRepository.findAll()).expectNextCount(2);
@@ -94,14 +75,10 @@ public class MongoProjectRepositoryTests extends AbstractMongoRepositoryTests {
         Project project = new Project();
         project.setId("testProjectOne");
         project.setName("testProjectName");
-        project.setAuthorizedGrantTypes(Set.of(GrantType.authorization_code));
         project.setType(Project.Type.web);
-        project.setDescription("testProjectDescription");
-        project.setLogoUrl("");
-        project.setClients(Map.of(Env.TEST, "testClient", Env.LIVE, "liveClient"));
-        Project savedProject = mongoProjectRepository.save(project).block();
-        mongoProjectRepository.deleteById(savedProject.getId()).block();
-        StepVerifier.create(mongoProjectRepository.findById(savedProject.getId())).expectComplete().verify();
+        mongoProjectRepository.save(project).block();
+        mongoProjectRepository.deleteById(project.getId()).block();
+        StepVerifier.create(mongoProjectRepository.findById(project.getId())).expectComplete().verify();
     }
 
     @Test
