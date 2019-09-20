@@ -28,6 +28,14 @@ public class PassportService {
     private String clientEndpoint;
     @Value("${passport.tokenEndpoint}")
     private String tokenEndpoint;
+    @Value("${client.id.test}")
+    private String testClientId;
+    @Value("${client.id.live}")
+    private String liveClientId;
+    @Value("${client.secret.test}")
+    private String testClientSecret;
+    @Value("${client.secret.live}")
+    private String liveClientSecret;
 
     public PassportService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
@@ -112,15 +120,13 @@ public class PassportService {
         MultiValueMap formData = new LinkedMultiValueMap();
         String client_id = "";
         String clientSecret = "";
-
         if (env.equals(Env.TEST)) {
-            client_id = "IKIAF2A377004CD8FED611092E788B1E2E73ECD6E22A";
-            clientSecret = "secret";
+            client_id = testClientId;
+            clientSecret = testClientSecret;
         } else if (env.equals(Env.LIVE)) {
-            client_id = "IKIAA64E6C383C1E585F90DE0EDEDB96F7E9BF1993D7";
-            clientSecret = "secret";
+            client_id = liveClientId;
+            clientSecret = liveClientSecret;
         }
-
         formData.setAll(Map.of("grant_type", "client_credentials", "scope", "profile+clients"));
         Client client = new Client();
         client.setClientId(client_id);
