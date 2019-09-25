@@ -53,6 +53,8 @@ public class ProjectServiceTests {
 
     private Resource resource;
 
+    private Product product;
+
     private ProductRequest productRequest;
 
     private Map<String, LinkedHashSet<String>> resources;
@@ -78,7 +80,7 @@ public class ProjectServiceTests {
         passportClient.setAccessTokenValiditySeconds(1800);
         passportClient.setRefreshTokenValiditySeconds(1209600);
 
-        Product product = new Product();
+        product = new Product();
         product.setName("productOne");
         product.setDescription("description");
         product.setAudiences(Set.of("audienceOne", "audienceTwo"));
@@ -266,5 +268,39 @@ public class ProjectServiceTests {
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
         StepVerifier.create(projectService.declineRequestedResources(projectData.getId(), resources)).expectComplete().verify();
+    }
+
+    @Test
+    public void testGetAvailableResources() {
+        Resource newResource = new Resource();
+        newResource.setId("resourceTwo");
+        newResource.setProduct(product);
+        ResourceRequest resourceRequest = new ResourceRequest();
+        resourceRequest.setId(newResource.getId());
+
+        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
+        when(mongoResourceRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(resource, newResource)));
+        when(mongoResourceRepository.findAllById(Set.of(resource.getId()))).thenReturn(Flux.fromIterable(Collections.singleton(resource)));
+        when(passportService.getPassportClient(project.getClientId(Env.LIVE), Env.LIVE)).thenReturn(Mono.just(passportClient));
+        StepVerifier.create(projectService.getAvailableResources(projectOwner, projectData.getId())).assertNext(p -> {
+            assertThat(p.getName()).isEqualTo(productRequest.getName());
+            assertThat(p.getDescription()).isEqualTo(productRequest.getDescription());
+            assertThat(p.getResources()).containsOnly(resourceRequest);
+        }).expectComplete().verify();
+    }
+
+    @Test
+    public void testGetPendingProjects() {
+        Project projectTwo = new Project();
+        projectTwo.setId("projectTwo");
+        projectTwo.setName("projectTwo");
+        projectTwo.setOwner(projectOwner);
+        projectTwo.setType(Project.Type.mobile);
+        when(mongoProjectRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(project, projectTwo)));
+        StepVerifier.create(projectService.getPendingProjects()).assertNext(p -> {
+            assertThat(p.getId()).isEqualTo(project.getId());
+            assertThat(p.getName()).isEqualTo(project.getName());
+            assertThat(p.getType()).isEqualTo(project.getType());
+        }).expectComplete().verify();
     }
 }

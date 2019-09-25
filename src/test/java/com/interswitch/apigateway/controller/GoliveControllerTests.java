@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.controller;
 
+import com.interswitch.apigateway.model.Project;
 import com.interswitch.apigateway.service.ProjectService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -16,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -37,6 +39,8 @@ public class GoliveControllerTests {
     private String projectOwner = "project.owner";
 
     private String projectId = "projectId";
+
+    private Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
 
     @BeforeEach
     public void setup() throws JOSEException {
@@ -68,7 +72,6 @@ public class GoliveControllerTests {
 
     @Test
     public void testGoliveApproval() {
-        Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
         when(projectService.saveApprovedResources(projectId, resources)).thenReturn(Mono.empty());
         this.webClient.post()
                 .uri("/golive/approve/{projectId}", projectId)
@@ -82,7 +85,6 @@ public class GoliveControllerTests {
 
     @Test
     public void testGoliveDecline() {
-        Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
         when(projectService.declineRequestedResources(projectId, resources)).thenReturn(Mono.empty());
         this.webClient.post()
                 .uri("/golive/decline/{projectId}", projectId)
@@ -92,5 +94,17 @@ public class GoliveControllerTests {
                 .exchange()
                 .expectStatus().isAccepted()
                 .expectBody(Void.class);
+    }
+
+    @Test
+    public void testGetPendingProjects() {
+        when(projectService.getPendingProjects()).thenReturn(Flux.just(new Project()));
+        this.webClient.get()
+                .uri("/golive/pending")
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Project.class);
     }
 }
