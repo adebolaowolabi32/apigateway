@@ -411,7 +411,9 @@ public class ProjectService {
                         return Flux.fromIterable(resources).flatMap(r -> {
                             project.getResource(r).ifPresentOrElse(resource ->
                                             project.removeResource(resource),
-                                    () -> Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of these resources has not been requested for")));
+                                    () -> {
+                                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of these resources has not been requested for");
+                                    });
                             return Mono.empty();
                         }).then(mongoProjectRepository.save(project)).then(Mono.empty());
                     }
