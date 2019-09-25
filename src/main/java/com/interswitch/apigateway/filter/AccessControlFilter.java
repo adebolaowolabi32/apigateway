@@ -1,70 +1,99 @@
 package com.interswitch.apigateway.filter;
 
-import com.interswitch.apigateway.model.Env;
+import com.interswitch.apigateway.model.User;
+import com.interswitch.apigateway.repository.MongoUserRepository;
+import com.interswitch.apigateway.util.RouteUtil;
 import com.nimbusds.jwt.JWT;
-import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.interswitch.apigateway.util.FilterUtil.*;
-import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
+public class AccessControlFilter implements WebFilter, Ordered {
 
-public class AccessControlFilter implements GlobalFilter, Ordered  {
+    private static List<String> excludedEndpoints = Arrays.asList("/passport/oauth.*");
 
-    private static List<String> PERMIT_ALL = Collections.singletonList("passport");
+    private static List<String> systemEndpoints = Arrays.asList("/actuator/health", "/actuator/prometheus");
 
-    public AccessControlFilter() {
-    }
+    private static List<String> devEndpoints = Arrays.asList("/projects.*", "/golive/request.*");
 
-    private static String wildcardToRegex(String wildcard) {
-        String regex = wildcard.trim();
-        String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
-        regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
-        if (StringUtils.containsAny(regex, "()&][$^{}|")) {
-            regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
-        }
-        return regex;
+    private static List<String> adminEndpoints = Arrays.asList("/users.*", "/golive/approve.*", "/golive/decline.*");
+
+    private MongoUserRepository mongoUserRepository;
+
+    private RouteUtil routeUtil;
+
+    public AccessControlFilter(MongoUserRepository mongoUserRepository, RouteUtil routeUtil) {
+        this.mongoUserRepository = mongoUserRepository;
+        this.routeUtil = routeUtil;
     }
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
-        HttpHeaders headers = exchange.getRequest().getHeaders();
-        Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
-        String routeId = (route != null) ? route.getId() : "";
-        JWT token = decodeBearerToken(headers);
-        String environment = getClaimAsStringFromBearerToken(token, "env");
-
-        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String path = exchange.getRequest().getPath().toString();
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || systemEndpoints.contains(path) || match(path, excludedEndpoints))
             return chain.filter(exchange);
-        List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
-
-        for (var r : resources) {
-            r = r.replaceAll(" ", "");
-            int indexOfFirstSlash = r.indexOf('/');
-            String method = r.substring(r.indexOf("-") + 1, indexOfFirstSlash);
-            String path = r.substring(indexOfFirstSlash);
-            if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
-                if (exchange.getRequest().getMethodValue().equals(method))
-                    return chain.filter(exchange);
+        JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+        List<String> audience = getClaimAsListFromBearerToken(token, "aud");
+        if (audience.contains("api-gateway")) {
+            return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
+                if (!isRouteBasedEndpoint) {
+                    String sender = getClaimAsStringFromBearerToken(token, "sender");
+                    if (sender.equals("api-gateway-client")) {
+                        String email = getClaimAsStringFromBearerToken(token, "email");
+                        if (isInterswitchEmail(email)) {
+                            if (match(path, adminEndpoints)) {
+                                String username = getClaimAsStringFromBearerToken(token, "user_name");
+                                return mongoUserRepository.findByUsername(username)
+                                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
+                                        .flatMap(user -> {
+                                            if (user.getRole().equals(User.Role.ADMIN))
+                                                return chain.filter(exchange);
+                                            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource"));
+                                        });
+                            }
+                            return chain.filter(exchange);
+                        }
+                        if (match(path, devEndpoints))
+                            return chain.filter(exchange);
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Interswitch domain users can access this resource"));
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource"));
+                }
+                return chain.filter(exchange);
+            });
         }
-        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
+        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+    }
+
+    private boolean isInterswitchEmail(String email) {
+        return email.endsWith("@interswitchgroup.com") ||
+                email.endsWith("@interswitch.com") ||
+                email.endsWith("@interswitchng.com");
+    }
+
+    private boolean match(String path, List<String> paths) {
+        boolean match = false;
+        for (var p : paths) {
+            if (path.matches(p)) {
+                match = true;
+                break;
+            }
+        }
+        return match;
     }
 
     @Override
     public int getOrder() {
-        return 1;
+        return -80;
     }
 }

@@ -1,10 +1,12 @@
 package com.interswitch.apigateway.controller;
 
+import com.interswitch.apigateway.model.Project;
 import com.interswitch.apigateway.service.ProjectService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.LinkedHashSet;
@@ -41,5 +43,10 @@ public class GoliveController {
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     private Mono<Void> declineGoLiveResources(@Validated @PathVariable String projectId, @Validated @RequestBody Map<String, LinkedHashSet<String>> request) {
         return projectService.declineRequestedResources(projectId, request);
+    }
+
+    @GetMapping(value = "/pending", produces = "application/json")
+    private Flux<Project> GetPendingProjects() {
+        return projectService.getPendingProjects();
     }
 }

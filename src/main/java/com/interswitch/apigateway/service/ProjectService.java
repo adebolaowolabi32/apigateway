@@ -231,6 +231,31 @@ public class ProjectService {
                 });
     }
 
+    public Flux<Project> getPendingProjects() {
+        return mongoProjectRepository.findAll()
+                .filter(project -> !project.getResources().isEmpty());
+    }
+
+    public Flux<ProductRequest> getAvailableResources(String projectOwner, String projectId) {
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .flatMapMany(project -> {
+                    if (projectOwner.equals(project.getOwner())) {
+                        Set<Resource> availableResources = new LinkedHashSet<>();
+                        Set<Resource> requestedResources = project.getResources();
+                        Set<Resource> resourcesToBeExcluded = new LinkedHashSet<>(requestedResources);
+                        return getApprovedResources(project).flatMap(resource -> {
+                            resourcesToBeExcluded.add(resource);
+                            return Flux.empty();
+                        }).thenMany(mongoResourceRepository.findAll().flatMap(resource -> {
+                            if (!resourcesToBeExcluded.contains(resource)) availableResources.add(resource);
+                            return Flux.empty();
+                        })).thenMany(parseResources(Flux.fromIterable(availableResources)));
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You cannot view these resources because you are not the owner of this project"));
+                });
+    }
+
     public Flux<ProductRequest> getRequestedResources(String projectOwner, String projectId) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
@@ -323,13 +348,13 @@ public class ProjectService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
                 .flatMapMany(project -> {
                     if (projectOwner.equals(project.getOwner())) {
-                        return getApprovedResources(project);
+                        return parseResources(getApprovedResources(project));
                     }
                     return mongoUserRepository.findByUsername(projectOwner)
                             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to view these resources")))
                             .flatMapMany(user -> {
                                 if (user.getRole().equals(User.Role.ADMIN))
-                                    return getApprovedResources(project);
+                                    return parseResources(getApprovedResources(project));
                                 return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to view these resources"));
                             });
                 });
@@ -394,7 +419,7 @@ public class ProjectService {
                 });
     }
 
-    private Flux<ProductRequest> getApprovedResources(Project project) {
+    private Flux<Resource> getApprovedResources(Project project) {
         String clientId = project.getClientId(Env.LIVE);
         if (!clientId.isEmpty()) {
             return passportService.getPassportClient(clientId, Env.LIVE).flatMapMany(passportClient -> {
@@ -405,7 +430,7 @@ public class ProjectService {
                     String resourceId = api_resource.substring(0, api_resource.indexOf("-"));
                     if (!resourceId.isEmpty()) resources.add(resourceId);
                 });
-                return parseResources(mongoResourceRepository.findAllById(resources));
+                return mongoResourceRepository.findAllById(resources);
             });
         }
         return Flux.empty();

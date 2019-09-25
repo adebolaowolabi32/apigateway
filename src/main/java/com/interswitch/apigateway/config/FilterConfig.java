@@ -19,23 +19,18 @@ public class FilterConfig {
     }
 
     @Bean
-    public AccessControlFilter accessControlFilter() {
-        return new AccessControlFilter();
+    public RouteAccessControlFilter routeAccessControlFilter() {
+        return new RouteAccessControlFilter();
     }
 
     @Bean
-    public UserAccessFilter userAccessFilter(MongoUserRepository mongoUserRepository, RouteUtil routeUtil) {
-        return new UserAccessFilter(mongoUserRepository, routeUtil);
+    public AccessControlFilter accessControlFilter(MongoUserRepository mongoUserRepository, RouteUtil routeUtil) {
+        return new AccessControlFilter(mongoUserRepository, routeUtil);
     }
 
     @Bean
     public RouteIdFilter routeIdFilter(){
         return  new RouteIdFilter();
-    }
-
-    @Bean
-    public AudienceFilter audienceFilter() {
-        return new AudienceFilter();
     }
 
     @Bean

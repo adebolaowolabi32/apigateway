@@ -36,7 +36,9 @@ public class ProjectControllerTests {
 
     private String accessToken;
 
-    private ProjectData projectData;
+    private ProjectData projectData = new ProjectData();
+
+    private String projectId = "projectId";
 
     private String projectOwner = "project.owner";
 
@@ -80,9 +82,9 @@ public class ProjectControllerTests {
 
     @Test
     public void testFindById() {
-        when(projectService.getProject(projectOwner, projectData.getId())).thenReturn(Mono.just(projectData));
+        when(projectService.getProject(projectOwner, projectId)).thenReturn(Mono.just(projectData));
         this.webClient.get()
-                .uri("/projects/{projectId}", projectData.getId())
+                .uri("/projects/{projectId}", projectId)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
@@ -118,9 +120,9 @@ public class ProjectControllerTests {
 
     @Test
     public void testGetCredentials() {
-        when(projectService.getClientCredentials(projectOwner, projectData.getId(), Env.TEST)).thenReturn(Mono.just(new Client()));
+        when(projectService.getClientCredentials(projectOwner, projectId, Env.TEST)).thenReturn(Mono.just(new Client()));
         this.webClient.get()
-                .uri("/projects/{projectId}/credentials/{env}", projectData.getId(), Env.TEST)
+                .uri("/projects/{projectId}/credentials/{env}", projectId, Env.TEST)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
@@ -130,9 +132,9 @@ public class ProjectControllerTests {
 
     @Test
     public void testGetRequestedResources() {
-        when(projectService.getRequestedResources(projectOwner, projectData.getId())).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
+        when(projectService.getRequestedResources(projectOwner, projectId)).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
         this.webClient.get()
-                .uri("/projects/{projectId}/requested", projectData.getId())
+                .uri("/projects/{projectId}/requested", projectId)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
@@ -143,9 +145,9 @@ public class ProjectControllerTests {
     @Test
     public void testSaveRequestedResources() {
         Map<String, LinkedHashSet<String>> resources = Map.of("resources", new LinkedHashSet(Arrays.asList("resourceone", "resourcetwo")));
-        when(projectService.saveRequestedResources(projectOwner, projectData.getId(), resources)).thenReturn(Mono.empty());
+        when(projectService.saveRequestedResources(projectOwner, projectId, resources)).thenReturn(Mono.empty());
         this.webClient.post()
-                .uri("/projects/{projectId}/requested", projectData.getId())
+                .uri("/projects/{projectId}/requested", projectId)
                 .body(BodyInserters.fromObject(resources))
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
@@ -156,9 +158,9 @@ public class ProjectControllerTests {
 
     @Test
     public void testGetApprovedResources() {
-        when(projectService.getApprovedResources(projectOwner, projectData.getId())).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
+        when(projectService.getApprovedResources(projectOwner, projectId)).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
         this.webClient.get()
-                .uri("/projects/{projectId}/approved", projectData.getId())
+                .uri("/projects/{projectId}/approved", projectId)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + accessToken)
                 .exchange()
@@ -166,45 +168,15 @@ public class ProjectControllerTests {
                 .expectBodyList(ProductRequest.class);
     }
 
-    /*@Test
-    public void testAssignProduct(){
-        Product p = new Product();
-        p.setId("testProductId");
-        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(mongoProductRepository.findById(p.getId())).thenReturn(Mono.just(p));
-        when(mongoProductRepository.save(p)).thenReturn(Mono.just(p));
-        this.webClient.post()
-                .uri("/projects/{projectId}/products/{productId}", project.getId(), p.getId())
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Project.class);
-    }
-
     @Test
-    public void testUnassignProduct(){
-        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
-        when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(mongoProductRepository.findById(product.getId())).thenReturn(Mono.just(product));
-        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
-        this.webClient.delete()
-                .uri("/projects/{projectId}/products/{productId}", project.getId(), product.getId())
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Project.class);
-    }
-
-    @Test
-    public void testGetAssignedProducts(){
-        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
+    public void testGetAvailableResources() {
+        when(projectService.getApprovedResources(projectOwner, projectId)).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
         this.webClient.get()
-                .uri("/projects/{projectId}/products", project.getId())
+                .uri("/projects/{projectId}/available", projectId)
                 .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(Product.class);
-    }*/
+                .expectBodyList(ProductRequest.class);
+    }
 }

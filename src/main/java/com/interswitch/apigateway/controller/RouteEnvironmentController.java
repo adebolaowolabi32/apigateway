@@ -33,7 +33,7 @@ public class RouteEnvironmentController {
         return repository.existsByRouteId(routeId)
                 .flatMap(exists -> {
                     if (exists)
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Route Environment configuration already exists");
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Route environment configuration already exists");
                     routeEnvironment.setRouteId(routeId);
                     return repository.save(routeEnvironment);
                 });
@@ -42,13 +42,13 @@ public class RouteEnvironmentController {
     @GetMapping(value = "/{routeId}", produces = "application/json")
     private Mono<RouteEnvironment> findByRouteId(@Validated @PathVariable String routeId) {
         return repository.findByRouteId(routeId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")));
+                .switchIfEmpty(Mono.error(new NotFoundException("Route environment configuration does not exist")));
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<RouteEnvironment> updateConfiguration(@Validated @RequestBody RouteEnvironment routeEnvironment) {
         return repository.findByRouteId(routeEnvironment.getRouteId())
-                .switchIfEmpty(Mono.error(new NotFoundException("Route Environment configuration does not exist")))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route environment configuration does not exist")))
                 .flatMap(existing -> {
                     routeEnvironment.setId(existing.getId());
                     return repository.save(routeEnvironment);
