@@ -31,15 +31,15 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange()
-                .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                .anyExchange().access((authenticationMono, context) -> {
-            String requestPath = context.getExchange().getRequest().getPath().toString().toLowerCase();
-            if (noAuthEndpoints.stream().anyMatch(endpoint -> requestPath.matches(endpoint)))
-                return Mono.just(new AuthorizationDecision(true));
-            return authenticationMono.flatMap(authentication -> Mono.just(new AuthorizationDecision(authentication.isAuthenticated())));
-        }).and().csrf().disable()
-                .oauth2ResourceServer()
-                .jwt().publicKey((RSAPublicKey) publicKey());
+            .pathMatchers(HttpMethod.OPTIONS).permitAll()
+            .anyExchange().access((authenticationMono, context) -> {
+                String requestPath = context.getExchange().getRequest().getPath().toString().toLowerCase();
+                if (noAuthEndpoints.stream().anyMatch(endpoint -> requestPath.matches(endpoint)))
+                    return Mono.just(new AuthorizationDecision(true));
+                return authenticationMono.flatMap(authentication -> Mono.just(new AuthorizationDecision(authentication.isAuthenticated())));
+            }).and().csrf().disable()
+            .oauth2ResourceServer()
+            .jwt().publicKey((RSAPublicKey) publicKey());
         return http.build();
     }
 
