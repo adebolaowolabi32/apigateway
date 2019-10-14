@@ -45,11 +45,14 @@ public class AccessControlFilterTests {
 
     private User user = new User();
 
+    private String username = "username";
+
     public void setup(String sender, String email, String aud, String path) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .claim("sender", sender)
                 .claim("email", email)
+                .claim("user_name", username)
                 .audience(aud)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -120,9 +123,8 @@ public class AccessControlFilterTests {
     public void requestsToAdminEndpointsFromNonAdminInterswitchUserShouldFail() throws JOSEException {
         this.setup("api-gateway-client", "nonadmin@interswitch.com", "api-gateway", "golive/approve");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-        user.setUsername("");
         user.setRole(User.Role.USER);
-        when(mongoUserRepository.findByUsername("")).thenReturn(Mono.just(user));
+        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You need administrative rights to access this resource\"").verify();
     }
 
@@ -130,9 +132,8 @@ public class AccessControlFilterTests {
     public void allRequestsFromAnAdminInterswitchUserShouldPass() throws JOSEException {
         this.setup("api-gateway-client", "admin@interswitch.com", "api-gateway", "/golive/decline");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
-        user.setUsername("");
         user.setRole(User.Role.ADMIN);
-        when(mongoUserRepository.findByUsername("")).thenReturn(Mono.just(user));
+        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }

@@ -30,8 +30,8 @@ public class RouteAccessControlFilter implements GlobalFilter, Ordered {
 
     private static String wildcardToRegex(String wildcard) {
         String regex = wildcard.trim();
-        String firstRegex = (regex.contains("*")) ? regex.replace("*", ".*") : regex;
-        regex = (firstRegex.contains("?")) ? firstRegex.replace("?", ".") : firstRegex;
+        if (regex.contains("*")) regex = regex.replace("*", ".*");
+        if (regex.contains("?")) regex = regex.replace("?", ".");
         if (StringUtils.containsAny(regex, "()&][$^{}|")) {
             regex = regex.replaceAll("[()&\\]\\[$^{}|]", "");
         }

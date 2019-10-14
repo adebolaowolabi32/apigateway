@@ -20,9 +20,9 @@ import static com.interswitch.apigateway.util.FilterUtil.*;
 
 public class AccessControlFilter implements WebFilter, Ordered {
 
-    private static List<String> excludedEndpoints = Arrays.asList("/passport/oauth.*");
+    private static List<String> excludedEndpoints = Arrays.asList("/passport/oauth.*", "/actuator/prometheus/?", "/actuator/health/?", ".*/login/?", ".*/logout/?", ".*/register/?", ".*/signup/?", ".*/signin/?", ".*/signout/?", ".*/index/?", ".*/home/?", ".*/oauth/token/?", ".*/oauth/authenticate/?", ".*/oauth/authorize/?");
 
-    private static List<String> systemEndpoints = Arrays.asList("/actuator/health", "/actuator/prometheus");
+    private static List<String> systemEndpoints = Arrays.asList("/actuator/health/?", "/actuator/prometheus/?");
 
     private static List<String> devEndpoints = Arrays.asList("/projects.*", "/golive/request.*");
 
@@ -40,7 +40,7 @@ public class AccessControlFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().toString();
-        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || systemEndpoints.contains(path) || match(path, excludedEndpoints))
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, systemEndpoints) || match(path, excludedEndpoints))
             return chain.filter(exchange);
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
         List<String> audience = getClaimAsListFromBearerToken(token, "aud");
@@ -49,10 +49,12 @@ public class AccessControlFilter implements WebFilter, Ordered {
                 if (!isRouteBasedEndpoint) {
                     String sender = getClaimAsStringFromBearerToken(token, "sender");
                     if (sender.equals("api-gateway-client")) {
+                        String username = getClaimAsStringFromBearerToken(token, "user_name");
+                        if (username.isEmpty())
+                            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "A user token is required to access this resource"));
                         String email = getClaimAsStringFromBearerToken(token, "email");
                         if (isInterswitchEmail(email)) {
                             if (match(path, adminEndpoints)) {
-                                String username = getClaimAsStringFromBearerToken(token, "user_name");
                                 return mongoUserRepository.findByUsername(username)
                                         .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
                                         .flatMap(user -> {
