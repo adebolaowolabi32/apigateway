@@ -17,17 +17,14 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 
+import static com.interswitch.apigateway.model.Endpoints.PASSPORT_ROUTE_ID;
 import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
 import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
 
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
-
-    private List<String> passportRoutes = Collections.singletonList("passport");
 
     private MongoAccessLogsRepository mongoAccessLogsRepository;
 
@@ -77,7 +74,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 }
 
                 if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
-                    if (accessLogs.getEntityId().contains(":") || passportRoutes.contains(accessLogs.getEntityId()))
+                    if (accessLogs.getEntityId().contains(":") || PASSPORT_ROUTE_ID.equalsIgnoreCase(accessLogs.getEntityId()))
                         accessLogs.setAction(Action.UPDATE);
                 }
 
@@ -89,6 +86,9 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 return chain.filter(exchange)
                         .doFinally((signalType) -> {
+                            if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
+                                accessLogs.setEntityId(getId(accessLogs.getEntity().getValue(), exchange.getRequest().getPath().toString()));
+                            }
                             HttpStatus status = exchange.getResponse().getStatusCode();
                             if (status.isError())
                                 accessLogs.setStatus(AccessLogs.Status.FAILED);
@@ -132,6 +132,6 @@ public class AccessLogsFilter implements WebFilter, Ordered {
     }
     @Override
     public int getOrder() {
-        return -20;
+        return -50;
     }
 }

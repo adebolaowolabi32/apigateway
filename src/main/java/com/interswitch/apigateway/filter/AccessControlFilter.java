@@ -13,20 +13,12 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.List;
 
+import static com.interswitch.apigateway.model.Endpoints.*;
 import static com.interswitch.apigateway.util.FilterUtil.*;
 
 public class AccessControlFilter implements WebFilter, Ordered {
-
-    private static List<String> excludedEndpoints = Arrays.asList("/passport/oauth.*", "/actuator/prometheus/?", "/actuator/health/?", ".*/login/?", ".*/logout/?", ".*/register/?", ".*/signup/?", ".*/signin/?", ".*/signout/?", ".*/index/?", ".*/home/?", ".*/oauth/token/?", ".*/oauth/authenticate/?", ".*/oauth/authorize/?");
-
-    private static List<String> systemEndpoints = Arrays.asList("/actuator/health/?", "/actuator/prometheus/?");
-
-    private static List<String> devEndpoints = Arrays.asList("/projects.*", "/golive/request.*");
-
-    private static List<String> adminEndpoints = Arrays.asList("/users.*", "/golive/approve.*", "/golive/decline.*");
 
     private MongoUserRepository mongoUserRepository;
 
@@ -40,7 +32,7 @@ public class AccessControlFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().toString();
-        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, systemEndpoints) || match(path, excludedEndpoints))
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, noAuthEndpoints) || match(path, noAuthSystemEndpoints))
             return chain.filter(exchange);
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
         List<String> audience = getClaimAsListFromBearerToken(token, "aud");
@@ -77,22 +69,12 @@ public class AccessControlFilter implements WebFilter, Ordered {
         return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
 
-    private boolean isInterswitchEmail(String email) {
+    public boolean isInterswitchEmail(String email) {
         return email.endsWith("@interswitchgroup.com") ||
                 email.endsWith("@interswitch.com") ||
                 email.endsWith("@interswitchng.com");
     }
 
-    private boolean match(String path, List<String> paths) {
-        boolean match = false;
-        for (var p : paths) {
-            if (path.matches(p)) {
-                match = true;
-                break;
-            }
-        }
-        return match;
-    }
 
     @Override
     public int getOrder() {

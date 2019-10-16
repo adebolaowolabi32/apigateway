@@ -47,9 +47,11 @@ public class ErrorResponseService {
                 String error = ((WebExchangeBindException) e).getReason();
                 String field = "";
                 String messageError = "";
-                for (var fields : fieldErrors) {
-                    messageError = fields.getDefaultMessage() + ", " + messageError;
-                    field = fields.getField() + " ( " + fields.getDefaultMessage() + " )";
+                for(int i = 0; i < fieldErrors.size(); i++){
+                    var fieldError = fieldErrors.get(i);
+                    if(i == 0) messageError = fieldError.getDefaultMessage();
+                    else messageError = fieldError.getDefaultMessage() + ", " + messageError;
+                    field = fieldError.getField() + " ( " + fieldError.getDefaultMessage() + " )";
                     errors.add(error + " for field: " + field);
                 }
                 message = messageError;

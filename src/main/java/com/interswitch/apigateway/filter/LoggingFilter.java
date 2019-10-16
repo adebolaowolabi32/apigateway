@@ -41,23 +41,27 @@ public class LoggingFilter implements WebFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
         String client_id = getClaimAsStringFromBearerToken(token, "client_id");
+        client_id = client_id.isEmpty() ? "No Client ID" : client_id;
+        String project = getClaimAsStringFromBearerToken(token, "client_name");
+        project = project.isEmpty() ? "No Project Name" : project;
         Trace trace = new Trace();
         if (request.getRemoteAddress() != null) {
             trace.setCallerIp(request.getRemoteAddress().getAddress().getHostAddress());
             trace.setCallerPort(request.getRemoteAddress().getPort());
             trace.setCallerName(request.getRemoteAddress().getAddress().getHostName());
         }
-
         try {
             trace.setHostIp(InetAddress.getLocalHost().getHostAddress());
             trace.setHostName(InetAddress.getLocalHost().getHostName());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             Mono.error(e).log();
         }
 
         trace.setHttpMethod(request.getMethodValue());
         trace.setHttpPath(request.getPath().toString());
         trace.setHttpRequestParams(request.getQueryParams().toString());
+        trace.setProjectName(project);
         trace.setClientId(client_id);
 
         return chain.filter(exchange)
@@ -65,19 +69,35 @@ public class LoggingFilter implements WebFilter, Ordered {
                     long totalRequestDuration = sample.stop(this.meterRegistry.timer("gateway.request.duration"));
 
                     HttpStatus statusCode = exchange.getResponse().getStatusCode();
-                    var status = (statusCode != null) ? valueOf(statusCode) : "No Status Code";
+                    String httpStatusCode = "";
+                    String status = "";
+
+                    if(statusCode != null){
+                        httpStatusCode = statusCode.toString();
+                        status = valueOf(statusCode).toString();
+                        status = statusCode.is4xxClientError() ? status += " - Error From API Gateway" : status;
+                        status = statusCode.is5xxServerError() ? status += " - Error From Downstream Service" : status;
+                    }
+                    else httpStatusCode = "No Status Code";
+
                     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
                     String routeId = (route != null) ? route.getId() : "API Gateway";
-                    String api = (route != null) ? route.getUri().toString() : "API Gateway";
+                    int index = routeId.indexOf(":");
+                    String product = index != -1 ? routeId.substring(index) : "API Gateway";
+                    String uri = (route != null) ? route.getUri().toString() : "API Gateway";
                     Long duration = exchange.getAttribute(DOWNSTREAM_ROUTE_DURATION);
                     long downstreamRouteDuration = duration != null ? duration : 0;
 
-                    trace.setHttpUri(api);
+                    trace.setProductName(product);
+                    trace.setHttpUri(uri);
                     trace.setRouteId(routeId);
-                    trace.setHttpStatusCode(status.toString());
-                    trace.setRequestDuration(totalRequestDuration / 1000000);
-                    trace.setDurationOutsideGateway(downstreamRouteDuration / 1000000);
-                    trace.setDurationWithinGateway((totalRequestDuration - downstreamRouteDuration) / 1000000);
+                    trace.setHttpStatusCode(httpStatusCode);
+                    trace.setHttpStatus(status);
+                    long requestDuration = totalRequestDuration / 1000000;
+                    long downstreamDuration = downstreamRouteDuration / 1000000;
+                    trace.setRequestDuration(requestDuration);
+                    trace.setDurationOutsideGateway(downstreamDuration);
+                    trace.setDurationWithinGateway(requestDuration - downstreamDuration);
 
                     if (LOG.isInfoEnabled()) {
                         LOG.info("payload", value("trace", trace));

@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public final class FilterUtil {
 
@@ -61,5 +62,16 @@ public final class FilterUtil {
             }
         }
         return claimAsList;
+    }
+
+    public static boolean match(String path, Set<String> paths) {
+        boolean match = false;
+        for (var p : paths) {
+            if (path.matches(p)) {
+                match = true;
+                break;
+            }
+        }
+        return match;
     }
 }

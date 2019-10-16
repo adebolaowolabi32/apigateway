@@ -25,7 +25,7 @@ public class Product {
 
     @Indexed(unique = true)
     @NotBlank(message = "Name is Required")
-    @Length(min = 5, max = 50, message = "Name mus vct be between 5 and 50 characters long")
+    @Length(min = 5, max = 50, message = "Name must not be between 5 and 50 characters long")
     private String name;
 
     @EqualsAndHashCode.Exclude
