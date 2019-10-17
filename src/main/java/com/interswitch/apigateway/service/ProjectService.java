@@ -188,6 +188,7 @@ public class ProjectService {
                     if (projectOwner.equals(project.getOwner())) {
                         String name = projectData.getName().trim().toLowerCase();
                         projectData.setName(name);
+                        projectData.setOwner(project.getOwner());
                         projectData.setClients(project.getClients());
                         projectData.setResources(project.getResources());
                         return Flux.fromArray(Env.values()).flatMap(env -> {
