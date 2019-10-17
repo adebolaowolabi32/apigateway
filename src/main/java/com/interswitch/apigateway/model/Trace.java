@@ -2,8 +2,6 @@ package com.interswitch.apigateway.model;
 
 import lombok.Data;
 
-import java.util.UUID;
-
 @Data
 public class Trace {
     private String httpUri;
@@ -12,6 +10,7 @@ public class Trace {
     private String httpRequestParams;
     private String httpStatusCode;
     private String httpStatus;
+    private String httpRequestEnvironment;
     private String productName;
     private String routeId;
     private String projectName;

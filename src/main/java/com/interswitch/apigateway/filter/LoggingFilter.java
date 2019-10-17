@@ -1,5 +1,6 @@
 package com.interswitch.apigateway.filter;
 
+import com.interswitch.apigateway.model.Env;
 import com.interswitch.apigateway.model.Trace;
 import com.nimbusds.jwt.JWT;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -40,6 +41,17 @@ public class LoggingFilter implements WebFilter, Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+
+        String env = "No environment found";
+        if (token != null) {
+            env = getClaimAsStringFromBearerToken(token, "env");
+            if (env.isEmpty()) env = Env.LIVE.toString().toLowerCase();
+        } else {
+            var envParam = request.getQueryParams().get("env");
+            if (envParam != null && !envParam.isEmpty()) env = envParam.get(0);
+            else env = Env.LIVE.toString().toLowerCase();
+        }
+
         String client_id = getClaimAsStringFromBearerToken(token, "client_id");
         client_id = client_id.isEmpty() ? "No Client ID" : client_id;
         String project = getClaimAsStringFromBearerToken(token, "client_name");
@@ -61,6 +73,7 @@ public class LoggingFilter implements WebFilter, Ordered {
         trace.setHttpMethod(request.getMethodValue());
         trace.setHttpPath(request.getPath().toString());
         trace.setHttpRequestParams(request.getQueryParams().toString());
+        trace.setHttpRequestEnvironment(env);
         trace.setProjectName(project);
         trace.setClientId(client_id);
 
