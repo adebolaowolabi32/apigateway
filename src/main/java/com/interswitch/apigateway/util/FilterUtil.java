@@ -64,6 +64,12 @@ public final class FilterUtil {
         return claimAsList;
     }
 
+    public static boolean isInterswitchEmail(String email) {
+        return email.endsWith("@interswitchgroup.com") ||
+                email.endsWith("@interswitch.com") ||
+                email.endsWith("@interswitchng.com");
+    }
+
     public static boolean match(String path, Set<String> paths) {
         boolean match = false;
         for (var p : paths) {

@@ -24,19 +24,19 @@ public class Product {
     private String id;
 
     @Indexed(unique = true)
-    @NotBlank(message = "Name is Required")
-    @Length(min = 5, max = 50, message = "Name must not be between 5 and 50 characters long")
+    @NotBlank(message = "Product name is Required")
+    @Length(min = 5, max = 50, message = "Product name must be between 5 and 50 characters long")
     private String name;
 
     @EqualsAndHashCode.Exclude
     @NotNull
-    @Length(max = 500, message = "Description must less than 500 characters long")
+    @Length(max = 500, message = "Product description must be less than 500 characters long")
     private String description = "";
 
     @EqualsAndHashCode.Exclude
     @NotBlank(message = "Documentation URL is Required")
-    @URL(message = "Documentation URL not valid")
-    @Length(max = 500, message = "Documentation URL must less than 500 characters long")
+    @URL(message = "Documentation URL is not valid")
+    @Length(max = 500, message = "Documentation URL must be less than 500 characters long")
     private String documentation;
 
     @EqualsAndHashCode.Exclude

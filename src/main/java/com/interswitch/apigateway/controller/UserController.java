@@ -7,8 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static com.interswitch.apigateway.util.FilterUtil.isInterswitchEmail;
 
 @RestController
 @RequestMapping("/users")
@@ -28,10 +31,13 @@ public class UserController {
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<User> register(@Validated @RequestBody User user) {
-        user.setUsername(user.getUsername().trim().toLowerCase());
-        user.setRole(User.Role.USER);
-        return mongoUserRepository.save(user);
-
+        String username = user.getUsername().trim().toLowerCase();
+        if (isInterswitchEmail(username)) {
+            user.setUsername(username);
+            user.setRole(User.Role.USER);
+            return mongoUserRepository.save(user);
+        }
+        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username must be a valid Interswitch domain email address"));
     }
 
     @GetMapping(value = "/{username}", produces = "application/json")

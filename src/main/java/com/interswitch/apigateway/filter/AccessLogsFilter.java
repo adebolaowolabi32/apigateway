@@ -41,7 +41,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
             if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
                 JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = getClaimAsStringFromBearerToken(token, "user_name");
+                String email = getClaimAsStringFromBearerToken(token, "email");
                 String client = getClaimAsStringFromBearerToken(token, "client_id");
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
@@ -75,10 +75,10 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
                     if (accessLogs.getEntityId().contains(":") || PASSPORT_ROUTE_ID.equalsIgnoreCase(accessLogs.getEntityId()))
-                        accessLogs.setAction(Action.UPDATE);
+                        accessLogs.setAction(Action.UPDATE); //this is done to identify route update requests because a route update request is a POST request
                 }
 
-                accessLogs.setUsername(username);
+                accessLogs.setUsername(email);
                 accessLogs.setClient(client);
 
                 accessLogs.setApi(path);
@@ -86,9 +86,6 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
                 return chain.filter(exchange)
                         .doFinally((signalType) -> {
-                            if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
-                                accessLogs.setEntityId(getId(accessLogs.getEntity().getValue(), exchange.getRequest().getPath().toString()));
-                            }
                             HttpStatus status = exchange.getResponse().getStatusCode();
                             if (status.isError())
                                 accessLogs.setStatus(AccessLogs.Status.FAILED);

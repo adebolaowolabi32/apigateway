@@ -68,31 +68,31 @@ public class LoggingFilter implements WebFilter, Ordered {
                 .doFinally((signalType) -> {
                     long totalRequestDuration = sample.stop(this.meterRegistry.timer("gateway.request.duration"));
 
-                    HttpStatus statusCode = exchange.getResponse().getStatusCode();
-                    String httpStatusCode = "";
-                    String status = "";
-
-                    if(statusCode != null){
-                        httpStatusCode = statusCode.toString();
-                        status = valueOf(statusCode).toString();
-                        status = statusCode.is4xxClientError() ? status += " - Error From API Gateway" : status;
-                        status = statusCode.is5xxServerError() ? status += " - Error From Downstream Service" : status;
-                    }
-                    else httpStatusCode = "No Status Code";
-
                     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
                     String routeId = (route != null) ? route.getId() : "API Gateway";
                     int index = routeId.indexOf(":");
-                    String product = index != -1 ? routeId.substring(index) : "API Gateway";
+                    String product = index != -1 ? routeId.substring(0, index) : "API Gateway";
                     String uri = (route != null) ? route.getUri().toString() : "API Gateway";
                     Long duration = exchange.getAttribute(DOWNSTREAM_ROUTE_DURATION);
                     long downstreamRouteDuration = duration != null ? duration : 0;
 
+                    HttpStatus statusCode = exchange.getResponse().getStatusCode();
+                    String httpStatusCode = "";
+                    String httpStatus = "";
+
+                    if (statusCode != null) {
+                        httpStatusCode = statusCode.toString();
+                        httpStatus = valueOf(statusCode).toString();
+                        if (statusCode.isError()) {
+                            if (downstreamRouteDuration == 0) httpStatus = "Error From API Gateway";
+                            else httpStatus = "Error From Downstream Service";
+                        }
+                    } else httpStatusCode = "No Status Code";
                     trace.setProductName(product);
                     trace.setHttpUri(uri);
                     trace.setRouteId(routeId);
                     trace.setHttpStatusCode(httpStatusCode);
-                    trace.setHttpStatus(status);
+                    trace.setHttpStatus(httpStatus);
                     long requestDuration = totalRequestDuration / 1000000;
                     long downstreamDuration = downstreamRouteDuration / 1000000;
                     trace.setRequestDuration(requestDuration);

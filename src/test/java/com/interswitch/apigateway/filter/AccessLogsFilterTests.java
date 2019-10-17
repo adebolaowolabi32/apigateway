@@ -39,7 +39,7 @@ public class AccessLogsFilterTests {
     AccessLogsFilter filter;
 
     private static String accessToken;
-    private static String username;
+    private static String email;
     private static String client;
     @MockBean
     private MongoAccessLogsRepository mongoAccessLogsRepository;
@@ -52,12 +52,12 @@ public class AccessLogsFilterTests {
 
     @BeforeAll
     public static void setup() throws JOSEException {
-        username = "username";
+        email = "sample@email.com";
         client = "clientId";
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime() + 1000 * 60 ^ 10))
                 .notBeforeTime(new Date())
-                .claim("user_name", username)
+                .claim("email", email)
                 .claim("client_id", client)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
@@ -194,7 +194,7 @@ public class AccessLogsFilterTests {
 
         accessLogs = captor.getValue();
         assertThat(accessLogs.getApi()).isEqualTo(path);
-        assertThat(accessLogs.getUsername()).isEqualTo(username);
+        assertThat(accessLogs.getUsername()).isEqualTo(email);
         assertThat(accessLogs.getClient()).isEqualTo(client);
         assertThat(accessLogs.getAction()).isEqualTo(action);
         assertThat(accessLogs.getEntity()).isEqualTo(entity);

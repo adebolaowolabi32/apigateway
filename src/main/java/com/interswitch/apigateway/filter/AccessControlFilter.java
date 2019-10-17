@@ -47,7 +47,7 @@ public class AccessControlFilter implements WebFilter, Ordered {
                         String email = getClaimAsStringFromBearerToken(token, "email");
                         if (isInterswitchEmail(email)) {
                             if (match(path, adminEndpoints)) {
-                                return mongoUserRepository.findByUsername(username)
+                                return mongoUserRepository.findByUsername(email)
                                         .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
                                         .flatMap(user -> {
                                             if (user.getRole().equals(User.Role.ADMIN))
@@ -68,13 +68,6 @@ public class AccessControlFilter implements WebFilter, Ordered {
         }
         return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
     }
-
-    public boolean isInterswitchEmail(String email) {
-        return email.endsWith("@interswitchgroup.com") ||
-                email.endsWith("@interswitch.com") ||
-                email.endsWith("@interswitchng.com");
-    }
-
 
     @Override
     public int getOrder() {

@@ -5,6 +5,7 @@ import com.nimbusds.jwt.JWT;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -15,8 +16,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
+import static com.interswitch.apigateway.model.Endpoints.PASSPORT_ROUTE_ID;
 import static com.interswitch.apigateway.model.Endpoints.noAuthEndpoints;
 import static com.interswitch.apigateway.util.FilterUtil.*;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 public class RouteAccessControlFilter implements GlobalFilter, Ordered {
 
@@ -38,10 +41,12 @@ public class RouteAccessControlFilter implements GlobalFilter, Ordered {
 
         HttpHeaders headers = exchange.getRequest().getHeaders();
         String requestPath = exchange.getRequest().getPath().toString();
+        Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
+        String routeId = (route != null) ? route.getId() : "";
         JWT token = decodeBearerToken(headers);
         String environment = getClaimAsStringFromBearerToken(token, "env");
 
-        if (match(requestPath, noAuthEndpoints) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PASSPORT_ROUTE_ID.equals(routeId) || match(requestPath, noAuthEndpoints) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
 
         List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");

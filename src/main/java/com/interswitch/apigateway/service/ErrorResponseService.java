@@ -46,15 +46,19 @@ public class ErrorResponseService {
                 List<FieldError> fieldErrors = ((WebExchangeBindException) e).getFieldErrors();
                 String error = ((WebExchangeBindException) e).getReason();
                 String field = "";
-                String messageError = "";
+                StringBuilder messageError = new StringBuilder();
+
                 for(int i = 0; i < fieldErrors.size(); i++){
                     var fieldError = fieldErrors.get(i);
-                    if(i == 0) messageError = fieldError.getDefaultMessage();
-                    else messageError = fieldError.getDefaultMessage() + ", " + messageError;
-                    field = fieldError.getField() + " ( " + fieldError.getDefaultMessage() + " )";
+                    if (i == 0) messageError.append(fieldError.getDefaultMessage());
+                    else {
+                        messageError.append(", ");
+                        messageError.append(fieldError.getDefaultMessage());
+                    }
+                    field = fieldError.getField() + " (" + fieldError.getDefaultMessage() + ")";
                     errors.add(error + " for field: " + field);
                 }
-                message = messageError;
+                message = messageError.toString();
             } else {
                 eMessage = ((ServerWebInputException) e).getMessage();
                 String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");

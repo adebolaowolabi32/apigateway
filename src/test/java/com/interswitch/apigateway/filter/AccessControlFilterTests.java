@@ -47,7 +47,7 @@ public class AccessControlFilterTests {
 
     private String username = "username";
 
-    public void setup(String sender, String email, String aud, String path) throws JOSEException {
+    public void setup(String sender, String email, String username, String aud, String path) throws JOSEException {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .expirationTime(new Date(new Date().getTime()+1000*60^10))
                 .claim("sender", sender)
@@ -82,72 +82,79 @@ public class AccessControlFilterTests {
 
     @Test
     public void allRequestsToSystemEndpointShouldPass() throws JOSEException {
-        this.setup(null, null, null, "/actuator/prometheus");
+        this.setup(null, null, null, null, "/actuator/prometheus");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void allRequestsToExcludedEndpointsShouldPass() throws JOSEException {
-        this.setup(null, null, null, "/passport/oauth/authorize");
+        this.setup(null, null, null, null, "/passport/oauth/authorize");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException {
-        this.setup(null, null, null, "/path");
+        this.setup(null, null, null, null, "/path");
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You do not have sufficient rights to this resource\"").verify();
     }
 
     @Test
     public void requestsToRouteBasedEndpointsShouldPass() throws JOSEException {
-        this.setup(null, null, "api-gateway", "/path");
+        this.setup(null, null, null, "api-gateway", "/path");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(true));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void allOtherRequestsWithoutApiGatewayClientInSenderClaimShouldFail() throws JOSEException {
-        this.setup(null, null, "api-gateway", "/path");
+        this.setup(null, null, null, "api-gateway", "/path");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You do not have permission to access this resource\"").verify();
     }
 
     @Test
+    public void allRequestsWithoutUserTokenToNonRouteBasedEndpointsShouldFail() throws JOSEException {
+        this.setup("api-gateway-client", null, null, "api-gateway", "/path");
+        when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"A user token is required to access this resource\"").verify();
+    }
+
+    @Test
     public void requestsToNonAdminEndpointsFromNonAdminInterswitchUserShouldPass() throws JOSEException {
-        this.setup("api-gateway-client", "nonadmin@interswitch.com", "api-gateway", "/path");
+        this.setup("api-gateway-client", "nonadmin@interswitch.com", username, "api-gateway", "/path");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsToAdminEndpointsFromNonAdminInterswitchUserShouldFail() throws JOSEException {
-        this.setup("api-gateway-client", "nonadmin@interswitch.com", "api-gateway", "golive/approve");
+        this.setup("api-gateway-client", "nonadmin@interswitch.com", username, "api-gateway", "golive/approve");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         user.setRole(User.Role.USER);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
+        when(mongoUserRepository.findByUsername("nonadmin@interswitch.com")).thenReturn(Mono.just(user));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You need administrative rights to access this resource\"").verify();
     }
 
     @Test
     public void allRequestsFromAnAdminInterswitchUserShouldPass() throws JOSEException {
-        this.setup("api-gateway-client", "admin@interswitch.com", "api-gateway", "/golive/decline");
+        this.setup("api-gateway-client", "admin@interswitch.com", username, "api-gateway", "/golive/decline");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         user.setRole(User.Role.ADMIN);
-        when(mongoUserRepository.findByUsername(username)).thenReturn(Mono.just(user));
+        when(mongoUserRepository.findByUsername("admin@interswitch.com")).thenReturn(Mono.just(user));
 
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsToDevEndpointsFromAnyUserShouldPass() throws JOSEException {
-        this.setup("api-gateway-client", null, "api-gateway", "projects/testprojectId");
+        this.setup("api-gateway-client", null, username, "api-gateway", "projects/testprojectId");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsToNonDevEndpointsFromNonInterswitchUserShouldFail() throws JOSEException {
-        this.setup("api-gateway-client", null, "api-gateway", "/users");
+        this.setup("api-gateway-client", null, username, "api-gateway", "/users");
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"Only Interswitch domain users can access this resource\"").verify();
     }
