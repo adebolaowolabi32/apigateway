@@ -14,16 +14,14 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.List;
 
+import static com.interswitch.apigateway.model.Endpoints.PASSPORT_ROUTE_ID;
+import static com.interswitch.apigateway.model.Endpoints.noAuthEndpoints;
 import static com.interswitch.apigateway.util.FilterUtil.*;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
-
 public class RouteAccessControlFilter implements GlobalFilter, Ordered {
-
-    private static List<String> PERMIT_ALL = Collections.singletonList("passport");
 
     public RouteAccessControlFilter() {
     }
@@ -42,15 +40,16 @@ public class RouteAccessControlFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         HttpHeaders headers = exchange.getRequest().getHeaders();
+        String requestPath = exchange.getRequest().getPath().toString();
         Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
         String routeId = (route != null) ? route.getId() : "";
         JWT token = decodeBearerToken(headers);
         String environment = getClaimAsStringFromBearerToken(token, "env");
 
-        if (PERMIT_ALL.contains(routeId) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
+        if (PASSPORT_ROUTE_ID.equals(routeId) || match(requestPath, noAuthEndpoints) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
-        List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
 
+        List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
         for (var r : resources) {
             r = r.replaceAll(" ", "");
             int indexOfFirstSlash = r.indexOf('/');

@@ -17,17 +17,14 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 
+import static com.interswitch.apigateway.model.Endpoints.PASSPORT_ROUTE_ID;
 import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
 import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
 
 public class AccessLogsFilter implements WebFilter, Ordered {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessLogsFilter.class);
-
-    private List<String> passportRoutes = Collections.singletonList("passport");
 
     private MongoAccessLogsRepository mongoAccessLogsRepository;
 
@@ -44,7 +41,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
             if (!isRouteBasedEndpoint && isAuditMethod(exchange.getRequest().getMethodValue())) {
                 AccessLogs accessLogs = new AccessLogs();
                 JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-                String username = getClaimAsStringFromBearerToken(token, "user_name");
+                String email = getClaimAsStringFromBearerToken(token, "email");
                 String client = getClaimAsStringFromBearerToken(token, "client_id");
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
@@ -77,11 +74,11 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 }
 
                 if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
-                    if (accessLogs.getEntityId().contains(":") || passportRoutes.contains(accessLogs.getEntityId()))
-                        accessLogs.setAction(Action.UPDATE);
+                    if (accessLogs.getEntityId().contains(":") || PASSPORT_ROUTE_ID.equalsIgnoreCase(accessLogs.getEntityId()))
+                        accessLogs.setAction(Action.UPDATE); //this is done to identify route update requests because a route update request is a POST request
                 }
 
-                accessLogs.setUsername(username);
+                accessLogs.setUsername(email);
                 accessLogs.setClient(client);
 
                 accessLogs.setApi(path);
@@ -132,6 +129,6 @@ public class AccessLogsFilter implements WebFilter, Ordered {
     }
     @Override
     public int getOrder() {
-        return -20;
+        return -50;
     }
 }

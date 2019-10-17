@@ -37,7 +37,7 @@ public class UserControllerTests {
     public void setup() {
         user = new User();
         user.setId("test_user_id");
-        user.setUsername("test_username");
+        user.setUsername("test_username@interswitch.com");
     }
 
     @Test

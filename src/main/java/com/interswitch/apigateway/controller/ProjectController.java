@@ -29,57 +29,57 @@ public class ProjectController {
 
     @GetMapping(produces = "application/json")
     private Flux<ProjectData> getAll(@RequestHeader HttpHeaders headers) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getAllProjects(username);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getAllProjects(email);
     }
 
     @GetMapping(value = "/{projectId}", produces = "application/json")
     private Mono<ProjectData> findById(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getProject(username, projectId);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getProject(email, projectId);
     }
 
     @PostMapping(produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.CREATED)
     private Mono<ProjectData> create(@RequestHeader HttpHeaders headers, @Validated @RequestBody ProjectData projectData) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.createProject(username, projectData);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.createProject(email, projectData);
     }
 
     @PutMapping(produces = "application/json", consumes = "application/json")
     private Mono<ProjectData> update(@RequestHeader HttpHeaders headers, @Validated @RequestBody ProjectData projectData) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.updateProject(username, projectData);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.updateProject(email, projectData);
     }
 
     @GetMapping(value = "/{projectId}/credentials/{env}", produces = "application/json")
     private Mono<Client> getClientCredentials(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId, @Validated @PathVariable Env env) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getClientCredentials(username, projectId, env);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getClientCredentials(email, projectId, env);
     }
 
     @GetMapping(value = "/{projectId}/requested", produces = "application/json")
     private Flux<ProductRequest> GetRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getRequestedResources(username, projectId);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getRequestedResources(email, projectId);
     }
 
     @PostMapping(value = "/{projectId}/requested", produces = "application/json", consumes = "application/json")
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     private Mono<Void> SaveRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId, @Validated @RequestBody Map<String, LinkedHashSet<String>> request) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.saveRequestedResources(username, projectId, request);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.saveRequestedResources(email, projectId, request);
     }
 
     @GetMapping(value = "/{projectId}/approved", produces = "application/json")
     private Flux<ProductRequest> GetApprovedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getApprovedResources(username, projectId);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getApprovedResources(email, projectId);
     }
 
     @GetMapping(value = "/{projectId}/available", produces = "application/json")
     private Flux<ProductRequest> GetAvailableResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.getAvailableResources(username, projectId);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.getAvailableResources(email, projectId);
     }
 }

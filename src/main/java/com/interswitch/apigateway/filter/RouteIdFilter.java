@@ -8,9 +8,9 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
+
+import static com.interswitch.apigateway.model.Endpoints.*;
 
 public class RouteIdFilter implements WebFilter, Ordered {
 
@@ -20,14 +20,11 @@ public class RouteIdFilter implements WebFilter, Ordered {
         String fullPath = request.getURI().getPath();
         int indexOfLastSlash = fullPath.lastIndexOf('/') + 1;
         String path = fullPath.substring(0, indexOfLastSlash);
-        String GATEWAY_SAVE_URL = "/actuator/gateway/routes/";
-        List<String> passportRoutes = Collections.singletonList("passport");
-
 
         if(request.getMethod() == HttpMethod.POST && path.equalsIgnoreCase(GATEWAY_SAVE_URL)){
             String id = fullPath.substring(indexOfLastSlash);
 
-            if(!id.isEmpty() && !id.contains(":") && !passportRoutes.contains(id)){
+            if(!id.isEmpty() && !id.contains(":") && !PASSPORT_ROUTE_ID.equalsIgnoreCase(id)){
                 String unique = UUID.randomUUID().toString().replaceAll("-", "");
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(path);
@@ -46,6 +43,6 @@ public class RouteIdFilter implements WebFilter, Ordered {
     }
     @Override
     public int getOrder() {
-        return -50;
+        return -20;
     }
 }

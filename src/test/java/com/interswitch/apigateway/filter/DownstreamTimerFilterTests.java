@@ -22,10 +22,10 @@ import static org.mockito.Mockito.when;
 public class DownstreamTimerFilterTests {
 
     @Autowired
-    DownstreamTimerFilter filter;
+    private DownstreamTimerFilter filter;
+
     private ArgumentCaptor<ServerWebExchange> captor = ArgumentCaptor.forClass(ServerWebExchange.class);
-    private MockServerHttpRequest request;
-    private ServerWebExchange exchange;
+
     @MockBean
     private GatewayFilterChain filterChain;
 

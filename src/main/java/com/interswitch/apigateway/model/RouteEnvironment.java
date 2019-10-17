@@ -16,10 +16,10 @@ public class RouteEnvironment {
     private String id;
 
     @Indexed(unique = true)
-    @NotBlank(message = "Route ID is required.")
+    @NotBlank(message = "Route ID is required")
     private String routeId;
 
     @EqualsAndHashCode.Exclude
-    @Pattern(regexp = "^https?:\\/\\/.+$", message = "Test URL must be a valid url pattern")
+    @Pattern(regexp = "^https?:\\/\\/.+$", message = "Test URL must be a valid URL pattern")
     private String testURL;
 }

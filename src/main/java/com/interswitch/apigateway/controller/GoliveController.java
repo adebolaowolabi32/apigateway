@@ -29,8 +29,8 @@ public class GoliveController {
     @PostMapping(value = "/request/{projectId}", produces = "application/json")
     @ResponseStatus(value = HttpStatus.ACCEPTED)
     private Mono<Void> requestToGoLive(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
-        String username = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "user_name");
-        return projectService.requestProjectGoLive(username, projectId);
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.requestProjectGoLive(email, projectId);
     }
 
     @PostMapping(value = "/approve/{projectId}", produces = "application/json", consumes = "application/json")
