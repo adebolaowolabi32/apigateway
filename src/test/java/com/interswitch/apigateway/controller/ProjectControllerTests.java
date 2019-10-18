@@ -32,6 +32,7 @@ public class ProjectControllerTests {
     private WebTestClient webClient;
 
     @MockBean
+
     private ProjectService projectService;
 
     private String accessToken;

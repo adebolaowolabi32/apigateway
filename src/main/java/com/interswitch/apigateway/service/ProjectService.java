@@ -204,7 +204,7 @@ public class ProjectService {
                             return Mono.empty();
                         }).then(mongoProjectRepository.save(from(projectData))).then(Mono.just(projectData));
                     } else {
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_MODIFIED, "You can not modify this project because you are not its owner"));
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not modify this project because you are not its owner"));
                     }
                 });
     }
