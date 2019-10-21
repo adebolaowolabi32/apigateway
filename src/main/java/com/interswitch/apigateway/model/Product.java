@@ -1,7 +1,6 @@
 package com.interswitch.apigateway.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -53,7 +52,6 @@ public class Product {
 
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @JsonIgnore
     @DBRef(lazy = true)
     @JsonBackReference
     private Set<Project> projects = new LinkedHashSet<>();

@@ -260,6 +260,7 @@ public class ProjectServiceTests {
     @Test
     public void testSaveApprovedResources() {
         project.setClientId("liveClientId", Env.LIVE);
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
         when(passportService.getPassportClient(project.getClientId(Env.LIVE), Env.LIVE)).thenReturn(Mono.just(passportClient));
