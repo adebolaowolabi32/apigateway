@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.service;
 
 import com.interswitch.apigateway.model.*;
+import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoProjectRepository;
 import com.interswitch.apigateway.repository.MongoResourceRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
@@ -36,6 +37,9 @@ public class ProjectServiceTests {
 
     @MockBean
     private MongoProjectRepository mongoProjectRepository;
+
+    @MockBean
+    private MongoProductRepository mongoProductRepository;
 
     @MockBean
     private MongoResourceRepository mongoResourceRepository;
@@ -256,6 +260,7 @@ public class ProjectServiceTests {
     @Test
     public void testSaveApprovedResources() {
         project.setClientId("liveClientId", Env.LIVE);
+        when(mongoProductRepository.save(product)).thenReturn(Mono.just(product));
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
         when(passportService.getPassportClient(project.getClientId(Env.LIVE), Env.LIVE)).thenReturn(Mono.just(passportClient));
