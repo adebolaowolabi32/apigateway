@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.service;
 
 import com.interswitch.apigateway.model.*;
+import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoProjectRepository;
 import com.interswitch.apigateway.repository.MongoResourceRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
@@ -36,6 +37,9 @@ public class ProjectServiceTests {
 
     @MockBean
     private MongoProjectRepository mongoProjectRepository;
+
+    @MockBean
+    private MongoProductRepository mongoProductRepository;
 
     @MockBean
     private MongoResourceRepository mongoResourceRepository;

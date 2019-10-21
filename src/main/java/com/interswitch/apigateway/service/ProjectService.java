@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.service;
 
 import com.interswitch.apigateway.model.*;
+import com.interswitch.apigateway.repository.MongoProductRepository;
 import com.interswitch.apigateway.repository.MongoProjectRepository;
 import com.interswitch.apigateway.repository.MongoResourceRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
@@ -18,12 +19,14 @@ import java.util.stream.Collectors;
 @Service
 public class ProjectService {
     private MongoProjectRepository mongoProjectRepository;
+    private MongoProductRepository mongoProductRepository;
     private MongoResourceRepository mongoResourceRepository;
     private MongoUserRepository mongoUserRepository;
     private PassportService passportService;
 
-    public ProjectService(MongoProjectRepository mongoProjectRepository, MongoResourceRepository mongoResourceRepository, MongoUserRepository mongoUserRepository, PassportService passportService) {
+    public ProjectService(MongoProjectRepository mongoProjectRepository, MongoProductRepository mongoProductRepository, MongoResourceRepository mongoResourceRepository, MongoUserRepository mongoUserRepository, PassportService passportService) {
         this.mongoProjectRepository = mongoProjectRepository;
+        this.mongoProductRepository = mongoProductRepository;
         this.mongoResourceRepository = mongoResourceRepository;
         this.mongoUserRepository = mongoUserRepository;
         this.passportService = passportService;
@@ -370,13 +373,19 @@ public class ProjectService {
                         Set<String> api_resources = new LinkedHashSet<>();
                         Set<String> audiences = new LinkedHashSet<>();
                         return Flux.fromIterable(resources).flatMap(r -> {
-                            return Mono.fromRunnable(() -> project.getResource(r).ifPresentOrElse(resource -> {
+                            var resourceOptional = project.getResource(r);
+                            return Mono.fromRunnable(() -> resourceOptional.ifPresentOrElse(resource -> {
                                 String resourceString = resource.getId() + "-" + resource.getMethod() + resource.getPath();
                                 api_resources.add(resourceString);
                                 audiences.addAll(resource.getProduct().getAudiences());
                                 project.removeResource(resource);
                             }, () -> {
                                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of these resources has not been requested for");
+                            })).then(Mono.defer(() -> {
+                                Resource resource = resourceOptional.get();
+                                Product product = resource.getProduct();
+                                product.addProject(project);
+                                return mongoProductRepository.save(product);
                             }));
                         }).then(Mono.defer(() -> {
                             String clientId = project.getClientId(Env.LIVE);
