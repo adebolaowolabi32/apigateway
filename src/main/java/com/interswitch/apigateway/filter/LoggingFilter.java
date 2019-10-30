@@ -47,9 +47,8 @@ public class LoggingFilter implements WebFilter, Ordered {
             env = getClaimAsStringFromBearerToken(token, "env");
             if (env.isEmpty()) env = Env.LIVE.toString().toLowerCase();
         } else {
-            var envParam = request.getQueryParams().get("env");
-            if (envParam != null && !envParam.isEmpty()) env = envParam.get(0);
-            else env = Env.LIVE.toString().toLowerCase();
+            env = request.getQueryParams().getFirst("env");
+            if (env == null || env.isEmpty()) env = Env.LIVE.toString().toLowerCase();
         }
 
         String client_id = getClaimAsStringFromBearerToken(token, "client_id");
