@@ -47,7 +47,7 @@ public class ProjectServiceTests {
     @MockBean
     private MongoUserRepository mongoUserRepository;
 
-    private ArgumentCaptor<PassportClient> captor;
+    private ArgumentCaptor<PassportClient> passportClientArgumentCaptor;
 
     private PassportClient passportClient;
 
@@ -57,7 +57,7 @@ public class ProjectServiceTests {
 
     private Resource resource;
 
-    private Product product;
+    private Product product, productOne;
 
     private ProductRequest productRequest;
 
@@ -74,7 +74,7 @@ public class ProjectServiceTests {
         passportClient.setScope(Set.of("profile"));
         passportClient.setClientSecret("secret");
         passportClient.setLogoUrl("http://logoUrl");
-        passportClient.setResourceIds(new LinkedHashSet<>(Arrays.asList("api-gateway", "passport")));
+        passportClient.setResourceIds(new LinkedHashSet<>(Set.of("api-gateway", "passport")));
         passportClient.setAuthorizedGrantTypes(Set.of("authorization_code", "client_credentials"));
         passportClient.setRegisteredRedirectUri(Set.of("http://redirectUrl"));
         passportClient.setClientOwner(projectOwner);
@@ -85,9 +85,14 @@ public class ProjectServiceTests {
         passportClient.setRefreshTokenValiditySeconds(1209600);
 
         product = new Product();
-        product.setName("productOne");
+        product.setName("product");
         product.setDescription("description");
         product.setAudiences(Set.of("audienceOne", "audienceTwo"));
+
+        productOne = new Product();
+        productOne.setName("productOne");
+        productOne.setDescription("description");
+        productOne.setAudiences(Set.of("audienceThree", "audienceFour"));
 
         resource = new Resource();
         resource.setId("resourceOne");
@@ -127,7 +132,7 @@ public class ProjectServiceTests {
 
         resources = Map.of("resources", new LinkedHashSet(Collections.singleton("resourceOne")));
 
-        captor = ArgumentCaptor.forClass(PassportClient.class);
+        passportClientArgumentCaptor = ArgumentCaptor.forClass(PassportClient.class);
     }
 
     @Test
@@ -169,8 +174,14 @@ public class ProjectServiceTests {
     @Test
     public void testCreateProject() {
         when(mongoProjectRepository.existsByName(project.getName())).thenReturn(Mono.just(false));
-        when(passportService.createPassportClient(captor.capture(), any(Env.class))).thenReturn(Mono.just(passportClient));
+        when(passportService.createPassportClient(passportClientArgumentCaptor.capture(), any(Env.class))).thenReturn(Mono.just(passportClient));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
+        when(mongoProductRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(product, productOne)));
+
+        Set<String> resourceIds = new HashSet<>();
+        resourceIds.addAll(product.getAudiences());
+        resourceIds.addAll(productOne.getAudiences());
+
         StepVerifier.create(projectService.createProject(projectOwner, projectData)).assertNext(p -> {
             assertThat(p.getId()).isEqualTo(projectData.getId());
             assertThat(p.getName()).isEqualTo(projectData.getName());
@@ -182,6 +193,7 @@ public class ProjectServiceTests {
             assertThat(p.getRegisteredRedirectUris()).isEqualTo(projectData.getRegisteredRedirectUris());
             assertThat(p.getClients()).isEqualTo(projectData.getClients());
             assertThat(p.getResources()).isEqualTo(projectData.getResources());
+            assertThat(passportClientArgumentCaptor.getValue().getResourceIds()).containsAll(resourceIds);
         }).expectComplete().verify();
     }
 

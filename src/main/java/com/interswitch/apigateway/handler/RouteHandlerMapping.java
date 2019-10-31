@@ -35,11 +35,12 @@ public class RouteHandlerMapping extends RoutePredicateHandlerMapping {
             return repository.findByRouteId(route.getId())
                     .flatMap(config -> {
                         String environment = "";
-                        if (route.getId().equals("passport") && exchange.getRequest().getQueryParams().getFirst("env") != null) {
-                            environment = exchange.getRequest().getQueryParams().getFirst("env");
-                        } else {
-                            JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+                        JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+                        if (token != null) {
                             environment = getClaimAsStringFromBearerToken(token, "env");
+                        } else {
+                            environment = exchange.getRequest().getQueryParams().getFirst("env");
+                            if (environment == null) environment = "";
                         }
                         URI uri = route.getUri();
                         if (environment.equalsIgnoreCase(Env.TEST.toString())) {
