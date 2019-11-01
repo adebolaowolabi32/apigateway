@@ -59,6 +59,8 @@ public class ProjectServiceTests {
 
     private Product product, productOne;
 
+    private Set<String> resourceIds;
+
     private ProductRequest productRequest;
 
     private Map<String, LinkedHashSet<String>> resources;
@@ -80,7 +82,7 @@ public class ProjectServiceTests {
         passportClient.setClientOwner(projectOwner);
         passportClient.setAutoApproveScopes(Collections.emptySet());
         passportClient.setAuthorities(Collections.emptyList());
-        passportClient.setAdditionalInformation(new LinkedHashMap<>(Map.of("api_resources", new ArrayList<>(Collections.singletonList("resourceOne-GET/path")))));
+        passportClient.setAdditionalInformation(new LinkedHashMap<>(Map.of("api_resources", new ArrayList<>(Collections.singletonList("resourceId-GET/path")))));
         passportClient.setAccessTokenValiditySeconds(1800);
         passportClient.setRefreshTokenValiditySeconds(1209600);
 
@@ -94,8 +96,12 @@ public class ProjectServiceTests {
         productOne.setDescription("description");
         productOne.setAudiences(Set.of("audienceThree", "audienceFour"));
 
+        resourceIds = new HashSet<>();
+        resourceIds.addAll(product.getAudiences());
+        resourceIds.addAll(productOne.getAudiences());
+
         resource = new Resource();
-        resource.setId("resourceOne");
+        resource.setId("resourceId");
         resource.setName("resourceName");
         resource.setMethod(HttpMethod.GET);
         resource.setPath("/path");
@@ -122,15 +128,15 @@ public class ProjectServiceTests {
         projectData.setResources(Set.of(resource));
 
         ResourceRequest resourceRequest = new ResourceRequest();
-        resourceRequest.setId("resourceOne");
+        resourceRequest.setId("resourceId");
         resourceRequest.setName("resourceName");
 
         productRequest = new ProductRequest();
-        productRequest.setName("productOne");
+        productRequest.setName("product");
         productRequest.setDescription("description");
         productRequest.setResources(Set.of(resourceRequest));
 
-        resources = Map.of("resources", new LinkedHashSet(Collections.singleton("resourceOne")));
+        resources = Map.of("resources", new LinkedHashSet(Collections.singleton("resourceId")));
 
         passportClientArgumentCaptor = ArgumentCaptor.forClass(PassportClient.class);
     }
@@ -178,10 +184,6 @@ public class ProjectServiceTests {
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
         when(mongoProductRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(product, productOne)));
 
-        Set<String> resourceIds = new HashSet<>();
-        resourceIds.addAll(product.getAudiences());
-        resourceIds.addAll(productOne.getAudiences());
-
         StepVerifier.create(projectService.createProject(projectOwner, projectData)).assertNext(p -> {
             assertThat(p.getId()).isEqualTo(projectData.getId());
             assertThat(p.getName()).isEqualTo(projectData.getName());
@@ -201,8 +203,10 @@ public class ProjectServiceTests {
     public void testUpdateProject() {
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(passportService.getPassportClient(any(String.class), any(Env.class))).thenReturn(Mono.just(passportClient));
-        when(passportService.updatePassportClient(any(PassportClient.class), any(Env.class))).thenReturn(Mono.empty());
+        when(passportService.updatePassportClient(passportClientArgumentCaptor.capture(), any(Env.class))).thenReturn(Mono.empty());
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
+        when(mongoProductRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(product, productOne)));
+
         StepVerifier.create(projectService.updateProject(projectOwner, projectData)).assertNext(p -> {
             assertThat(p.getId()).isEqualTo(projectData.getId());
             assertThat(p.getName()).isEqualTo(projectData.getName());
@@ -214,6 +218,7 @@ public class ProjectServiceTests {
             assertThat(p.getRegisteredRedirectUris()).isEqualTo(projectData.getRegisteredRedirectUris());
             assertThat(p.getClients()).isEqualTo(projectData.getClients());
             assertThat(p.getResources()).isEqualTo(projectData.getResources());
+            assertThat(passportClientArgumentCaptor.getValue().getResourceIds()).containsAll(resourceIds);
         }).expectComplete().verify();
     }
 
@@ -225,6 +230,16 @@ public class ProjectServiceTests {
             assertThat(client.getClientId()).isEqualTo(passportClient.getClientId());
             assertThat(client.getClientSecret()).isEqualTo(passportClient.getClientSecret());
         }).expectComplete().verify();
+    }
+
+    @Test
+    public void testRefreshProject() {
+        when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
+        when(passportService.getPassportClient(any(String.class), any(Env.class))).thenReturn(Mono.just(passportClient));
+        when(passportService.updatePassportClient(passportClientArgumentCaptor.capture(), any(Env.class))).thenReturn(Mono.empty());
+        when(mongoProductRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(product, productOne)));
+        StepVerifier.create(projectService.refreshAudiences(projectOwner, project.getId())).expectComplete().verify();
+        assertThat(passportClientArgumentCaptor.getValue().getResourceIds()).containsAll(resourceIds);
     }
 
     @Test

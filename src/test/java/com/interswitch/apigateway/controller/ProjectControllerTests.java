@@ -131,6 +131,18 @@ public class ProjectControllerTests {
     }
 
     @Test
+    public void testRefreshProject() {
+        when(projectService.refreshAudiences(projectOwner, projectId)).thenReturn(Mono.empty());
+        this.webClient.post()
+                .uri("/projects/{projectId}/refresh", projectId)
+                .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + accessToken)
+                .exchange()
+                .expectStatus().isAccepted()
+                .expectBody().isEmpty();
+    }
+
+    @Test
     public void testGetRequestedResources() {
         when(projectService.getRequestedResources(projectOwner, projectId)).thenReturn(Flux.fromIterable(Collections.singleton(new ProductRequest())));
         this.webClient.get()
