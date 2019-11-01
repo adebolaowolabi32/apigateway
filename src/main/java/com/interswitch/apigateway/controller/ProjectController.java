@@ -58,6 +58,13 @@ public class ProjectController {
         return projectService.getClientCredentials(email, projectId, env);
     }
 
+    @PostMapping(value = "/{projectId}/refresh")
+    @ResponseStatus(value = HttpStatus.ACCEPTED)
+    private Mono<Void> RefreshAudiences(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
+        String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");
+        return projectService.refreshAudiences(email, projectId);
+    }
+
     @GetMapping(value = "/{projectId}/requested", produces = "application/json")
     private Flux<ProductRequest> GetRequestedResources(@RequestHeader HttpHeaders headers, @Validated @PathVariable String projectId) {
         String email = getClaimAsStringFromBearerToken(decodeBearerToken(headers), "email");

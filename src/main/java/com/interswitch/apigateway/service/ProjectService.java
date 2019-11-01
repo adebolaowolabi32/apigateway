@@ -32,27 +32,14 @@ public class ProjectService {
         this.passportService = passportService;
     }
 
-    private static PassportClient buildPassportClient(ProjectData project, PassportClient passportClient) {
-        if (passportClient == null) passportClient = new PassportClient();
-        passportClient.setClientName(project.getName());
-        passportClient.setDescription(project.getDescription());
-        passportClient.setClientOwner(project.getOwner());
-        passportClient.setScope(Collections.singleton("profile"));
-        passportClient.setAuthorizedGrantTypes(project.getAuthorizedGrantTypes().stream().map(Enum::name).collect(Collectors.toSet()));
-        passportClient.setRegisteredRedirectUri(project.getRegisteredRedirectUris());
-        passportClient.setLogoUrl(project.getLogoUrl());
-        int accessTokenValiditySeconds;
-        int refreshTokenValiditySeconds;
-        if (project.getType().equals(Project.Type.web)) {
-            accessTokenValiditySeconds = 1800;
-            refreshTokenValiditySeconds = 3600;
-        } else {
-            accessTokenValiditySeconds = 3600;
-            refreshTokenValiditySeconds = 7200;
-        }
-        passportClient.setAccessTokenValiditySeconds(accessTokenValiditySeconds);
-        passportClient.setRefreshTokenValiditySeconds(refreshTokenValiditySeconds);
-        return passportClient;
+    private Mono<PassportClient> buildPassportClient(PassportClient passportClient, ProjectData project, Env env) {
+        if (passportClient == null)
+            passportClient = new PassportClient();
+        setPassportClientFields(passportClient, project);
+        if (env.toString().equalsIgnoreCase(Env.TEST.toString()))
+            return loadAudiencesIntoClient(passportClient, env);
+        return Mono.just(passportClient);
+
     }
 
     private static ProjectData from(Project project) {
@@ -127,9 +114,29 @@ public class ProjectService {
         return listOfResources;
     }
 
-    private Mono<PassportClient> loadAllProductAudiencesIntoClient(PassportClient passportClient, Env env) {
-        if (!env.toString().equalsIgnoreCase(Env.TEST.toString()))
-            return Mono.just(passportClient);
+    private PassportClient setPassportClientFields(PassportClient passportClient, ProjectData project) {
+        passportClient.setClientName(project.getName());
+        passportClient.setDescription(project.getDescription());
+        passportClient.setClientOwner(project.getOwner());
+        passportClient.setScope(Collections.singleton("profile"));
+        passportClient.setAuthorizedGrantTypes(project.getAuthorizedGrantTypes().stream().map(Enum::name).collect(Collectors.toSet()));
+        passportClient.setRegisteredRedirectUri(project.getRegisteredRedirectUris());
+        passportClient.setLogoUrl(project.getLogoUrl());
+        int accessTokenValiditySeconds;
+        int refreshTokenValiditySeconds;
+        if (project.getType().equals(Project.Type.web)) {
+            accessTokenValiditySeconds = 1800;
+            refreshTokenValiditySeconds = 3600;
+        } else {
+            accessTokenValiditySeconds = 3600;
+            refreshTokenValiditySeconds = 7200;
+        }
+        passportClient.setAccessTokenValiditySeconds(accessTokenValiditySeconds);
+        passportClient.setRefreshTokenValiditySeconds(refreshTokenValiditySeconds);
+        return passportClient;
+    }
+
+    private Mono<PassportClient> loadAudiencesIntoClient(PassportClient passportClient, Env env) {
         Set<String> audiences = new LinkedHashSet<>(Set.of("api-gateway", "passport"));
         return mongoProductRepository.findAll().flatMap(product -> {
             audiences.addAll(product.getAudiences());
@@ -185,9 +192,8 @@ public class ProjectService {
                     projectData.setClients(new LinkedHashMap<>());
                     projectData.setResources(new LinkedHashSet<>());
                     Project project = from(projectData);
-                    PassportClient newPassportClient = buildPassportClient(projectData, null);
-                    newPassportClient.setAdditionalInformation(Map.of("env", Env.TEST));
-                    return this.loadAllProductAudiencesIntoClient(newPassportClient, Env.TEST).flatMap(passportClient -> {
+                    return this.buildPassportClient(null, projectData, Env.TEST).flatMap(passportClient -> {
+                        passportClient.setAdditionalInformation(Map.of("env", Env.TEST));
                         return passportService.createPassportClient(passportClient, Env.TEST)
                                 .flatMap(createdClient -> {
                                     project.setClientId(createdClient.getClientId(), Env.TEST);
@@ -200,36 +206,6 @@ public class ProjectService {
                     });
                 });
     }
-
-    /*public Mono<ProjectData> updateProject(String projectOwner, ProjectData projectData) {
-        return mongoProjectRepository.findById(projectData.getId())
-                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .flatMap(project -> {
-                    if (projectOwner.equals(project.getOwner())) {
-                        String name = projectData.getName().trim().toLowerCase();
-                        projectData.setName(name);
-                        projectData.setOwner(project.getOwner());
-                        projectData.setClients(project.getClients());
-                        projectData.setResources(project.getResources());
-                        return Flux.fromArray(Env.values()).flatMap(env -> {
-                            String clientId = project.getClientId(env);
-                            if (!clientId.isEmpty()) {
-                                return passportService.getPassportClient(clientId, env)
-                                        .flatMap(existingPassportClient -> {
-                                            existingPassportClient = buildPassportClient(projectData, existingPassportClient);
-                                            existingPassportClient.setClientId(clientId);
-                                            return this.loadAllProductAudiencesIntoClient(existingPassportClient, env)
-                                                    .flatMap(passportClient ->
-                                                        passportService.updatePassportClient(passportClient, env));
-                                        });
-                            }
-                            return Mono.empty();
-                        }).then(mongoProjectRepository.save(from(projectData))).then(Mono.just(projectData));
-                    } else {
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not modify this project because you are not its owner"));
-                    }
-                });
-    }*/
 
     public Mono<ProjectData> updateProject(String projectOwner, ProjectData projectData) {
         return mongoProjectRepository.findById(projectData.getId())
@@ -245,11 +221,10 @@ public class ProjectService {
                             String clientId = project.getClientId(env);
                             if (!clientId.isEmpty()) {
                                 return passportService.getPassportClient(clientId, env)
-                                        .flatMap(passportClient -> {
-                                            passportClient = buildPassportClient(projectData, passportClient);
-                                            passportClient.setClientId(clientId);
-                                            return passportService.updatePassportClient(passportClient, env);
-                                        });
+                                        .flatMap(existingPassportClient ->
+                                                buildPassportClient(existingPassportClient, projectData, env)
+                                                        .flatMap(passportClient ->
+                                                                passportService.updatePassportClient(passportClient, env)));
                             }
                             return Mono.empty();
                         }).then(mongoProjectRepository.save(from(projectData))).then(Mono.just(projectData));
@@ -279,6 +254,25 @@ public class ProjectService {
                         return Mono.just(client);
                     }
                     return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view credentials for this project because you are not its owner"));
+                });
+    }
+
+    public Mono<Void> refreshAudiences(String projectOwner, String projectId) {
+        return mongoProjectRepository.findById(projectId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
+                .flatMap(project -> {
+                    if (projectOwner.equals(project.getOwner())) {
+                        String clientId = project.getClientId(Env.TEST);
+                        if (!clientId.isEmpty()) {
+                            return passportService.getPassportClient(clientId, Env.TEST)
+                                    .flatMap(passportClient ->
+                                            loadAudiencesIntoClient(passportClient, Env.TEST)
+                                                    .flatMap(updatedPassportClient ->
+                                                            passportService.updatePassportClient(updatedPassportClient, Env.TEST)));
+                        }
+                        return Mono.empty();
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not refresh credentials for this project because you are not its owner"));
                 });
     }
 
@@ -330,7 +324,7 @@ public class ProjectService {
                     if (projectOwner.equals(project.getOwner())) {
                         Set<String> resources = request.get("resources");
                         if (!resources.isEmpty()) {
-                            project.setResources(new LinkedHashSet<>());
+                            //project.setResources(new LinkedHashSet<>());
                             Set<String> audiences = new LinkedHashSet<>();
                             return Flux.fromIterable(resources).flatMap(r -> {
                                 return mongoResourceRepository.findById(r)
