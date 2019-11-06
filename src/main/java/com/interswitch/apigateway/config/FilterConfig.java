@@ -52,5 +52,10 @@ public class FilterConfig {
     public DownstreamTimerFilter downstreamTimerFilter(MeterRegistry meterRegistry) {
         return new DownstreamTimerFilter(meterRegistry);
     }
+
+    @Bean
+    public ResponseInterceptor responseInterceptor() {
+        return new ResponseInterceptor();
+    }
 }
 
