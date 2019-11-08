@@ -1,6 +1,8 @@
 package com.interswitch.apigateway.controller;
 
 import com.interswitch.apigateway.model.AccessLogs;
+import com.interswitch.apigateway.model.AccessLogs.Entity;
+import com.interswitch.apigateway.model.AccessLogs.MethodActions;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -34,12 +37,14 @@ public class AccessLogsControllerTests {
 
     private AccessLogs accessLogs;
 
+    private long total = 1000;
+
     @BeforeEach
     public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(AccessLogs.Action.CREATE);
-        accessLogs.setEntity(AccessLogs.Entity.PRODUCT);
+        accessLogs.setAction(MethodActions.CREATE);
+        accessLogs.setEntity(Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
         accessLogs.setTimestamp(LocalDateTime.now());
@@ -51,18 +56,22 @@ public class AccessLogsControllerTests {
     @Test
     public void testGetPagedDefaultValues() {
         when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
+        when(mongoAccessLogsRepository.countAll()).thenReturn(Mono.just(total));
         this.webClient.get()
                 .uri("/audit")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(AccessLogs.class).contains(accessLogs);
+                .expectBody()
+                .jsonPath("$.data").isNotEmpty()
+                .jsonPath("$.count").isEqualTo(total);
     }
 
     @Test
     public void testGetPaged() {
         when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
+        when(mongoAccessLogsRepository.countAll()).thenReturn(Mono.just(total));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit")
@@ -73,12 +82,15 @@ public class AccessLogsControllerTests {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(AccessLogs.class).contains(accessLogs);
+                .expectBody()
+                .jsonPath("$.data").isNotEmpty()
+                .jsonPath("$.count").isEqualTo(total);
     }
 
     @Test
     public void testGetSearchValue() {
         when(mongoAccessLogsRepository.query(any(String.class), any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
+        when(mongoAccessLogsRepository.count(any(String.class))).thenReturn(Mono.just(total));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/audit/search")
@@ -90,6 +102,8 @@ public class AccessLogsControllerTests {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBodyList(AccessLogs.class).contains(accessLogs);
+                .expectBody()
+                .jsonPath("$.data").isNotEmpty()
+                .jsonPath("$.count").isEqualTo(total);
     }
 }

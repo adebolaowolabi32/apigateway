@@ -256,7 +256,8 @@ public class ProjectServiceTests {
     public void testSaveRequestedResources() {
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
-        when(mongoResourceRepository.findById(resource.getId())).thenReturn(Mono.just(resource));
+        when(mongoResourceRepository.findAllById(Set.of(resource.getId()))).thenReturn(Flux.fromIterable(Collections.singleton(resource)));
+        when(mongoProductRepository.findAll()).thenReturn(Flux.fromIterable(Arrays.asList(product, productOne)));
         when(passportService.getPassportClient(project.getClientId(Env.TEST), Env.TEST)).thenReturn(Mono.just(passportClient));
         when(passportService.updatePassportClient(passportClient, Env.TEST)).thenReturn(Mono.empty());
         StepVerifier.create(projectService.saveRequestedResources(projectOwner, projectData.getId(), resources)).expectComplete().verify();
@@ -299,6 +300,9 @@ public class ProjectServiceTests {
     public void testDeclineRequestedResources() {
         when(mongoProjectRepository.findById(project.getId())).thenReturn(Mono.just(project));
         when(mongoProjectRepository.save(project)).thenReturn(Mono.just(project));
+        when(mongoResourceRepository.findAllById(Set.of(resource.getId()))).thenReturn(Flux.fromIterable(Collections.singleton(resource)));
+        when(passportService.getPassportClient(project.getClientId(Env.LIVE), Env.LIVE)).thenReturn(Mono.just(passportClient));
+        when(passportService.updatePassportClient(passportClient, Env.LIVE)).thenReturn(Mono.empty());
         StepVerifier.create(projectService.declineRequestedResources(projectData.getId(), resources)).expectComplete().verify();
     }
 

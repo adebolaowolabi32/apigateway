@@ -1,8 +1,9 @@
 package com.interswitch.apigateway.repository;
 
 import com.interswitch.apigateway.model.AccessLogs;
-import com.interswitch.apigateway.model.AccessLogs.Action;
 import com.interswitch.apigateway.model.AccessLogs.Entity;
+import com.interswitch.apigateway.model.AccessLogs.GoliveActions;
+import com.interswitch.apigateway.model.AccessLogs.MethodActions;
 import com.interswitch.apigateway.model.AccessLogs.Status;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     public void setup() {
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs1");
-        accessLogs.setAction(Action.CREATE);
+        accessLogs.setAction(MethodActions.CREATE);
         accessLogs.setEntity(Entity.PRODUCT);
         accessLogs.setEntityId("productId");
         accessLogs.setApi("/products");
@@ -41,10 +42,10 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
 
         accessLogs = new AccessLogs();
         accessLogs.setId("accessLogs2");
-        accessLogs.setAction(Action.UPDATE);
-        accessLogs.setEntity(Entity.PRODUCT);
-        accessLogs.setEntityId("productId");
-        accessLogs.setApi("/products");
+        accessLogs.setAction(GoliveActions.REQUEST);
+        accessLogs.setEntity(Entity.GOLIVE);
+        accessLogs.setEntityId("");
+        accessLogs.setApi("/golive/request");
         accessLogs.setTimestamp(LocalDateTime.now());
         accessLogs.setUsername("user.name.other");
         accessLogs.setClient("client.id");

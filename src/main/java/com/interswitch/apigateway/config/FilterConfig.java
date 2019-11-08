@@ -29,11 +29,6 @@ public class FilterConfig {
     }
 
     @Bean
-    public RouteIdFilter routeIdFilter(){
-        return  new RouteIdFilter();
-    }
-
-    @Bean
     public LoggingFilter loggingFilter(MeterRegistry meterRegistry) {
         return new LoggingFilter(meterRegistry);
     }
@@ -51,6 +46,11 @@ public class FilterConfig {
     @Bean
     public DownstreamTimerFilter downstreamTimerFilter(MeterRegistry meterRegistry) {
         return new DownstreamTimerFilter(meterRegistry);
+    }
+
+    @Bean
+    public ResponseInterceptor responseInterceptor() {
+        return new ResponseInterceptor();
     }
 }
 
