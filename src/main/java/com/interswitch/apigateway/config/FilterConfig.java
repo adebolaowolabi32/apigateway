@@ -29,11 +29,6 @@ public class FilterConfig {
     }
 
     @Bean
-    public RouteIdFilter routeIdFilter(){
-        return  new RouteIdFilter();
-    }
-
-    @Bean
     public LoggingFilter loggingFilter(MeterRegistry meterRegistry) {
         return new LoggingFilter(meterRegistry);
     }

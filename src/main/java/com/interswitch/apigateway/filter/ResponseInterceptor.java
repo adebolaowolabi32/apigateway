@@ -34,18 +34,20 @@ public class ResponseInterceptor implements WebFilter, Ordered {
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 if (body != null) {
-                    Flux<? extends DataBuffer> fluxBody = (Flux<? extends DataBuffer>) body;
-                    return super.writeWith(fluxBody.map(dataBuffer -> {
-                        byte[] content = new byte[dataBuffer.readableByteCount()];
-                        dataBuffer.read(content);
-                        String message = new String(content, Charset.forName("UTF-8"));
-                        if (response.getStatusCode().equals(HttpStatus.FORBIDDEN) || message.contains("Invalid token does not contain resource id"))
-                            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly log in to your account on developer console and refresh your credentials.");
+                    if (body instanceof Flux) {
+                        Flux<? extends DataBuffer> fluxBody = (Flux<? extends DataBuffer>) body;
+                        return super.writeWith(fluxBody.map(dataBuffer -> {
+                            byte[] content = new byte[dataBuffer.readableByteCount()];
+                            dataBuffer.read(content);
+                            String message = new String(content, Charset.forName("UTF-8"));
+                            if (response.getStatusCode().equals(HttpStatus.FORBIDDEN) || message.contains("Invalid token does not contain resource id"))
+                                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly log in to your account on developer console and refresh your credentials.");
 
-                        return response.bufferFactory().wrap(content);
-                    }));
+                            return response.bufferFactory().wrap(content);
+                        }));
+                    }
                 }
-                return super.writeWith(Flux.empty());
+                return super.writeWith(body);
             }
         }).build());
     }

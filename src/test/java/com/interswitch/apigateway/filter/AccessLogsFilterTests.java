@@ -1,8 +1,8 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.AccessLogs;
-import com.interswitch.apigateway.model.AccessLogs.Action;
 import com.interswitch.apigateway.model.AccessLogs.Entity;
+import com.interswitch.apigateway.model.AccessLogs.MethodActions;
 import com.interswitch.apigateway.model.AccessLogs.Status;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.nimbusds.jose.*;
@@ -111,7 +111,7 @@ public class AccessLogsFilterTests {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/projects", Action.CREATE, Entity.PROJECT, "");
+        filterExchangeThenAssertAuditLogs("/projects", MethodActions.CREATE, Entity.PROJECT, "");
     }
 
     @Test
@@ -122,7 +122,7 @@ public class AccessLogsFilterTests {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/products", Action.UPDATE, Entity.PRODUCT, "");
+        filterExchangeThenAssertAuditLogs("/products", MethodActions.UPDATE, Entity.PRODUCT, "");
     }
 
     @Test
@@ -133,7 +133,7 @@ public class AccessLogsFilterTests {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/users/" + id, Action.DELETE, Entity.USER, id);
+        filterExchangeThenAssertAuditLogs("/users/" + id, MethodActions.DELETE, Entity.USER, id);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class AccessLogsFilterTests {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/actuator/gateway/refresh", Action.REFRESH, Entity.SYSTEM, "");
+        filterExchangeThenAssertAuditLogs("/actuator/gateway/refresh", MethodActions.REFRESH, Entity.REFRESH, "");
     }
 
     @Test
@@ -156,34 +156,10 @@ public class AccessLogsFilterTests {
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .build();
 
-        filterExchangeThenAssertAuditLogs("/actuator/gateway/routes/" + id, Action.CREATE, Entity.ROUTE, id);
+        filterExchangeThenAssertAuditLogs("/actuator/gateway/routes/" + id, MethodActions.CREATE, Entity.ROUTE, id);
     }
 
-    @Test
-    public void testRouteUpdateEndpointAudit() {
-        String id = "routeId:1234567890987654321";
-        request = MockServerHttpRequest
-                .post("/actuator/gateway/routes/" + id)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .build();
-
-        filterExchangeThenAssertAuditLogs("/actuator/gateway/routes/" + id, Action.UPDATE, Entity.ROUTE, id);
-    }
-
-    @Test
-    public void testPassportRouteUpdateAudit() {
-        String id = "passport";
-        request = MockServerHttpRequest
-                .post("/actuator/gateway/routes/" + id)
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .build();
-
-        filterExchangeThenAssertAuditLogs("/actuator/gateway/routes/" + id, Action.UPDATE, Entity.ROUTE, id);
-    }
-
-    private void filterExchangeThenAssertAuditLogs(String path, Action action, Entity entity, String id) {
+    private void filterExchangeThenAssertAuditLogs(String path, Object action, Entity entity, String id) {
         exchange = MockServerWebExchange.from(request);
         exchange.getResponse().setStatusCode(HttpStatus.OK);
 

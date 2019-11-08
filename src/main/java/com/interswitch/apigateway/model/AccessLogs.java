@@ -29,7 +29,7 @@ public class AccessLogs {
     private String entityId = "";
 
     @NotNull
-    private Action action;
+    private Object action;
 
     @NotNull
     private Status status;
@@ -38,14 +38,15 @@ public class AccessLogs {
     private LocalDateTime timestamp = LocalDateTime.now();
 
     public enum Entity {
+        REFRESH("refresh"),
         ROUTE("/routes"),
         RESOURCE("/resources"),
         PROJECT("/projects"),
         PRODUCT("/products"),
         USER("/users"),
-        SYSTEM("/actuator"),
         ROUTE_ENVIRONMENT("/env"),
-        GOLIVE("/golive");
+        GOLIVE("/golive"),
+        SYSTEM("/actuator");
 
         private String value;
 
@@ -59,7 +60,7 @@ public class AccessLogs {
 
     }
 
-    public enum Action {
+    public enum MethodActions {
         CREATE("POST"),
         UPDATE("PUT"),
         DELETE("DELETE"),
@@ -67,31 +68,32 @@ public class AccessLogs {
 
         private String value;
 
+        MethodActions(String value) {
+            this.value = value;
+        }
+
         public String getValue(){
             return value;
         }
-
-        Action(String value){
-            this.value = value;
-        }
     }
 
-    public enum Status {
-        SUCCESSFUL, FAILED
-    }
-
-    public enum ActuatorEndpoint {
-        ROUTE_REFRESH("/actuator/gateway/refresh"),
-        BUS_REFRESH("/actuator/bus-refresh");
+    public enum GoliveActions {
+        REQUEST("/request"),
+        APPROVE("/approve"),
+        DECLINE("/decline");
 
         private String value;
 
-        ActuatorEndpoint(String value) {
+        GoliveActions(String value) {
             this.value = value;
         }
 
         public String getValue() {
             return value;
         }
+    }
+
+    public enum Status {
+        SUCCESSFUL, FAILED
     }
 }

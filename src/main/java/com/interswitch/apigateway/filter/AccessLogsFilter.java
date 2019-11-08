@@ -1,9 +1,9 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.AccessLogs;
-import com.interswitch.apigateway.model.AccessLogs.Action;
-import com.interswitch.apigateway.model.AccessLogs.ActuatorEndpoint;
 import com.interswitch.apigateway.model.AccessLogs.Entity;
+import com.interswitch.apigateway.model.AccessLogs.GoliveActions;
+import com.interswitch.apigateway.model.AccessLogs.MethodActions;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.util.RouteUtil;
 import com.nimbusds.jwt.JWT;
@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
-import static com.interswitch.apigateway.model.Endpoints.PASSPORT_ROUTE_ID;
 import static com.interswitch.apigateway.util.FilterUtil.decodeBearerToken;
 import static com.interswitch.apigateway.util.FilterUtil.getClaimAsStringFromBearerToken;
 
@@ -46,36 +45,26 @@ public class AccessLogsFilter implements WebFilter, Ordered {
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethodValue();
                 LocalDateTime timestamp = LocalDateTime.now();
-                Entity[] entities = Entity.values();
-                Action[] actions = Action.values();
-                for (var entity : entities) {
+                for (var entity : Entity.values()) {
                     if (path.contains(entity.getValue())) {
-                        String id = getId(entity.getValue(), path);
                         accessLogs.setEntity(entity);
-                        accessLogs.setEntityId(id);
+                        accessLogs.setEntityId(getId(entity.getValue(), path));
                         break;
                     }
                 }
-                for (var action : actions) {
-                    if (method.equals(action.getValue()))
-                        accessLogs.setAction(action);
-                }
-
-                if (accessLogs.getEntity().equals(Entity.SYSTEM)) {
-                    for (var actuatorEndpoint : ActuatorEndpoint.values()) {
-                        if (path.contains(actuatorEndpoint.getValue())) {
-                            if (actuatorEndpoint.equals(ActuatorEndpoint.ROUTE_REFRESH) || actuatorEndpoint.equals(ActuatorEndpoint.BUS_REFRESH)) {
-                                accessLogs.setEntityId("");
-                                accessLogs.setAction(Action.REFRESH);
-                            }
-                            break;
+                if (accessLogs.getEntity() != null) {
+                    if (accessLogs.getEntity().equals(Entity.GOLIVE))
+                        for (var action : GoliveActions.values()) {
+                            if (path.contains(action.getValue()))
+                                accessLogs.setAction(action);
                         }
-                    }
-                }
-
-                if (accessLogs.getEntity().equals(Entity.ROUTE) && accessLogs.getAction().equals(Action.CREATE)) {
-                    if (accessLogs.getEntityId().contains(":") || PASSPORT_ROUTE_ID.equalsIgnoreCase(accessLogs.getEntityId()))
-                        accessLogs.setAction(Action.UPDATE); //this is done to identify route update requests because a route update request is a POST request
+                    else if (accessLogs.getEntity().equals(Entity.REFRESH))
+                        accessLogs.setAction(MethodActions.REFRESH);
+                    else
+                        for (var action : MethodActions.values()) {
+                            if (method.equals(action.getValue()))
+                                accessLogs.setAction(action);
+                        }
                 }
 
                 accessLogs.setUsername(email);
@@ -109,8 +98,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
 
     private boolean isAuditMethod(String requestMethod){
         boolean isAuditMethod = false;
-        Action[] methods = Action.values();
-        for (var method : methods) {
+        for (var method : MethodActions.values()) {
             if(method.getValue().equals(requestMethod))
                 isAuditMethod = true;
         }
@@ -127,6 +115,7 @@ public class AccessLogsFilter implements WebFilter, Ordered {
             nextSlashAfterSubPath = fullPath.length();
         return fullPath.substring(indexOfId, nextSlashAfterSubPath);
     }
+
     @Override
     public int getOrder() {
         return -50;

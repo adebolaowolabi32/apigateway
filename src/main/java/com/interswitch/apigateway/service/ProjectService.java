@@ -168,9 +168,7 @@ public class ProjectService {
                         String clientId = project.getClientId(Env.TEST);
                         if (clientId.isEmpty()) return Mono.empty();
                         return passportService.getPassportClient(clientId, Env.TEST)
-                                .flatMap(passportClient -> {
-                                    return Mono.just(from(from(project), passportClient));
-                                });
+                                .flatMap(passportClient -> Mono.just(from(from(project), passportClient)));
                     }
                     return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "You can not view this project because you are not its owner"));
                 });
@@ -188,7 +186,7 @@ public class ProjectService {
                     projectData.setResources(new LinkedHashSet<>());
                     Project project = from(projectData);
                     PassportClient passportClient = buildPassportClient(new PassportClient(), projectData);
-                        passportClient.setAdditionalInformation(Map.of("env", Env.TEST));
+                    passportClient.setAdditionalInformation(Map.of("env", Env.TEST));
                     return loadAudiencesIntoClient(passportClient, Env.TEST).flatMap(updatedClient ->
                             passportService.createPassportClient(updatedClient, Env.TEST)
                                     .flatMap(createdClient -> {
@@ -321,12 +319,11 @@ public class ProjectService {
                     if (projectOwner.equals(project.getOwner())) {
                         Set<String> resources = request.get("resources");
                         if (!resources.isEmpty()) {
-                            return Flux.fromIterable(resources).flatMap(r -> mongoResourceRepository.findById(r)
-                                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of the requested resources do not exist")))
+                            return mongoResourceRepository.findAllById(resources)
                                     .flatMap(resource -> {
                                         project.addResource(resource);
                                         return Mono.empty();
-                                    })).then(Mono.defer(() -> {
+                                    }).then(Mono.defer(() -> {
                                 String clientId = project.getClientId(Env.TEST);
                                 if (!clientId.isEmpty()) {
                                     return passportService.getPassportClient(clientId, Env.TEST)
@@ -422,7 +419,7 @@ public class ProjectService {
                             if (!clientId.isEmpty()) {
                                 return passportService.getPassportClient(clientId, Env.LIVE)
                                         .flatMap(passportClient -> {
-                                            passportClient = setResourceIds(passportClient, audiences);
+                                            setResourceIds(passportClient, audiences);
                                             Map<String, Object> additionalInformation = passportClient.getAdditionalInformation();
                                             Set<String> listOfResources = getApi_resources(additionalInformation);
                                             listOfResources.addAll(api_resources);
@@ -439,7 +436,6 @@ public class ProjectService {
                     return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty"));
                 });
     }
-/*
     public Mono<Void> declineRequestedResources(String projectId, Map<String, LinkedHashSet<String>> request) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
@@ -447,49 +443,30 @@ public class ProjectService {
                     Set<String> resources = request.get("resources");
                     Set<String> api_resources = new HashSet<>();
                     if (!resources.isEmpty()) {
-                        return Flux.fromIterable(resources).flatMap(r ->
-                            mongoResourceRepository.findById(r).flatMap(resource -> {
+                        return mongoResourceRepository.findAllById(resources)
+                                .flatMap(resource -> {
                                 if(project.getResources().contains(resource))
                                     project.removeResource(resource);
                                 else{
                                     api_resources.add(resource.getId() + "-" + resource.getMethod() + resource.getPath());
                                 }
                                 return Mono.empty();
-                            })).thenMany(Flux.defer(()-> {
-                            String clientId = project.getClientId(Env.LIVE);
-                            if (!clientId.isEmpty()) {
-                                return passportService.getPassportClient(clientId, Env.LIVE).flatMap(passportClient -> {
-                                    Map<String, Object> additionalInformation = passportClient.getAdditionalInformation();
-                                    Set<String> resourceIds = new LinkedHashSet<>();
-                                    Set<String> approvedResources = getApi_resources(additionalInformation);
-                                    approvedResources.removeAll(api_resources);
-                                    additionalInformation.put("api_resources", approvedResources);
-                                    passportClient.setAdditionalInformation(additionalInformation);
-                                    return passportService.updatePassportClient(passportClient, Env.LIVE);
-                                });
-                            }
-                            return Mono.empty();
+                                }).thenMany(Flux.defer(() -> {
+                                    if (api_resources.isEmpty()) return Mono.empty();
+                                    String clientId = project.getClientId(Env.LIVE);
+                                    if (!clientId.isEmpty()) {
+                                        return passportService.getPassportClient(clientId, Env.LIVE).flatMap(passportClient -> {
+                                            Map<String, Object> additionalInformation = passportClient.getAdditionalInformation();
+                                            Set<String> approvedResources = getApi_resources(additionalInformation);
+                                            approvedResources.removeAll(api_resources);
+                                            additionalInformation.put("api_resources", approvedResources);
+                                            passportClient.setAdditionalInformation(additionalInformation);
+                                            return passportService.updatePassportClient(passportClient, Env.LIVE);
+                                        });
+                                    }
+                                    return Mono.empty();
                         })).then(mongoProjectRepository.save(project)).then(Mono.empty());
 
-                    }
-                    return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty"));
-                });
-    }*/
-
-    public Mono<Void> declineRequestedResources(String projectId, Map<String, LinkedHashSet<String>> request) {
-        return mongoProjectRepository.findById(projectId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
-                .flatMap(project -> {
-                    Set<String> resources = request.get("resources");
-                    if (!resources.isEmpty()) {
-                        return Flux.fromIterable(resources).flatMap(r -> {
-                            project.getResource(r).ifPresentOrElse(resource ->
-                                            project.removeResource(resource),
-                                    () -> {
-                                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of these resources has not been requested for");
-                                    });
-                            return Mono.empty();
-                        }).then(mongoProjectRepository.save(project)).then(Mono.empty());
                     }
                     return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty"));
                 });
