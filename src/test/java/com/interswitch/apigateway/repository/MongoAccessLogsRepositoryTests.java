@@ -79,7 +79,7 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
             assertThat(a.getEntityId()).isEqualTo(accessLogs.getEntityId()).isEqualTo(savedAccessLogs.getEntityId());
             assertThat(a.getUsername()).isEqualTo(accessLogs.getUsername()).isEqualTo(savedAccessLogs.getUsername());
             assertThat(a.getClient()).isEqualTo(accessLogs.getClient()).isEqualTo(savedAccessLogs.getClient());
-            assertThat(a.getAction()).isEqualTo(accessLogs.getAction()).isEqualTo(savedAccessLogs.getAction());
+            assertThat(a.getAction().toString()).isEqualTo(accessLogs.getAction().toString()).isEqualTo(savedAccessLogs.getAction().toString());
             assertThat(a.getStatus()).isEqualTo(accessLogs.getStatus()).isEqualTo(savedAccessLogs.getStatus());
         }).expectComplete().verify();
     }
