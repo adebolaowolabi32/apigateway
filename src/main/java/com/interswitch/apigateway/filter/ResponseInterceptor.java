@@ -41,7 +41,7 @@ public class ResponseInterceptor implements WebFilter, Ordered {
                             dataBuffer.read(content);
                             String message = new String(content, Charset.forName("UTF-8"));
                             if (response.getStatusCode().equals(HttpStatus.FORBIDDEN) || message.contains("Invalid token does not contain resource id"))
-                                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly log in to your account on developer console and refresh your credentials.");
+                                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly refresh your credentials on developer console");
 
                             return response.bufferFactory().wrap(content);
                         }));

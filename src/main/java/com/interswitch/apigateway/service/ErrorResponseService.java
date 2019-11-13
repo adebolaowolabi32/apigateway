@@ -37,7 +37,7 @@ public class ErrorResponseService {
         if (e instanceof DuplicateKeyException) {
             code = 409;
             String[] keys = StringUtils.substringsBetween(eMessage, "\"", "\"");
-            String key = (httpMethod != HttpMethod.PUT) ? " already exists." : " cannot be modified here.";
+            String key = (httpMethod != HttpMethod.PUT) ? " already exists" : " cannot be modified here";
             message = (keys != null) ? keys[0] + key : message;
         }
         if (e instanceof WebExchangeBindException || e instanceof ServerWebInputException) {
@@ -63,7 +63,7 @@ public class ErrorResponseService {
                 eMessage = ((ServerWebInputException) e).getMessage();
                 String[] keys = StringUtils.substringsBetween(eMessage, "(", ")");
                 String[] key = (keys != null) ? StringUtils.substringsBetween(keys[0], "\"", "\"") : StringUtils.substringsBetween(eMessage, "\"", "\"");
-                String field = "Bad Input.";
+                String field = "Bad Input";
                 if (key != null)
                     field = (key[0].contains("mismatch")) ? "Data Type mismatch for value " + key[1] : "Invalid value for field " + key[0];
                 message = "Validation failure: " + field;
@@ -80,14 +80,14 @@ public class ErrorResponseService {
             message = "Either remote server cannot be reached or network connection was reset/broken. Please try again later";
         }
         if (e instanceof ResourceAccessException) {
-            message = "Something went wrong, please bear with us while we fix it.";
+            message = "Something went wrong, please bear with us while we fix it";
         }
         if (e instanceof UnknownHostException) {
-            message = "Unknown Host. Host Ip could not be determined.";
+            message = "Unknown Host. Host Ip could not be determined";
         }
         if (e instanceof HttpServerErrorException.InternalServerError) {
             code = 500;
-            message = "An Unexpected error has occurred. Please try again later.";
+            message = "An Unexpected error has occurred. Please try again later";
         }
         if (e instanceof MethodNotAllowedException) {
             code = 415;

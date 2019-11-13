@@ -75,8 +75,8 @@ public class ResponseInterceptorTests {
     @Test
     public void testRequestsWithSpecificErrorMessageShouldBeIntercepted() throws JOSEException {
         this.setup(Env.TEST.toString());
-        when(filterChain.filter(exchangeArgumentCaptor.capture())).thenReturn(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly log in to your account on developer console and refresh your credentials.")));
-        StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"Your access token is no longer valid, kindly log in to your account on developer console and refresh your credentials.\"").verify();
+        when(filterChain.filter(exchangeArgumentCaptor.capture())).thenReturn(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Your access token is no longer valid, kindly refresh your credentials on developer console")));
+        StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"Your access token is no longer valid, kindly refresh your credentials on developer console\"").verify();
     }
 
 }
