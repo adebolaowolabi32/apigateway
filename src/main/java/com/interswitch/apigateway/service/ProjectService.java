@@ -319,11 +319,13 @@ public class ProjectService {
                     if (projectOwner.equals(project.getOwner())) {
                         Set<String> resources = request.get("resources");
                         if (!resources.isEmpty()) {
-                            return mongoResourceRepository.findAllById(resources)
-                                    .flatMap(resource -> {
-                                        project.addResource(resource);
-                                        return Mono.empty();
-                                    }).then(Mono.defer(() -> {
+                            return Flux.fromIterable(resources).flatMap(r ->
+                                    mongoResourceRepository.findById(r)
+                                            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of the requested resources do not exist")))
+                                            .flatMap(resource -> {
+                                                project.addResource(resource);
+                                                return Mono.empty();
+                                            })).then(Mono.defer(() -> {
                                 String clientId = project.getClientId(Env.TEST);
                                 if (!clientId.isEmpty()) {
                                     return passportService.getPassportClient(clientId, Env.TEST)
@@ -443,15 +445,17 @@ public class ProjectService {
                     Set<String> resources = request.get("resources");
                     Set<String> api_resources = new HashSet<>();
                     if (!resources.isEmpty()) {
-                        return mongoResourceRepository.findAllById(resources)
-                                .flatMap(resource -> {
-                                if(project.getResources().contains(resource))
-                                    project.removeResource(resource);
-                                else{
-                                    api_resources.add(resource.getId() + "-" + resource.getMethod() + resource.getPath());
-                                }
-                                return Mono.empty();
-                                }).thenMany(Flux.defer(() -> {
+                        return Flux.fromIterable(resources).flatMap(r ->
+                                mongoResourceRepository.findById(r)
+                                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of these resources has not been requested for")))
+                                        .flatMap(resource -> {
+                                            if (project.getResources().contains(resource))
+                                                project.removeResource(resource);
+                                            else {
+                                                api_resources.add(resource.getId() + "-" + resource.getMethod() + resource.getPath());
+                                            }
+                                            return Mono.empty();
+                                        })).thenMany(Flux.defer(() -> {
                                     if (api_resources.isEmpty()) return Mono.empty();
                                     String clientId = project.getClientId(Env.LIVE);
                                     if (!clientId.isEmpty()) {
