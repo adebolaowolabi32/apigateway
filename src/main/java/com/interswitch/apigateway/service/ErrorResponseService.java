@@ -71,7 +71,7 @@ public class ErrorResponseService {
         }
         if (e instanceof NotFoundException) {
             code = 404;
-            String[] key = (eMessage != null) ? StringUtils.substringsBetween(eMessage, "\"", "\"") : null;
+            String[] key = (eMessage != null) ? StringUtils.substringsBetween(eMessage, "\"", "\"") : new String[]{};
             message = (key[0] != null) ? key[0] : "Not Found";
         }
 
