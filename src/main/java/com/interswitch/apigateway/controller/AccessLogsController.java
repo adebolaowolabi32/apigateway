@@ -29,29 +29,9 @@ public class AccessLogsController {
 
     @GetMapping(produces = "application/json")
     @Validated
-    private Mono getAll(@RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
-                        @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
-        Pageable page = PageRequest.of(pageNum, pageSize, new Sort(Sort.Direction.ASC, "timestamp"));
-        Map<String, Object> record = new HashMap<>();
-        List<AccessLogs> data = new ArrayList<>();
-
-        return mongoAccessLogsRepository.countAll().flatMap(total -> {
-            record.put("count", total);
-            return mongoAccessLogsRepository.retrieveAllPaged(page).flatMap(accessLogs -> {
-                data.add(accessLogs);
-                return Mono.empty();
-            }).then(Mono.defer(() -> {
-                record.put("data", data);
-                return Mono.just(record);
-            }));
-        });
-    }
-
-    @GetMapping(value = "/search", produces = "application/json")
-    @Validated
     private Mono getSearchPaged(@RequestParam(value = "pageNum", defaultValue = "0") int pageNum,
                                 @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-                                @RequestParam(value = "searchValue") String searchValue) {
+                                @RequestParam(value = "searchValue", defaultValue = "") String searchValue) {
 
         Map<String, Object> record = new HashMap<>();
         List<AccessLogs> data = new ArrayList<>();

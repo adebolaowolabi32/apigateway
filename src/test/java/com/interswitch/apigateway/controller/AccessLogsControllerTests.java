@@ -55,29 +55,10 @@ public class AccessLogsControllerTests {
 
     @Test
     public void testGetPagedDefaultValues() {
-        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
-        when(mongoAccessLogsRepository.countAll()).thenReturn(Mono.just(total));
+        when(mongoAccessLogsRepository.query(any(String.class), any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
+        when(mongoAccessLogsRepository.count(any(String.class))).thenReturn(Mono.just(total));
         this.webClient.get()
                 .uri("/audit")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBody()
-                .jsonPath("$.data").isNotEmpty()
-                .jsonPath("$.count").isEqualTo(total);
-    }
-
-    @Test
-    public void testGetPaged() {
-        when(mongoAccessLogsRepository.retrieveAllPaged(any(PageRequest.class))).thenReturn(Flux.fromIterable(Collections.singleton(accessLogs)));
-        when(mongoAccessLogsRepository.countAll()).thenReturn(Mono.just(total));
-        this.webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/audit")
-                        .queryParam("pageNum", "2")
-                        .queryParam("pageSize", "20")
-                        .build())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -93,7 +74,7 @@ public class AccessLogsControllerTests {
         when(mongoAccessLogsRepository.count(any(String.class))).thenReturn(Mono.just(total));
         this.webClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/audit/search")
+                        .path("/audit")
                         .queryParam("pageNum", "1")
                         .queryParam("pageSize", "30")
                         .queryParam("searchValue", "user.name")
