@@ -55,11 +55,6 @@ public class MongoAccessLogsRepositoryTests extends AbstractMongoRepositoryTests
     }
 
     @Test
-    public void testRetrieveAllPaged() {
-        StepVerifier.create(mongoAccessLogsRepository.retrieveAllPaged(PageRequest.of(0, 10))).expectNextCount(2);
-    }
-
-    @Test
     public void testQuery() {
         StepVerifier.create(mongoAccessLogsRepository.query("user.name.other", PageRequest.of(0, 10))).expectNextCount(1);
     }
