@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 
 public class Endpoints {
-    public static final Set<String> noAuthEndpoints = Collections.unmodifiableSet(Set.of("/passport/oauth.*", ".*/login/?", ".*/logout/?", ".*/register/?", ".*/signup/?", ".*/signin/?", ".*/signout/?", ".*/index/?", ".*/home/?", ".*/oauth/token/?", ".*/oauth/authenticate/?", ".*/oauth/authorize/?", ".*/reset-password/?", ".*/finch/user-mgmt/auth/users/oauth/authenticate/otp/?", ".*/finch/user-mgmt/auth/users/refreshUserToken/?", ".*/finch/user-mgmt/auth/users/generateToken/?"));
+    public static final Set<String> noAuthEndpoints = Collections.unmodifiableSet(Set.of("/passport/oauth.*", ".*/login/?", ".*/logout/?", ".*/register/?", ".*/signup/?", ".*/signin/?", ".*/signout/?", ".*/index/?", ".*/home/?", ".*/oauth/token/?", ".*/oauth/authenticate/?", ".*/oauth/authorize/?", ".*/reset-password/?", ".*/finch/user-mgmt/auth/users/oauth/authenticate/otp/?", ".*/finch/user-mgmt/auth/users/refreshusertoken/?", ".*/finch/user-mgmt/auth/users/generatetoken/?"));
 
     public static final Set<String> noAuthSystemEndpoints = Collections.unmodifiableSet(Set.of("/actuator/health/?", "/actuator/prometheus/?"));
 
