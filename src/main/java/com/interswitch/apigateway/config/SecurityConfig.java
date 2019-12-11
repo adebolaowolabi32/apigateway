@@ -15,18 +15,19 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+
+import static com.interswitch.apigateway.model.Endpoints.noAuthEndpoints;
+import static com.interswitch.apigateway.model.Endpoints.noAuthSystemEndpoints;
 
 @EnableWebFluxSecurity
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
     private String key;
 
-    private static List<String> noAuthEndpoints = Arrays.asList("/passport/oauth.*", "/actuator/prometheus/?", "/actuator/health/?", ".*/login/?", ".*/logout/?", ".*/register/?", ".*/signup/?", ".*/signin/?", ".*/signout/?", ".*/index/?", ".*/home/?", ".*/oauth/token/?", ".*/oauth/authenticate/?", ".*/oauth/authorize/?");
-
-
+    private static final List<String> noAuthList = new ArrayList<>();
 
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
@@ -34,7 +35,9 @@ public class SecurityConfig {
             .pathMatchers(HttpMethod.OPTIONS).permitAll()
             .anyExchange().access((authenticationMono, context) -> {
                 String requestPath = context.getExchange().getRequest().getPath().toString().toLowerCase();
-                if (noAuthEndpoints.stream().anyMatch(endpoint -> requestPath.matches(endpoint)))
+            noAuthList.addAll(noAuthSystemEndpoints);
+            noAuthList.addAll(noAuthEndpoints);
+            if (noAuthList.stream().anyMatch(endpoint -> requestPath.matches(endpoint)))
                     return Mono.just(new AuthorizationDecision(true));
                 return authenticationMono.flatMap(authentication -> Mono.just(new AuthorizationDecision(authentication.isAuthenticated())));
             }).and().csrf().disable()
