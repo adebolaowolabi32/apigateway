@@ -72,7 +72,7 @@ public class Product {
         projects.remove(project);
     }
 
-    private enum Category {
+    public enum Category {
         PUBLIC, RESTRICTED
     }
 }

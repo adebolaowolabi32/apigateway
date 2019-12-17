@@ -16,6 +16,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static com.interswitch.apigateway.util.FilterUtil.isInterswitchEmail;
+
 @Service
 public class ProjectService {
     private MongoProjectRepository mongoProjectRepository;
@@ -102,6 +104,12 @@ public class ProjectService {
         if (api_resourcesObj instanceof ArrayList)
             listOfResources = new LinkedHashSet<>((ArrayList) api_resourcesObj);
         return listOfResources;
+    }
+
+    public Flux<Resource> getResourcesForUser(String projectOwner) {
+        if (isInterswitchEmail(projectOwner))
+            return mongoResourceRepository.findAll();
+        return mongoResourceRepository.findAll().filter(resource -> resource.getProduct().getCategory().equals(Product.Category.PUBLIC));
     }
 
     private static PassportClient buildPassportClient(PassportClient passportClient, ProjectData project) {
@@ -287,7 +295,7 @@ public class ProjectService {
                         return getApprovedResources(project).flatMap(resource -> {
                             resourcesToBeExcluded.add(resource);
                             return Flux.empty();
-                        }).thenMany(mongoResourceRepository.findAll().flatMap(resource -> {
+                        }).thenMany(getResourcesForUser(projectOwner).flatMap(resource -> {
                             if (!resourcesToBeExcluded.contains(resource)) availableResources.add(resource);
                             return Flux.empty();
                         })).thenMany(parseResources(Flux.fromIterable(availableResources)));
@@ -323,6 +331,9 @@ public class ProjectService {
                                     mongoResourceRepository.findById(r)
                                             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more of the requested resources do not exist")))
                                             .flatMap(resource -> {
+                                                if (!isInterswitchEmail(projectOwner))
+                                                    if (resource.getProduct().getCategory().equals(Product.Category.RESTRICTED))
+                                                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "You do not have permission to request for this resource"));
                                                 project.addResource(resource);
                                                 return Mono.empty();
                                             })).then(Mono.defer(() -> {
@@ -438,6 +449,7 @@ public class ProjectService {
                     return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Resources list cannot be empty"));
                 });
     }
+
     public Mono<Void> declineRequestedResources(String projectId, Map<String, LinkedHashSet<String>> request) {
         return mongoProjectRepository.findById(projectId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Project does not exist")))
