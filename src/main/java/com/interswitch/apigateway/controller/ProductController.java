@@ -94,14 +94,17 @@ public class ProductController {
     private Mono<Product> saveResource(@Validated @PathVariable String productId, @Validated @RequestBody Resource resource) {
         return mongoProductRepository.findById(productId)
                 .flatMap(product -> {
-                    resource.setName(resource.getName().trim().toLowerCase());
-                    resource.setProduct(product);
-                    return mongoResourceRepository.save(resource).flatMap(r -> {
-                        if(!product.getResources().contains(r)){
+                    String resourceName = resource.getName().trim().toLowerCase();
+                    if (product.getResources().stream().noneMatch(r -> r.getName().equalsIgnoreCase(resourceName))) {
+                        resource.setName(resourceName);
+                        resource.setProduct(product);
+                        return mongoResourceRepository.save(resource).flatMap(r -> {
                             product.addResource(r);
-                        }
-                        return mongoProductRepository.save(product);
-                    });
+                            return mongoProductRepository.save(product);
+                        });
+                    }
+                    return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Product already contains this resource"));
+
                 }).switchIfEmpty(Mono.error(new NotFoundException("Product does not exist")));
     }
 
@@ -124,14 +127,17 @@ public class ProductController {
                 .flatMap(product -> {
                     return mongoResourceRepository.findById(resource.getId()).flatMap(existing -> {
                         if (product.getResources().contains(existing)) {
-                            resource.setId(existing.getId());
-                            resource.setName(resource.getName().trim().toLowerCase());
-                            resource.setProduct(product);
-                            return mongoResourceRepository.save(resource).flatMap(r -> {
-                                product.removeResource(existing);
-                                product.addResource(r);
-                                return mongoProductRepository.save(product);
-                            });
+                            String resourceName = resource.getName().trim().toLowerCase();
+                            if (product.getResources().stream().filter(r -> !r.equals(existing)).noneMatch(r -> r.getName().equalsIgnoreCase(resourceName))) {
+                                resource.setName(resourceName);
+                                resource.setProduct(product);
+                                return mongoResourceRepository.save(resource).flatMap(r -> {
+                                    product.removeResource(existing);
+                                    product.addResource(r);
+                                    return mongoProductRepository.save(product);
+                                });
+                            }
+                            return Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Product already contains this resource"));
                         }
                         return Mono.error(new NotFoundException("Resource not found for Product"));
                     }).switchIfEmpty(Mono.error(new NotFoundException("Resource does not exist")));
