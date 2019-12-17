@@ -17,7 +17,7 @@ import java.util.List;
 
 public class CorsFilter implements WebFilter, Ordered {
 
-    public static final List<String> ALLOWED_HEADERS = Arrays.asList("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization");
+    public static final List<String> ALLOWED_HEADERS = Arrays.asList("*");
     public static final List<HttpMethod> ALLOWED_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.OPTIONS);
     public static final List<String> VARY = Arrays.asList("Origin");
     public static final long MAX_AGE = 3600;

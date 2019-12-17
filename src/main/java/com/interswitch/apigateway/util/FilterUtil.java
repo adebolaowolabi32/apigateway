@@ -71,13 +71,6 @@ public final class FilterUtil {
     }
 
     public static boolean match(String path, Set<String> paths) {
-        boolean match = false;
-        for (var p : paths) {
-            if (path.matches(p)) {
-                match = true;
-                break;
-            }
-        }
-        return match;
+        return paths.stream().anyMatch(p -> path.matches(p));
     }
 }

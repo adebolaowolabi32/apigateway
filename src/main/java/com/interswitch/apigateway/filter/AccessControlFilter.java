@@ -32,7 +32,7 @@ public class AccessControlFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().toString();
-        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, noAuthEndpoints) || match(path, noAuthSystemEndpoints))
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, noAuthEndpoints))
             return chain.filter(exchange);
         JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
         List<String> audience = getClaimAsListFromBearerToken(token, "aud");
