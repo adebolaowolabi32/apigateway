@@ -1,13 +1,13 @@
 package com.interswitch.apigateway.config;
 
+import com.interswitch.apigateway.filter.SecurityFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import reactor.core.publisher.Mono;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -17,22 +17,19 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-import static com.interswitch.apigateway.model.Endpoints.noAuthEndpoints;
-
 @EnableWebFluxSecurity
 public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.keyValue}")
     private String key;
 
+    @Autowired
+    private SecurityFilter securityFilter;
+
     @Bean
     public SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) throws Exception {
         http.authorizeExchange()
             .pathMatchers(HttpMethod.OPTIONS).permitAll()
-            .anyExchange().access((authenticationMono, context) -> {
-            if (noAuthEndpoints.stream().anyMatch(endpoint -> context.getExchange().getRequest().getPath().toString().matches(endpoint)))
-                return Mono.just(new AuthorizationDecision(true));
-            return authenticationMono.flatMap(authentication -> Mono.just(new AuthorizationDecision(authentication.isAuthenticated())));
-        }).and().csrf().disable()
+                .anyExchange().access(securityFilter.authorize()).and().csrf().disable()
             .oauth2ResourceServer()
             .jwt().publicKey((RSAPublicKey) publicKey());
         return http.build();
