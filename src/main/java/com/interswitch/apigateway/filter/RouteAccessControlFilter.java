@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.model.Env;
+import com.interswitch.apigateway.util.SecurityUtil;
 import com.nimbusds.jwt.JWT;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -23,7 +24,10 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 
 public class RouteAccessControlFilter implements GlobalFilter, Ordered {
 
-    public RouteAccessControlFilter() {
+    private SecurityUtil securityUtil;
+
+    public RouteAccessControlFilter(SecurityUtil securityUtil) {
+        this.securityUtil = securityUtil;
     }
 
     private static String wildcardToRegex(String wildcard) {
@@ -48,18 +52,22 @@ public class RouteAccessControlFilter implements GlobalFilter, Ordered {
 
         if (PASSPORT_ROUTE_ID.equals(routeId) || match(requestPath, noAuthEndpoints) || environment.equalsIgnoreCase(Env.TEST.toString()) || HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()))
             return chain.filter(exchange);
+        return securityUtil.isRequestAuthenticated(route, exchange).flatMap(isRequestAuthenticated -> {
+            if (isRequestAuthenticated.get())
+                return chain.filter(exchange);
+            List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
+            for (var r : resources) {
+                r = r.replaceAll(" ", "");
+                int indexOfFirstSlash = r.indexOf('/');
+                String method = r.substring(r.indexOf("-") + 1, indexOfFirstSlash);
+                String path = r.substring(indexOfFirstSlash);
+                if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
+                    if (exchange.getRequest().getMethodValue().equals(method))
+                        return chain.filter(exchange);
+            }
+            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
 
-        List<String> resources = getClaimAsListFromBearerToken(token, "api_resources");
-        for (var r : resources) {
-            r = r.replaceAll(" ", "");
-            int indexOfFirstSlash = r.indexOf('/');
-            String method = r.substring(r.indexOf("-") + 1, indexOfFirstSlash);
-            String path = r.substring(indexOfFirstSlash);
-            if (exchange.getRequest().getPath().toString().matches(wildcardToRegex(path)))
-                if (exchange.getRequest().getMethodValue().equals(method))
-                    return chain.filter(exchange);
-        }
-        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have access to this resource"));
+        });
     }
 
     @Override

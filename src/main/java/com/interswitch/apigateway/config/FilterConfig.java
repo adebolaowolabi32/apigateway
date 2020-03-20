@@ -1,9 +1,12 @@
 package com.interswitch.apigateway.config;
 
 import com.interswitch.apigateway.filter.*;
+import com.interswitch.apigateway.handler.RouteHandlerMapping;
 import com.interswitch.apigateway.repository.MongoAccessLogsRepository;
 import com.interswitch.apigateway.repository.MongoUserRepository;
+import com.interswitch.apigateway.route.MongoRouteDefinitionRepository;
 import com.interswitch.apigateway.util.RouteUtil;
+import com.interswitch.apigateway.util.SecurityUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.actuate.endpoint.web.reactive.ControllerEndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
@@ -19,8 +22,8 @@ public class FilterConfig {
     }
 
     @Bean
-    public RouteAccessControlFilter routeAccessControlFilter() {
-        return new RouteAccessControlFilter();
+    public RouteAccessControlFilter routeAccessControlFilter(SecurityUtil securityUtil) {
+        return new RouteAccessControlFilter(securityUtil);
     }
 
     @Bean
@@ -29,13 +32,23 @@ public class FilterConfig {
     }
 
     @Bean
+    public SecurityFilter securityFilter(RouteUtil routeUtil) {
+        return new SecurityFilter(routeUtil);
+    }
+
+    @Bean
     public LoggingFilter loggingFilter(MeterRegistry meterRegistry) {
         return new LoggingFilter(meterRegistry);
     }
 
     @Bean
-    public RouteUtil routeUtil(RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping) {
-        return new RouteUtil(requestMappingHandlerMapping, controllerEndpointHandlerMapping, webFluxEndpointHandlerMapping);
+    public RouteUtil routeUtil(RequestMappingHandlerMapping requestMappingHandlerMapping, ControllerEndpointHandlerMapping controllerEndpointHandlerMapping, WebFluxEndpointHandlerMapping webFluxEndpointHandlerMapping, RouteHandlerMapping routeHandlerMapping, SecurityUtil securityUtil) {
+        return new RouteUtil(requestMappingHandlerMapping, controllerEndpointHandlerMapping, webFluxEndpointHandlerMapping, routeHandlerMapping, securityUtil);
+    }
+
+    @Bean
+    public SecurityUtil securityUtil(MongoRouteDefinitionRepository routeDefinitionRepository) {
+        return new SecurityUtil(routeDefinitionRepository);
     }
 
     @Bean

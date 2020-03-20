@@ -34,39 +34,43 @@ public class AccessControlFilter implements WebFilter, Ordered {
         String path = exchange.getRequest().getPath().toString();
         if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || match(path, noAuthEndpoints))
             return chain.filter(exchange);
-        JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
-        List<String> audience = getClaimAsListFromBearerToken(token, "aud");
-        if (audience.contains("api-gateway")) {
-            return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
-                if (!isRouteBasedEndpoint) {
-                    String sender = getClaimAsStringFromBearerToken(token, "sender");
-                    if (sender.equals("api-gateway-client")) {
-                        String username = getClaimAsStringFromBearerToken(token, "user_name");
-                        if (username.isEmpty())
-                            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "A user token is required to access this resource"));
-                        String email = getClaimAsStringFromBearerToken(token, "email");
-                        if (isInterswitchEmail(email)) {
-                            if (match(path, adminEndpoints)) {
-                                return mongoUserRepository.findByUsername(email)
-                                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
-                                        .flatMap(user -> {
-                                            if (user.getRole().equals(User.Role.ADMIN))
-                                                return chain.filter(exchange);
-                                            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource"));
-                                        });
-                            }
-                            return chain.filter(exchange);
-                        }
-                        if (match(path, devEndpoints))
-                            return chain.filter(exchange);
-                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Interswitch domain users can access this resource"));
-                    }
-                    return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource"));
-                }
+        return routeUtil.isRequestAuthenticated(exchange).flatMap(isRequestAuthenticated -> {
+            if (isRequestAuthenticated.get())
                 return chain.filter(exchange);
-            });
-        }
-        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+            JWT token = decodeBearerToken(exchange.getRequest().getHeaders());
+            List<String> audience = getClaimAsListFromBearerToken(token, "aud");
+            if (audience.contains("api-gateway")) {
+                return routeUtil.isRouteBasedEndpoint(exchange).flatMap(isRouteBasedEndpoint -> {
+                    if (!isRouteBasedEndpoint) {
+                        String sender = getClaimAsStringFromBearerToken(token, "sender");
+                        if (sender.equals("api-gateway-client")) {
+                            String username = getClaimAsStringFromBearerToken(token, "user_name");
+                            if (username.isEmpty())
+                                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "A user token is required to access this resource"));
+                            String email = getClaimAsStringFromBearerToken(token, "email");
+                            if (isInterswitchEmail(email)) {
+                                if (match(path, adminEndpoints)) {
+                                    return mongoUserRepository.findByUsername(email)
+                                            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource")))
+                                            .flatMap(user -> {
+                                                if (user.getRole().equals(User.Role.ADMIN))
+                                                    return chain.filter(exchange);
+                                                return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You need administrative rights to access this resource"));
+                                            });
+                                }
+                                return chain.filter(exchange);
+                            }
+                            if (match(path, devEndpoints))
+                                return chain.filter(exchange);
+                            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Interswitch domain users can access this resource"));
+                        }
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource"));
+                    }
+                    return chain.filter(exchange);
+                });
+            }
+            return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have sufficient rights to this resource"));
+        });
     }
 
     @Override

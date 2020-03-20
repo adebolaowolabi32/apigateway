@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.gateway.route.Route;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
@@ -22,8 +23,11 @@ import reactor.test.StepVerifier;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 @WebFluxTest
 @ActiveProfiles("dev")
@@ -68,6 +72,8 @@ public class AccessControlFilterTests {
                 .header("Authorization", accessToken)
                 .build());
 
+        exchange.getAttributes().put(GATEWAY_ROUTE_ATTR, Route.async().id("").uri("http://localhost:8080").order(0)
+                .predicate(swe -> true).build());
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
     }
 
@@ -95,12 +101,14 @@ public class AccessControlFilterTests {
     @Test
     public void requestsWithoutApiGatewayInAudienceClaimShouldFail() throws JOSEException {
         this.setup(null, null, null, null, "/path");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You do not have sufficient rights to this resource\"").verify();
     }
 
     @Test
     public void requestsToRouteBasedEndpointsShouldPass() throws JOSEException {
         this.setup(null, null, null, "api-gateway", "/path");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(true));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
@@ -108,6 +116,7 @@ public class AccessControlFilterTests {
     @Test
     public void allOtherRequestsWithoutApiGatewayClientInSenderClaimShouldFail() throws JOSEException {
         this.setup(null, null, null, "api-gateway", "/path");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"You do not have permission to access this resource\"").verify();
     }
@@ -115,6 +124,7 @@ public class AccessControlFilterTests {
     @Test
     public void allRequestsWithoutUserTokenToNonRouteBasedEndpointsShouldFail() throws JOSEException {
         this.setup("api-gateway-client", null, null, "api-gateway", "/path");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"A user token is required to access this resource\"").verify();
     }
@@ -122,6 +132,7 @@ public class AccessControlFilterTests {
     @Test
     public void requestsToNonAdminEndpointsFromNonAdminInterswitchUserShouldPass() throws JOSEException {
         this.setup("api-gateway-client", "nonadmin@interswitch.com", username, "api-gateway", "/path");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
@@ -129,6 +140,7 @@ public class AccessControlFilterTests {
     @Test
     public void requestsToAdminEndpointsFromNonAdminInterswitchUserShouldFail() throws JOSEException {
         this.setup("api-gateway-client", "nonadmin@interswitch.com", username, "api-gateway", "golive/approve");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         user.setRole(User.Role.USER);
         when(mongoUserRepository.findByUsername("nonadmin@interswitch.com")).thenReturn(Mono.just(user));
@@ -138,16 +150,17 @@ public class AccessControlFilterTests {
     @Test
     public void allRequestsFromAnAdminInterswitchUserShouldPass() throws JOSEException {
         this.setup("api-gateway-client", "admin@interswitch.com", username, "api-gateway", "/golive/decline");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         user.setRole(User.Role.ADMIN);
         when(mongoUserRepository.findByUsername("admin@interswitch.com")).thenReturn(Mono.just(user));
-
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
 
     @Test
     public void requestsToDevEndpointsFromAnyUserShouldPass() throws JOSEException {
         this.setup("api-gateway-client", null, username, "api-gateway", "projects/testprojectId");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
@@ -155,6 +168,7 @@ public class AccessControlFilterTests {
     @Test
     public void requestsToNonDevEndpointsFromNonInterswitchUserShouldFail() throws JOSEException {
         this.setup("api-gateway-client", null, username, "api-gateway", "/users");
+        when(routeUtil.isRequestAuthenticated(any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(routeUtil.isRouteBasedEndpoint(exchange)).thenReturn(Mono.just(false));
         StepVerifier.create(filter.filter(exchange, filterChain)).expectErrorMessage(HttpStatus.FORBIDDEN + " \"Only Interswitch domain users can access this resource\"").verify();
     }

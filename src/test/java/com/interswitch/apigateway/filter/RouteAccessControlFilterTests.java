@@ -1,6 +1,7 @@
 package com.interswitch.apigateway.filter;
 
 import com.interswitch.apigateway.util.FilterUtil;
+import com.interswitch.apigateway.util.SecurityUtil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -23,7 +24,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
@@ -38,6 +41,9 @@ public class RouteAccessControlFilterTests {
 
     @MockBean
     private GatewayFilterChain filterChain;
+
+    @MockBean
+    private SecurityUtil securityUtil;
 
     private ServerWebExchange exchange;
 
@@ -92,6 +98,7 @@ public class RouteAccessControlFilterTests {
     @Test
     public void liveRequestsWithoutResourcePermissionsShouldFail() throws JOSEException {
         this.setup("LIVE", "id", Collections.emptyList());
+        when(securityUtil.isRequestAuthenticated(any(Route.class), any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
@@ -99,6 +106,7 @@ public class RouteAccessControlFilterTests {
     @Test
     public void liveRequestsWithWrongPatternMatchingShouldFail() throws JOSEException {
         this.setup("LIVE", "id", Collections.singletonList("GET/*?/(path}[]&^$|"));
+        when(securityUtil.isRequestAuthenticated(any(Route.class), any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectError().verify();
     }
@@ -106,6 +114,7 @@ public class RouteAccessControlFilterTests {
     @Test
     public void liveRequestsWithProperResourcePermissionsShouldPass() throws JOSEException {
         this.setup("LIVE", "id", Collections.singletonList("GET/pat?/*"));
+        when(securityUtil.isRequestAuthenticated(any(Route.class), any(ServerWebExchange.class))).thenReturn(Mono.just(new AtomicBoolean(false)));
         when(filterChain.filter(exchange)).thenReturn(Mono.empty());
         StepVerifier.create(filter.filter(exchange, filterChain)).expectComplete().verify();
     }
